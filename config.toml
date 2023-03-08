@@ -1,0 +1,143 @@
+baseurl = "https://tech-lessons.in"
+metaDataFormat = "yaml"
+title = "tech-lessons.in"
+theme = "blist"
+
+DefaultContentLanguage = "en"
+DefaultContentLanguageInSubdir = true
+[languages]
+  [languages.en]
+    contentDir = "content/en"
+    weight = 1
+    languageName = "English"
+    [languages.en.params]
+      introTitle = "tech-lessons.in"
+      introSubtitle = "learnings by a developer"
+      introPhoto = "/picture.jpg"
+      logo = "/logo.png"
+    [[languages.en.menu.main]]
+        name = "Home"
+        url = "/"
+        weight = 1
+
+    [[languages.en.menu.main]]
+        name = "Blogs"
+        url = "/blog"
+        weight = 2
+
+    [[languages.en.menu.main]]
+        name = "About Me"
+        url = "page/about/"
+        weight = 3
+
+    [[languages.en.menu.main]]
+        name = "Tags"
+        url = "tags"
+        weight = 4
+
+[params]
+  # Enable the darkmode toggle in header
+  darkModeToggle = true
+  
+  # Enable search in header
+  enableSearch = true
+
+  # Option to customize the search parameters of a page
+  # Below are the supported options; Note that including entire content
+  # may slowdown the loading of search results
+  # Title of page is included by default
+  searchKeys = [
+    "tags",
+    "date",
+    "categories",
+    "summary",
+    "content",
+    "link",
+    "author"
+  ]
+
+  # Custom copyright - optional
+  copyright = "tech-lessons.in © 2020. All Rights Reserved"
+  favicon = "/favicon.png"
+
+  # Color for the intro details and social links block, not applicable for dark mode
+  # Supported values: Any color from TailwindCSS default colors
+  # Reference: https://tailwindcss.com/docs/customizing-colors
+  ascentColor = "bg-blue-200"
+
+  # The page bundle that is shown on the front page
+  frontBundle = "blog"
+
+  # Used to hide the post metadata such as posted date, reading time and word count
+  # Can be used at site level or page level
+  hideMeta = false
+
+  # To hide "Other languages" option if the post is available in multiple languages
+  # Can be used at site level or page level
+  hideOtherLanguages = true
+
+  # Add support for Table of contents
+  # Can be added to a page level also in markdown frontmatter
+  toc = true
+
+  # Hides the thumbnail in post view
+  # Thumbnails in home and blog pages will still be shown
+  # This setting can also be in page's markdown file
+  hidePageThumbnail = false
+
+# Comments system
+[params.comments]
+  # Supports disqus, giscus and utterances
+  # Check hugo docs for setting up disqus
+  system = "disqus"
+  disqusShortname = 'techlessons'
+
+# Options for giscus, exclude hyphens
+  repo = ""
+  repoid = ""
+  category = ""
+  categoryid = ""
+  mapping = ""
+  strict = ""
+  reactionsenabled = ""
+  emitmetadata = ""
+  inputposition = ""
+  theme = ""
+
+  # Options for utterances, exclude hyphens
+  # repo = ""
+  # issueterm = ""
+  # theme = ""
+
+[params.homepage.social]
+  # Global params common for both languages
+  title = "Let's connect"
+  description = ""
+
+  [[params.homepage.social.icons]]
+    website = "twitter"
+    url = "https://twitter.com/MakhijaSarthak"
+  [[params.homepage.social.icons]]
+    website = "linkedin"
+    url = "https://www.linkedin.com/in/sarthak-makhija-7a165a55"
+  [[params.homepage.social.icons]]
+    website = "github"
+    url = "https://github.com/SarthakMakhija/"
+
+[[menu.main]]
+  name = "About"
+  url = "/about"
+
+[build]
+  writeStats = true
+
+[outputs]
+  home = ["HTML", "RSS", "JSON"]
+
+# syntax highlight settings
+[markup]
+  [markup.highlight]
+    style = "dracula"
+  [markup.goldmark.renderer]
+    # Enable to include inline HTML
+    unsafe = true
