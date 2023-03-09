@@ -36,6 +36,7 @@
       "main",
       "meta",
       "ol",
+      "order",
       "p",
       "path",
       "polyline",
@@ -242,6 +243,7 @@
       "z-10"
     ],
     "ids": [
+      "",
       "4-bit-counter",
       "TableOfContents",
       "a",
@@ -270,6 +272,7 @@
       "code-today-and-add-tests-later",
       "combining-things-together",
       "conclusion",
+      "connecting-the-dots",
       "controller-unit-tests",
       "creating-custom-annotations",
       "defining-legacy-code",
@@ -300,6 +303,7 @@
       "lambda-with-receiver",
       "lets-connect",
       "lets-get-all-the-values",
+      "lets-welcome-localstack",
       "main",
       "makes-you-a-better-articulator-of-thoughts",
       "mentions",
@@ -321,12 +325,19 @@
       "space-optimized-data-structure",
       "step-1-setting-up-the-project",
       "step-10-adding-unit-tests",
+      "step-2-creating-stack-with-the-lambda-function",
       "step-2-lets-start-with-the-lambda-handler",
+      "step-3-fixing-the-test",
       "step-3-lets-jump-into-controller",
+      "step-4-adding-dynamodb-to-the-stack",
       "step-4-lets-jump-into-the-service",
       "step-5-lets-jump-into-the-repository",
+      "step-5-refactoring-the-stack",
+      "step-6-adding-lambda-backed-public-rest-api-to-the-stack",
       "step-6-finishing-the-order-class",
       "step-7-finishing-the-orderrequest-class",
+      "step-7-updating-the-stack",
+      "step-8-deploying-our-stack",
       "step-8-introducing-asyncawait-in-service-and-controller",
       "step-9-lambda-response-with-api-gateway",
       "summary",
@@ -338,6 +349,7 @@
       "time-to-invoke-c-code-from-golang",
       "understanding-bloom-filter",
       "understanding-count-min-sketch",
+      "understanding-localstack",
       "unit-and-integration-testing-with-aws-lambda",
       "what-does-flips-offer",
       "what-is-aws-lambda",
@@ -348,7 +360,8 @@
       "working-with-legacy-code",
       "would-you-buy-a-car-without-brakes",
       "wrap-up",
-      "writing-characterization-test"
+      "writing-characterization-test",
+      "writing-repository-test"
     ]
   }
 }

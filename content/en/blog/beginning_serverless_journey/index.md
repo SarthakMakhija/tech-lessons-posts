@@ -614,4 +614,4 @@ I am sure you will be able to fill these gaps and at this stage, I will move for
 
 Code is available [here](https://github.com/aws-articles/serverless-order-service).
 
-Let's move on to our [next](/blog/testing-serverless-journey) article that explores integration testing using Localstack for our serverless application.
+Let's move on to our [next](/blog/testing_serverless_journey) article that explores integration testing using Localstack for our serverless application.
