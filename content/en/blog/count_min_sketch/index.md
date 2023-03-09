@@ -5,7 +5,7 @@ date: 2023-02-24
 description: "Count-min sketch (CM sketch) is a probabilistic data structure used to estimate the frequency of events in a data stream."
 tags: ["Count-min sketch", "Probabilistic data structure"]
 thumbnail: /countminsketch-title.png
-caption: "Background by Alessio Soggetti on Unsplash"
+caption: "Background by Fernando Paredes Murillo on Unsplash"
 ---
 
 Count-min sketch (CM sketch) is a probabilistic data structure[^1] used to estimate the frequency of events in a data stream.

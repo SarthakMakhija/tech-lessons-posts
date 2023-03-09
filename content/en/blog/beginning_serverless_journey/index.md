@@ -5,7 +5,7 @@ date: 2020-03-10
 description: "Serverless is a paradigm that lays its foundations on the fact that \"We don't have to provision and manage servers\". Let's begin our serverless journey which starts with building a serverless application. After we have built an application we will proceed with testing it using LocalStack and finally deploying it using AWS CDK"
 tags: ["AWS Lambda", "Serverless"]
 thumbnail: /beginning-serverless.png
-caption: "Background by Solen Feyissa on Unsplash"
+caption: "Background by Nick Fewings on Unsplash"
 ---
 
 > Serverless is a paradigm that lays its foundations on the fact that "We don't have to provision and manage servers".

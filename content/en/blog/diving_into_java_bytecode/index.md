@@ -5,7 +5,7 @@ date: 2021-04-04
 description: "Java code is compiled into an intermediate representation called \"bytecode\". It is this bytecode which gets executed by JVM and is later converted into machine specific instructions by JIT compiler. With this article, we attempt to dive into bytecode and understand the internals of various bytecode operations."
 tags: ["Java", "JVM", "Bytecode"]
 thumbnail: /diving-into-java-bytecode.png
-caption: "Background by Kalle Kortelainen on Unsplash"
+caption: "Background by Thomas Stephan on Unsplash"
 ---
 
 <blockquote class="wp-block-quote">

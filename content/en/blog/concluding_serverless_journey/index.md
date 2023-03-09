@@ -5,7 +5,7 @@ date: 2020-03-18
 description: "Let's deploy our Serverless application. We will be using AWS CDK to deploy our application that includes infra and the code. What would be interesting is to see if we can make our infra testable."
 tags: ["AWS Lambda", "Serverless", "CDK"]
 thumbnail: /concluding-serverless.png
-caption: "Background by Mary Iva on Unsplash"
+caption: "Background by Tamara Schipchinskaya on Unsplash"
 ---
 
 We have come a long way in our [Serverless journey](/blog/beginning_serverless_journey). This journey which started with building a serverless application has finally come to a stage where we can see all

@@ -5,7 +5,7 @@ date: 2021-12-21
 description: "Let's explore Golang's C package to invoke C code from Golang by building a linked list in C which would offer put, get, getAllValues, length and close features."
 tags: ["Golang", "C", "CGO"]
 thumbnail: /invoking-C-code-from-golang.png
-caption: "Background by Gradienta on Unsplash"
+caption: "Background by Giorgio Trovato on Unsplash"
 ---
 
 The article attempts to explore Golang's "C" package which allows invoking C code from Golang. Before we get into the idea
