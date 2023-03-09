@@ -126,7 +126,7 @@ There is so much to refactor in legacy code, and we can not refactor everything.
 We want to refactor legacy code to leave it cleaner than what it was when it came to us and to make it understandable for others.
 With that said, we want to make the system better keeping the focus on the task. We don’t want to go crazy with refactoring trying to improve the whole system in a few days. What we want to do is *refactor the code that comes in our way of implementing any new change*. We will try and understand this better with an example in the next article.
 
-   <iframe width="800" height="400" src="https://www.youtube.com/embed/0U83rST3ang" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+{{< youtube 0U83rST3ang >}}
 
 Let's move on to the [next article](/blog/lets_deal_with_legacy_code/) that explains how to deal with legacy code.
 

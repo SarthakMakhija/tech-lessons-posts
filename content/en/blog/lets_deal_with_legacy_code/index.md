@@ -94,7 +94,7 @@ public class Rental {
 
 The team decides to discuss different ways to handle this new requirement in legacy code.
 
-<iframe width="800" height="400" src="https://www.youtube.com/embed/aGGoW8YENKo" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+{{< youtube aGGoW8YENKo >}}
 
 And the team agrees to improve the code before implementing the new functionality. Scott and Jessica will be pairing on this. But, where do they start from? As mentioned in their discussion, they need to understand the code first, so they decide to write [Characterization Test(s)](/blog/lets_define_legacy_code#which-tests-to-write).
 
