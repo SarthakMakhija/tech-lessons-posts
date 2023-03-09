@@ -125,7 +125,7 @@ DefaultContentLanguageInSubdir = true
     url = "https://github.com/SarthakMakhija/"
 
 [[menu.main]]
-  name = "About"
+  name = "About Me"
   url = "/about"
 
 [build]
