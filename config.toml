@@ -1,4 +1,4 @@
-baseurl = "https://tech-lessons.in/"
+baseurl = "/"
 metaDataFormat = "yaml"
 title = "tech-lessons.in"
 theme = "blist"
@@ -90,7 +90,7 @@ DefaultContentLanguageInSubdir = true
   # Supports disqus, giscus and utterances
   # Check hugo docs for setting up disqus
   system = "disqus"
-  disqusShortname = 'techlessons'
+  disqusShortname = "techlessons"
 
 # Options for giscus, exclude hyphens
   repo = ""
