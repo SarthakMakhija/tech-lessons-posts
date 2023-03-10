@@ -1,6 +1,6 @@
 ## Introduction
 
-[tech-lessons.in](https://tech-lessons.in/) is a [Hugo](https://gohugo.io/) based blog and this repository the core content of the blog.
+[tech-lessons.in](https://tech-lessons.in/) is a [Hugo](https://gohugo.io/) based blog and this repository is the core content of the blog.
 
 ## Running on local
 
