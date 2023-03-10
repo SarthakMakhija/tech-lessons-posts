@@ -52,7 +52,7 @@ module.exports = {
 };
 ```
 
-<img class=""align-center" src="/project-setup-cdk.png" />
+<img src="/project-setup-cdk.png" />
 
 If all has gone well so far this how our project structure will look like -
 
