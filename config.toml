@@ -89,20 +89,20 @@ DefaultContentLanguageInSubdir = true
 [params.comments]
   # Supports disqus, giscus and utterances
   # Check hugo docs for setting up disqus
-  system = "disqus"
-  disqusShortname = "techlessons"
+  system = "giscus"
+  disqusShortname = ""
 
 # Options for giscus, exclude hyphens
-  repo = ""
-  repoid = ""
-  category = ""
-  categoryid = ""
-  mapping = ""
-  strict = ""
-  reactionsenabled = ""
-  emitmetadata = ""
-  inputposition = ""
-  theme = ""
+  repo = "SarthakMakhija/tech-lessons-comments"
+  repoid = "R_kgDOJHu3mA"
+  category = "Announcements"
+  categoryid = "DIC_kwDOJHu3mM4CUxhS"
+  mapping = "og:title"
+  strict = "0"
+  reactionsenabled = "1"
+  emitmetadata = "0"
+  inputposition = "bottom"
+  theme = "light"
 
   # Options for utterances, exclude hyphens
   # repo = ""
