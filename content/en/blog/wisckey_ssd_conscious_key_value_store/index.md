@@ -200,9 +200,15 @@ Point 2 means we should try to **leverage the parallelism offered by SSDs** when
 
 ### WiscKey proposal
 
+#### Separate values from keys
+#### Leverage the internal parallelism of SSDs
+#### Introduce garbage collection 
+
 ### Challenges with WiscKey
 
-### Implementation of WiscKey
+### Optimizations
+
+### Reference implementation of WiscKey
 
 ### References
 
