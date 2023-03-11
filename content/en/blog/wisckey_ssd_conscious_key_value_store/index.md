@@ -182,7 +182,21 @@ Before moving on, let's quickly recap the amplification numbers. The read amplif
 
 > A key idea while designing a storage engine is to minimize the read and write amplification. Typically, SSDs can wear out through repeated writes, the high write amplification in LSM-trees can significantly reduce device lifetime.
 
-### SSD features
+### SSD considerations
+
+There are fundamental differences between SSDs and HDDs which should be considered when designing a storage engine. Let's look at some of the most important considerations:
+1. SSDs can wear out through repeated writes, the high write amplification in LSM-trees can significantly reduce the device lifetime. 
+2. SSDs offer a large degree of internal parallelism
+
+Point 1 means we should try to **reduce the write amplification** when designing a storage engine for SSD-conscious storage.
+
+Point 2 means we should try to **leverage the parallelism offered by SSDs** when performing IO operations. Let's look at the below graph. For the request size >= 64KB, the aggregate throughput of random reads with 32 threads matches the sequential read throughput. 
+
+<figure>
+    <img class="align-center" src="/SSD-parallelism.png" />
+</figure>
+
+**Sequential and Random Reads on SSD**. This figure shows the sequential and random read performance for various request sizes on a modern SSD device. All requests are issued to a 100-GB file on ext4.
 
 ### WiscKey proposal
 
