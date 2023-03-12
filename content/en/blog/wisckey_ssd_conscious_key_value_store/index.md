@@ -48,6 +48,9 @@ To ensure persistent writes, every `put(key, value)` *appends* the key-value pai
 Every `get(key)` in the LSM-tree goes through the RAM based component to disk components from C1 to Ck in the order. The `get(key)` operation first queries the C0 component, if the value for the key is not found, the search proceeds
 to the disk resident component C1. This process continues until the value is found or all the disk resident components have been scanned. LSM-trees may need multiple reads for a point lookup. Hence, LSM-trees are most useful when inserts are more common than lookups. 
 
+**Quick summary**
+> LSM-tree is a collection of exponentially increasing sized components, C0 to Ck. <br/> Writes go to C0 (in RAM). <br/> After C0 is full, the entire data is flushed to disk. <br/> The get operation involves going through C0 to Ck.
+
 Let's look at the structure of LSM-tree in LevelDB to understand a bit more on C0 to Ck components. 
 
 ### LevelDB
@@ -104,7 +107,10 @@ SSTable files are organized into blocks (or sections). Typically, SSTable files 
 LSM-trees may end up reading a lot of files (or portions of files) in order to perform a `get` operation. What we need is a way to establish the relationship between the amount of data read (or written to) and the amount of data requested by the user.
 This relationship can later be used to question if the storage engine is doing too much IO or is the throughput suffering because of the additional IO? 
 
-Let's understand "read and write amplification" to build such a relationship.
+**Quick summary**
+> LevelDB uses WAL, memtables and SSTables as its data structures. <br/> Memtable is implemented using Skip list <br/> SSTables are sorted string tables and organized into levels, Level0 to Level6. <br/> SSTables are organized into index-block, bloom-filter block and data block. <br/> Puts go to WAL and the active memtable, gets go to active memtable -> immutable memtable -> SSTables. 
+
+Let's now understand "read and write amplification".
 
 <<<<Compaction>>>
 
@@ -127,6 +133,9 @@ This results in "amplification". Both the reads and the writes are amplified. Th
 **Read amplification** is the ratio of the amount of data read from the storage device and the amount of data requested by the user. In the above example, read amplification is 32 (`4*1024 bytes / 128 bytes`). 
 
 **Write amplification** is the ratio of the amount of data written to the storage device and the amount of data requested by the user. In the above example, write amplification is 32 (`4*1024 bytes / 128 bytes`).
+
+**Quick summary**
+> The smallest unit of data exchange between an application and a block storage device is a block, usually 4KB in size. <br/> Read/Write amplification is the amount of data read from (or written to) the storage device and the amount of data requested by the user.
 
 ### Analysis of Read Write amplification in LevelDB
 
@@ -178,9 +187,8 @@ So, the total size of the index block would be around 0.99 MB `(((104 * 10,000)/
 
 If the index-block were not there, the same get operation would have happened against the data block. Assuming the size of a single value to be 1024 bytes, we will have around 10.71 MB `((((100 + 1024) * 10,000)/1024)/1024)` as the size of the data block.
 
-Before moving on, let's quickly recap the amplification numbers. The **read amplification in LevelDB is 336** and the **write amplification can be over 50**, in the worst case.
-
-> A key idea while designing a storage engine is to minimize the read and write amplification to reduce IO latency. Also, SSDs can wear out through repeated writes, the high write amplification in LSM-trees can significantly reduce device lifetime.
+**Quick summary**
+> The **read amplification in LevelDB is 336** and the **write amplification can be over 50**, in the worst case. <br/> A key idea while designing a storage engine is to minimize the read and write amplification to reduce IO latency. Also, SSDs can wear out through repeated writes, the high write amplification in LSM-trees can significantly reduce device lifetime.
 
 ### SSD considerations
 
@@ -197,6 +205,9 @@ Point 2 means we should try to **leverage the parallelism offered by SSDs** when
 </figure>
 
 **Sequential and Random Reads on SSD**. This figure shows the sequential and random read performance for various request sizes on a modern SSD device. All requests are issued to a 100-GB file on ext4.
+
+**Quick summary**
+> When designing a storage engine for SSDs, try to reduce the write-amplification and leverage the internal parallelism offered by SSDs.
 
 With these considerations, let's understand WiscKey proposal.
 
@@ -234,7 +245,7 @@ This requires an additional IO for every `get` operation. The research paper cla
 
 > BadgerDB is an implementation of the WiscKey paper, but it makes a small modification to `put` and the `get` operations. If the value size is less than some threshold, the value will be put in the memtable else the value-offset will be put in the memtable. If the key is found during the `get` operation, BadgerDB loads the value from the value-log if the retrieved value is a value-offset. SSTables always contain the value-offset.   
 
-Deleting a key in WiscKey will delete it from the LSM-tree but the value-log remains untouched. WiscKey proposes [garbage collection](#introduce-garbage-collection) to remove invalid (or dangling) values from value-log. <<More on this later.>>
+Deleting a key in WiscKey will delete it from the LSM-tree but the value-log remains untouched. WiscKey proposes [garbage collection](#introduce-garbage-collection) to remove invalid (or dangling) values from value-log.
 
 #### Leverage the internal parallelism of SSDs
 
@@ -264,6 +275,9 @@ Garbage involves the following steps:
 3. To avoid losing any data in case a crash happens during garbage collection, WiscKey calls `fsync` on the value-log.
 4. WiscKey needs to add the updated value’s addresses to the LSM-tree. So, it adds the key & value-offset pairs to the LSM-tree along with the current tail offset. The tail is stored in the LSM-tree as `<'tail', tail-value-log-offset>`.
 5. Finally, the free space is reclaimed and the head offset is stored in the LSM-tree.
+
+**Quick summary**
+> WiscKey separates values from keys in the LSM-tree. LSM-tree contains keys and the offsets of the key-value pair from the value-log. This reduces the write-amplification during compaction. </br> WiscKey leverages the internal parallelism offered by SSDs, during range queries. <br/> Wisckey introduces garbage collection to remove dangling values from the value-log.
 
 Let's discuss various optimizations proposed in the WiscKey paper.
 
