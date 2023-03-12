@@ -204,7 +204,7 @@ WiscKey proposes four key ideas:
 1. Separate values from keys, keeping only the keys in the LSM-tree, values go in a separate value-log.
 2. Leverage the parallel random read characteristic of SSDs during range queries.
 3. Introduce garbage collection to remove values corresponding to deleted keys from value-log.
-4. Remove LSM-tree log (WAL log) without sacrificing consistency.
+4. Remove LSM-tree log (WAL log) without sacrificing consistency (under [Optimizations](#optimizations)).
 
 Let's discuss each of these ideas one by one.
 
@@ -283,7 +283,7 @@ the lookup operation will be performed in the value-log buffer and if the value-
 
 This optimization means that the buffered data can be lost during a crash. 
 
-#### Optimizing the LSM-tree Log
+#### Remove the LSM-tree Log
 
 The value-log is storing the entire key-value pair. If a crash happens before the keys are persistent in the LSM-tree (and after they have been written to the value-log), they can be recovered by scanning the value-log. 
 In order to optimize the recovery of the LSM-tree from the value-log, the `head` offset of the value-log is periodically stored in the LSM-tree as `<'head', head-value-log-offset>`.
@@ -292,7 +292,240 @@ So, removing the LSM-tree log is a safe optimization.
 
 ### Reference implementation of WiscKey
 
+[BadgerDB]() is an implementation of the WiscKey paper. We will briefly look at the `put` and the `get` implementations of BadgerDB.
 
+Let's start with `put(key , value)`.
+
+```golang
+//Fields ommitted
+type request struct {
+	// Input values
+	Entries []*Entry
+
+	Ptrs []valuePointer
+}
+type Entry struct {
+	Key       []byte
+	Value     []byte
+}
+type valuePointer struct {
+	Fid    uint32
+	Len    uint32
+	Offset uint32
+}
+
+//Code ommitted
+func (db *DB) writeRequests(requests []*request) error {
+	db.opt.Debugf("writeRequests called. Writing to value log")
+	
+	//write the requests to the value log file
+	err := db.vlog.write(requests) 
+	if err != nil {
+		done(err)
+		return err
+	}
+	for _, request := range requests {
+		//write a single request to the LSM-tree
+		if err := db.writeToLSM(request); err != nil {  
+			done(err)
+			return y.Wrap(err, "writeRequests")
+		}
+	}
+	return nil
+}
+```
+
+BadgerDB implements snapshot transaction isolation. Let's assume the `commit()` method on the transaction is invoked. This method results in calling the `writeRequests`
+method through a single goroutine in a fashion that is very much similar to a [singular update queue](https://martinfowler.com/articles/patterns-of-distributed-systems/singular-update-queue.html).
+
+As a part of this method, the key-value pairs that are a part of the transaction get written to the value-log and then each request is written to the LSM-tree.
+
+Let's look at the `writeToLSM` method to understand the content of the memtable.
+
+```golang
+//Code ommitted
+func (db *DB) writeToLSM(reqest *request) error {
+	for i, entry := range reqest.Entries {
+		var err error
+		if db.opt.managedTxns || entry.skipVlogAndSetThreshold(db.valueThreshold()) {
+			//Write the entire key and the value in the memtable. Memtable is implemented using Skip list 
+			err = db.memtable.Put(entry.Key,
+				y.ValueStruct{
+					Value: entry.Value,
+					Meta:      entry.meta &^ bitValuePointer,
+					UserMeta:  entry.UserMeta,
+					ExpiresAt: entry.ExpiresAt,
+				})
+		} else {
+			// Write the pointer to the memtable.
+			err = db.memtable.Put(entry.Key,
+				y.ValueStruct{
+					Value:     reqest.Ptrs[i].Encode(),
+					Meta:      entry.meta | bitValuePointer,
+					UserMeta:  entry.UserMeta,
+					ExpiresAt: entry.ExpiresAt,
+				})
+		}
+		if err != nil {
+			return y.Wrapf(err, "while writing to memTable")
+		}
+	}
+	if db.opt.SyncWrites {
+	    //Memtable contains both a WAL and a skip list. 
+	    //Sync the writes to the WAL associated with the current memtable. 
+		return db.memtable.SyncWAL()
+	}
+	return nil
+}
+
+func (e *Entry) skipVlogAndSetThreshold(threshold int64) bool {
+	if e.valThreshold == 0 {
+		e.valThreshold = threshold
+	}
+	return int64(len(e.Value)) < e.valThreshold
+}
+```
+
+The method `writeToLSM` is writing the entire key-value pair in the LSM-tree if the size of the value is less than some threshold, else the encoded value of the `value pointer` is written to the LSM-tree.
+
+Let's look at the `get(key)` method.
+
+```golang
+//Code ommitted
+type ValueStruct struct {
+	Meta      byte
+	UserMeta  byte
+	ExpiresAt uint64
+	Value     []byte
+	Version uint64
+}
+
+func (txn *Txn) Get(key []byte) (item *Item, rerr error) {    
+	item = new(Item)
+	seek := y.KeyWithTs(key, txn.readTs)
+	
+	//get the valueStruct corresponding to the key.
+	//db.get will perform a get operation in all the memtables (active and all the immutable memtables), 
+	//if the key is not found, it will perform a get across all the levels. 
+	valueStruct, err := txn.db.get(seek)
+	
+	if valueStruct.Value == nil && valueStruct.Meta == 0 {
+		return nil, ErrKeyNotFound
+	}
+	if isDeletedOrExpired(valueStruct.Meta, valueStruct.ExpiresAt) {
+		return nil, ErrKeyNotFound
+	}
+
+    //if the key exists, return an item. 
+    //Item will abstract the idea of fetching the value from the value-log   
+	item.key = key
+	item.version = valueStruct.Version
+	item.meta = valueStruct.Meta
+	item.userMeta = valueStruct.UserMeta
+	item.vptr = y.SafeCopy(item.vptr, valueStruct.Value)
+	item.txn = txn
+	item.expiresAt = valueStruct.ExpiresAt
+	return item, nil
+}
+```
+
+The `Get(key)` method in the transaction does two things:
+1. Invokes the `get` method of the `db` abstraction to get the `valueStruct`
+2. If the key exists, it returns an `Item`. `ValueStruct` may or may not contain the value, so `Item` abstraction ensures that the value is fetched from the value-log if needed.
+
+Let's look at the method `yieldItemValue` in the `Item`. The idea is to decode the value pointer (get the object of `valuePointer` back from the byte array) and perform a random read
+operation in the value-log.
+
+```golang
+//Code ommitted
+func (item *Item) yieldItemValue() ([]byte, func(), error) {
+	key := item.Key() // No need to copy.
+	if !item.hasValue() {
+		return nil, nil, nil
+	}
+
+	var vp valuePointer
+	vp.Decode(item.vptr)
+	
+	db := item.txn.db
+	//Read the value from the value log. This is a random seek in the value-log.
+	result, cb, err := db.vlog.Read(vp, item.slice) 
+	
+	....
+}
+```
+
+The article has already gone too long, but I would like to put a short mention of the `iterator` implementation in BadgerDB. 
+
+BadgerDB provides a `NewIterator(opt IteratorOptions)` method that returns an iterator object. 
+
+The challenge is: where should the iterator point to? Should it point to the active memtable? Or, which of the N immutable memtables or M SSTable files should it point to?
+
+```golang
+//Code ommitted
+func (txn *Txn) NewIterator(opt IteratorOptions) *Iterator {
+    tables, decr := txn.db.getMemTables()
+    
+    for i := 0; i < len(tables); i++ {
+		iters = append(iters, tables[i].skiplist.NewUniIterator(opt.Reverse))
+	}
+	iters = append(iters, txn.db.levelController.iterators(&opt)...)
+	res := &Iterator{
+		txn:    txn,
+		iitr:   table.NewMergeIterator(iters, opt.Reverse),
+		opt:    opt,
+		readTs: txn.readTs,
+	}
+}
+```
+
+BadgerDB creates iterators across all the objects: all the memtables and all the SSTable files from Level0 to the last level, and returns an instance of `MergeIterator`. The `MergeIterator` organizes all the 
+iterators in form of a binary tree.
+
+```golang
+//Code ommitted
+type MergeIterator struct {
+	left  node
+	right node
+}
+
+//y.Iterator is an interface that has various implementations: skiplist.NewUniIterator, MergeIterator
+func NewMergeIterator(iters []y.Iterator, reverse bool) y.Iterator {
+	switch len(iters) {
+	case 2:
+		mi := &MergeIterator{
+			reverse: reverse,
+		}
+		//When we are left with 2 iterators, set the left and the right node of MergeIterator
+		mi.left.setIterator(iters[0])
+		mi.right.setIterator(iters[1])
+		mi.small = &mi.left
+		return mi
+	}
+	mid := len(iters) / 2
+	
+	//Recursive call to arrange the iterators from 0 to mid-1, and then mid to the last index
+	return NewMergeIterator(
+		[]y.Iterator{
+			NewMergeIterator(iters[:mid], reverse),
+			NewMergeIterator(iters[mid:], reverse),
+		}, reverse)
+}
+```
+
+`Seek` is a recursive operation starting from the top-most iterator to the bottom most, each iterator may find some value for the key. (The same key may be present in the active memtable and in one SSTable.)
+`mi.fix()` resolves the key that will be returned from the `MergeIterator`.
+
+```golang
+//Code ommitted
+func (mi *MergeIterator) Seek(key []byte) {
+	mi.left.seek(key)
+	mi.right.seek(key)
+	mi.fix()
+}
+```
+
+MergerIterator is available [here](https://github.com/dgraph-io/badger/blob/main/table/merge_iterator.go).
 
 ### References
 
