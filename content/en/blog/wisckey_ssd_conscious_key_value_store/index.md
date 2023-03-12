@@ -8,16 +8,16 @@ thumbnail: /wisckey.jpg
 caption: "Background by Alex Conchillos on Pexels"
 ---
 
-> LSM-tree (Log structured merge tree) is a data structure typically used for write-heavy workloads. LSM-tree optimizes the write path by performing sequential writes to disk. WiscKey is a persistent LSM-tree-based key-value store that separates keys from values to minimize read and write amplification. The design of WiscKey is highly SSD optimized, leveraging both the device's sequential and random performance characteristics.
+> [LSM-tree](https://en.wikipedia.org/wiki/Log-structured_merge-tree#:~:text=In%20computer%20science%2C%20the%20log,%2C%20maintain%20key%2Dvalue%20pairs.) (Log structured merge tree) is a data structure typically used for write-heavy workloads. LSM-tree optimizes the write path by performing sequential writes to disk. WiscKey is a persistent LSM-tree-based key-value store that separates keys from values to minimize read and write amplification. The design of WiscKey is highly SSD optimized, leveraging both the device's sequential and random performance characteristics.
 
 This article summarises the [WiscKey](https://www.usenix.org/system/files/conference/fast16/fast16-papers-lu.pdf) paper published in 2016.
 
-Before we understand the paper, it is essential to understand the LSM-tree data structure, read and write amplification in the LSM-tree and various SSD features that can be leveraged while building SSD-conscious storage engine.
+Before we understand the paper, it is essential to understand the LSM-tree data structure, read and write amplification in the LSM-tree and various SSD characteristics that should be considered while building SSD-conscious storage engine.
 
 ### LSM-tree
 
-LSM-tree is a write-optimized data structure implemented by storage engines for supporting write-heavy workloads. A lot of storage engines including [BadgerDB](), [RocksDB]() and
-[LevelDB]() use LSM-tree as the core data structure.
+LSM-tree is a write-optimized data structure implemented by storage engines for supporting write-heavy workloads. A lot of storage engines including [BadgerDB](https://github.com/dgraph-io/badger), [RocksDB](https://github.com/facebook/rocksdb) and
+[LevelDB](https://github.com/google/leveldb) use LSM-tree as the core data structure.
 
 > Storage engine is a software module that provides data structures for efficient reads and writes. The two most common data structures are B+Tree (read-optimized) and LSM-tree (write-optimized).
 
@@ -25,7 +25,7 @@ Let's look at the structure of LSM-tree to understand why it is write-optimized.
 
 <img class="align-center" src="/lsm-c0-ck.png" />
 
-> **Data structure choice for C0**: The data structure for C0 should maintain the keys in the sorted order and provide efficient reads and writes. This data structure could be a [treemap](https://docs.oracle.com/javase/8/docs/api/java/util/TreeMap.html) or a [red-black tree](https://en.wikipedia.org/wiki/Red%E2%80%93black_tree) or a [skip list](https://en.wikipedia.org/wiki/Skip_list). Of all these data structures, the Skip list is the one that supports versioned keys.
+> **Data structure choice for C0**: The data structure for C0 should maintain the keys in the sorted order and provide efficient reads and writes. This data structure could be a [treemap](https://docs.oracle.com/javase/8/docs/api/java/util/TreeMap.html) or a [red-black tree](https://en.wikipedia.org/wiki/Red%E2%80%93black_tree) or a [skip list](https://en.wikipedia.org/wiki/Skip_list). Of all these data structures, the Skip list is the one that supports versioned keys, same key with different versions.
 
 LSM-tree buffers the data in-memory and performs a sequential write to disk after the in-memory buffer is full. The below image highlights the throughput difference between sequential and random writes on an NVMe SSD, the difference would be a lot higher on an HDD. 
 
@@ -36,30 +36,30 @@ LSM-tree buffers the data in-memory and performs a sequential write to disk afte
 
 > LSM-tree based storage engines offer better write throughput because they perform sequential writes to disk.
 
-Let's take a look at the overall flow of `put(key, value)` and `get(key)` operations in an LSM-tree.
+Let's take a look at the overall flow of `put(key: []byte, value: []byte)` and `get(key: []byte)` operations in LSM-tree.
 
 Every `put(key, value)` in the LSM-tree adds the key-value pair in the C0 component and after C0 is full, the entire data is flushed to disk. LSM-trees treat `delete(key)` as another `put` which will put the key with a deleted marker. 
 
 After C0 is full, the entire data is flushed to disk. Simply speaking, the entire in-memory data consisting of key-value pairs is encoded in a byte array and written to disk. If the C1 component already exists on disk,   
 the buffered content is merged with the contents of C1. **More on this later. <<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>**
 
-> To ensure persistent writes, every `put(key, value)` *appends* the key-value pair to a [WAL](https://martinfowler.com/articles/patterns-of-distributed-systems/wal.html) file and then writes the key-value pair to the C0 component. Appending to a WAL file is also a sequential write to disk.   
+To ensure persistent writes, every `put(key, value)` *appends* the key-value pair to a [WAL](https://martinfowler.com/articles/patterns-of-distributed-systems/wal.html) file and then writes the key-value pair to the C0 component. Appending to a WAL file is also a sequential write to disk.   
 
 Every `get(key)` in the LSM-tree goes through the RAM based component to disk components from C1 to Ck in the order. The `get(key)` operation first queries the C0 component, if the value for the key is not found, the search proceeds
 to the disk resident component C1. This process continues until the value is found or all the disk resident components have been scanned. LSM-trees may need multiple reads for a point lookup. Hence, LSM-trees are most useful when inserts are more common than lookups. 
 
-Let's look at the structure of LSM-tree in LevelDB. 
+Let's look at the structure of LSM-tree in LevelDB to understand a bit more on C0 to Ck components. 
 
 ### LevelDB
 
 LevelDB is a key-value storage engine based on LSM-tree. LevelDB maintains the following data structures:
-1. On-disk log file to persist the writes
-2. Two in-memory components called "memtable" (active and passive)
+1. On-disk log file (WAL) to persist the writes
+2. Two in-memory components called "memtables" (active and passive)
 3. Seven levels of on-disk components called "SSTable" (Sorted string table) 
 
 Every `put(key, value)` goes in a log file and the active in-memory memtable. Once the active memtable is full, LevelDB *switches to a new memtable and log file* to handle further writes.
 
-The previously active memtable is stored as an immutable memtable in RAM and flushed to disk in the background. This flush to disk generates a new SSTable file (about 2 MB) at level-0 and also discards the previous log file.
+The previously active memtable is stored as an immutable memtable in RAM and flushed to disk in the background. This flush to disk generates a new SSTable file (about 2 MB) at level-0 and also discards the previous log file (WAL). 
 
 The size of all files in each level is limited, and increases by a factor of ten with the level number. For example, the size limit of all files at L1 is 10 MB, while the limit of L2 is 100 MB.
 
@@ -70,15 +70,15 @@ In order to perform the `get(key)` operation, LevelDB performs the following ste
 3. If not found, perform `get` in the files from Level0 to Level6. LevelDB ensures that the keys do not overlap in the files from Level1 to Level6 whereas keys in the Level0 files can overlap.
    1. This means that a `get` operation may involve multiple files in Level0 and one file at each level from Level1 to Level6
 
-> LevelDB implements the in-memory components using Skip list.
+> LevelDB implements the in-memory components using [Skip list](https://en.wikipedia.org/wiki/Skip_list).
    
 The below image represents the high-level architecture of LevelDB.
 
 <img class="align-center" src="/leveldb.png" />
 
-> [BadgerDB](https://github.com/dgraph-io/badger) maintains an array of immutable memtables. The `get` operation searches the active memtable and if the key is not found, it searches the inactive (or the immutable) memtables in the reverse order (the newest immutable memtable to the oldest immutable memtable).   
+> [BadgerDB](https://github.com/dgraph-io/badger) maintains an array of immutable memtables instead of one immutable memtable to optimize reads. The `get` operation searches the active memtable and if the key is not found, it searches the inactive (or immutable) memtables in the reverse order (the newest immutable memtable to the oldest immutable memtable).   
 
-Let's spend a couple of minutes to understand the structure of the data block of an SSTable file before we move on.
+Let's spend a couple of minutes to understand the structure of an SSTable file before we move on.
 
 SSTables contain key-value pairs sorted by key. Key-value pairs are encoded before they can be written to a file. One encoding scheme could be to use `key-size`, followed by `value-size`, followed by the `actual key` and then the `actual value` as depicted in the following table:
 
@@ -91,17 +91,17 @@ A naive way to get the value for a key in an SSTable would be to read the entire
 
 > **How do you read a single key-value pair from an SSTable file that follows the above-mentioned encoding scheme**? To read one key-value pair from an SSTable file, we need to read the first four bytes (`u32`) to get the key size, next four bytes to get the value size, then read the number of bytes equal to the key size to get the key and finally read the number of bytes equal to the value size to get the value.
 
-SSTable files are organized into blocks (or sections). Typically, SSTable files in all the storage engines `index-block` + `bloom-filter-block` + `data-block`. *Imagine all these blocks as byte arrays ranging from one offset to the other.*
+SSTable files are organized into blocks (or sections). Typically, SSTable files in all the LSM-tree based storage engines include `index-block` + `bloom-filter-block` + `data-block`. *Imagine all these blocks as byte arrays ranging from one offset to the other.*
 
 **Index-block** contains the key-offset pairs in the sorted order by key. The offset here is the offset of the key-value pair in the data block of the SSTable file. 
 
-**Bloom filter block** contains the bloom filter byte array corresponding to all the keys present in the SSTable file
+**Bloom filter block** contains the bloom filter byte array of all the keys present in the SSTable file
 
-**Data block** contains the key-value pairs in the sorted order by key
+**Data block** contains the actual data; the key-value pairs in the sorted order by key
 
 > A Bloom filter is a probabilistic data structure used to test whether an element is a set member. A bloom filter can query against large amounts of data and return either “possibly in the set” or “definitely not in the set”. More information on bloom filter is available [here](/blog/bloom_filter/).
 
-The previous image represents that a `get` operation may have to read multiple files. What we need is a way to establish the relationship between the amount of data read (or written to) and the amount of data requested by the user.
+LSM-trees may end up reading a lot of files (or portions of files) in order to perform a `get` operation. What we need is a way to establish the relationship between the amount of data read (or written to) and the amount of data requested by the user.
 This relationship can later be used to question if the storage engine is doing too much IO or is the throughput suffering because of the additional IO? 
 
 Let's understand "read and write amplification" to build such a relationship.
@@ -128,7 +128,7 @@ This results in "amplification". Both the reads and the writes are amplified. Th
 
 **Write amplification** is the ratio of the amount of data written to the storage device and the amount of data requested by the user. In the above example, write amplification is 32 (`4*1024 bytes / 128 bytes`).
 
-### Analysis of Read-Write amplification in LevelDB
+### Analysis of Read Write amplification in LevelDB
 
 Let's analyze the read and write amplification in LevelDB. 
 
@@ -142,22 +142,6 @@ To find the value for a key within an SSTable file, LevelDB needs to read multip
 
 > The read amplification in LevelDB is 336 (`14 files * 24KB`). Another way to state this is: "LevelDB amplifies the reads by 336 times in the worst case".
 
-**Why is the size of the index-section 16KB?** 
-
-SSTables can contain more than one metadata or index sections. Even if the index section is just 1KB, Block IO will involve reading the entire disk block from the underlying storage. LevelDB has multiple index sections, reading each section involves reading a 4KB disk block. Hence, the data that is actually read for the index section is 16KB. 
-
-**Why is the size of the data-section just 4KB?** 
-
-The data section can be huge but LevelDB needs to read just the 4KB data section to find the value for a key. The steps include: 
-
-- LevelDB will load the index section to identify the position of the bloom-filter section.
-  - Index section (or the index block) contains metadata and one of the metadata items could be the beginning offset of the bloom-filter block, other could be the offset of the keys in the data-block as mentioned earlier.
-- LevelDB will now load the bloom-filter section and skip the file if the key is definitely not present.
-- If the bloom filter indicates that the key may be present, LevelDB will identify the offset of the key from the index section.
-- LevelDB jumps to the identified offset within the data section. With Block IO, the entire block containing the offset needs to be read. So, LevelDB ends up reading 4KB of the data block.   
-
-*I am using the term section with index, bloom-filter and data to avoid confusing it with the disk block*. 
-
 **Let's analyze the write amplification**.
 
 LSM-tree based storage engines need to perform file merges during compaction. <<<<Compaction link>>>>
@@ -169,18 +153,34 @@ the level L<sub>i</sub> in the worst case and write back those 10 files after so
 
 *We ignore the cost of moving a file from Level0 to Level1*.
 
-**Why do we need an index-block in an SSTable file**?
+#### Why is the size of the index-section 16KB?
+
+SSTables can contain more than one metadata or index sections. Even if the index section is just 1KB, Block IO will involve reading the entire disk block from the underlying storage. LevelDB has multiple index sections and reading each section involves reading a 4KB disk block. Hence, the data that is actually read for the index section is 16KB.
+
+#### Why is the size of the data-section just 4KB?
+
+The data section can be huge but LevelDB needs to read just the 4KB data section to find the value for a key. The steps include:
+
+- LevelDB will load the index section to identify the position of the bloom-filter section.
+    - Index section (or the index block) contains metadata and one of the metadata items could be the beginning offset of the bloom-filter block, (other could be the offset of the keys in the data-block as mentioned earlier).
+- LevelDB will now load the bloom-filter section and skip the file if the key is definitely not present.
+- If the bloom filter indicates that the key may be present, LevelDB will identify the offset of the key from the index section.
+- LevelDB jumps to the identified offset within the data section. With Block IO, the entire block containing the offset needs to be read. So, LevelDB ends up reading 4KB of the data block.
+
+*I am using the term section with index, bloom-filter and data to avoid confusing it with the disk block*.
+
+#### Why do we need an index-block in an SSTable file?
 
 In a key-value storage engine, the value is considered to be much bigger than the key. 
 
-Index block is going to contain the key-offset pairs sorted by keys. Let's assume 10,000 keys in an SSTable file where each key is 100 bytes. This means each key-offset pair will take `104 bytes` (`100 bytes for the kyy + 4 bytes for the offset`, ignoring the encoding). 
+Index block is going to contain the key/value-offset pairs sorted by keys. Let's assume 10,000 keys in an SSTable file where each key is 100 bytes long. This means each key-offset pair will take `104 bytes` (`100 bytes for the key + 4 bytes for the offset`, ignoring the encoding). 
 So, the total size of the index block would be around 0.99 MB `(((104 * 10,000)/1024)/1024)`. To get the value for a key, the storage engine will need to read ~1 MB of index block and if the key is found, a random seek to the identified offset within the data block will be needed.
 
 If the index-block were not there, the same get operation would have happened against the data block. Assuming the size of a single value to be 1024 bytes, we will have around 10.71 MB `((((100 + 1024) * 10,000)/1024)/1024)` as the size of the data block.
 
-Before moving on, let's quickly recap the amplification numbers. The read amplification in LevelDB is 336 and the write amplification can be over 50, in the worst case.
+Before moving on, let's quickly recap the amplification numbers. The **read amplification in LevelDB is 336** and the **write amplification can be over 50**, in the worst case.
 
-> A key idea while designing a storage engine is to minimize the read and write amplification. Typically, SSDs can wear out through repeated writes, the high write amplification in LSM-trees can significantly reduce device lifetime.
+> A key idea while designing a storage engine is to minimize the read and write amplification to reduce IO latency. Also, SSDs can wear out through repeated writes, the high write amplification in LSM-trees can significantly reduce device lifetime.
 
 ### SSD considerations
 
@@ -188,7 +188,7 @@ There are fundamental differences between SSDs and HDDs which should be consider
 1. SSDs can wear out through repeated writes, the high write amplification in LSM-trees can significantly reduce the device lifetime. 
 2. SSDs offer a large degree of internal parallelism
 
-Point 1 means we should try to **reduce the write amplification** when designing a storage engine for SSD-conscious storage.
+Point 1 means we should try to **reduce the write amplification** when designing a storage engine for SSD-conscious storage. We have already seen that [compaction](#analysis-of-read-write-amplification-in-leveldb) process is the source of high write-application in LSM-tree based storage engines.
 
 Point 2 means we should try to **leverage the parallelism offered by SSDs** when performing IO operations. Let's look at the below graph. For the request size >= 64KB, the aggregate throughput of random reads with 32 threads matches the sequential read throughput. 
 
@@ -198,10 +198,12 @@ Point 2 means we should try to **leverage the parallelism offered by SSDs** when
 
 **Sequential and Random Reads on SSD**. This figure shows the sequential and random read performance for various request sizes on a modern SSD device. All requests are issued to a 100-GB file on ext4.
 
+With these considerations, let's understand WiscKey proposal.
+
 ### WiscKey proposal
 
 WiscKey proposes four key ideas:
-1. Separate values from keys, keeping only the keys in the LSM-tree, values go in a separate value-log.
+1. Separate values from keys, keeping only the keys in the LSM-tree, putting values in a separate value-log.
 2. Leverage the parallel random read characteristic of SSDs during range queries.
 3. Introduce garbage collection to remove values corresponding to deleted keys from value-log.
 4. Remove LSM-tree log (WAL log) without sacrificing consistency (under [Optimizations](#optimizations)).
@@ -211,12 +213,12 @@ Let's discuss each of these ideas one by one.
 #### Separate values from keys
 
 Compaction is the reason for the major performance cost in LSM-trees. During compaction, multiple SSTable files are read in-memory, sorted and written back. This is also the reason
-for the higher write amplification in LevelDB. If we look at the compaction process carefully, we will realize that this process only needs to sort the keys, while values can be managed separately.
+for the high write amplification in LevelDB. If we look at the compaction process carefully, we will realize that this process only needs to sort the keys, while values can be managed separately.
 Since keys are usually smaller than values, compacting only keys could significantly reduce the amount of data needed during the sorting.
 
-In WiscKey, only the location of the value is stored in the LSM-tree with the key, while the actual values are stored in a separate value-log file.
+In WiscKey, only the location of the value is stored in the LSM-tree along with the key, while the actual values are stored in a separate value-log file.
 
-The `put(key, value)` operation in WiscKey makes a small modification to the original `put` flow. Every `put(key, value)` in the WiscKey adds the `key-value pair` in the `value-log` and then adds the `key` along with the `key-value pair offset` in the memtable.
+The `put(key, value)` operation in WiscKey makes a small modification to the original `put` flow. Every `put(key, value)` in the WiscKey adds the `key-value pair` in the `value-log` and then adds the `key` along with the value-log offset in the memtable.
 Converting the active memtable to the immutable memtable, flushing the active memtable to disk and performing compaction process in the background remains the same. 
 
 > Memtables and SSTables in WiscKey contain keys along with the key-value pair offset from value-log. Given, keys are smaller than values, the amount of data needed during compaction is significantly reduced.
@@ -230,19 +232,19 @@ Let's look at the flow of the `get(key)` operation.
 If the `get` operation finds the key, a random seek to the key-value pair offset needs to be performed in the value-log to get the value. 
 This requires an additional IO for every `get` operation. The research paper claims that the LSM-tree of Wisckey is a lot smaller than LevelDB, a lookup may search fewer levels of table files and a significant portion of the LSM-tree can be easily cached in memory.
 
-Deleting a key will delete it from the LSM-tree but the value-log remains untouched. WiscKey proposes garbage collection to remove invalid (or dangling) values from value-log. <<More on this later.>>  
-
 > BadgerDB is an implementation of the WiscKey paper, but it makes a small modification to `put` and the `get` operations. If the value size is less than some threshold, the value will be put in the memtable else the value-offset will be put in the memtable. If the key is found during the `get` operation, BadgerDB loads the value from the value-log if the retrieved value is a value-offset. SSTables always contain the value-offset.   
+
+Deleting a key in WiscKey will delete it from the LSM-tree but the value-log remains untouched. WiscKey proposes [garbage collection](#introduce-garbage-collection) to remove invalid (or dangling) values from value-log. <<More on this later.>>
 
 #### Leverage the internal parallelism of SSDs
 
-All the modern storage engines provide support for range queries. LevelDB provides the user with an `iterator-based` interface with `Seek(key)`, `Next()`, `Prev()`, `Key()` and `Value()` operations. To scan a range of key-value pairs, the client can first `Seek(key)` to the starting key, then call `Next()` or `Prev()` to search keys one by one. To retrieve the key or the value of the current iterator position, the client calls `Key()` or `Value()`, respectively.
+All the modern storage engines provide support for range queries. LevelDB provides the clients with an `iterator-based` interface with `Seek(key)`, `Next()`, `Prev()`, `Key()` and `Value()` operations. To scan a range of key-value pairs, the client can first `Seek(key)` to the starting key, then call `Next()` or `Prev()` to search keys one by one. To retrieve the key or the value of the current iterator position, the client calls `Key()` or `Value()`, respectively.
 
 In LevelDB, since keys and values are stored together and sorted, a range query can sequentially read key-value pairs from SSTable files. However, since keys and values are stored separately in WiscKey, range queries require random reads (from value-log), and are hence not efficient.
 
-Wisckey leverages the same iterator-based interface for range queries. To make range queries efficient, WiscKey leverages the parallel I/O characteristic of SSD devices to prefetch values from the value-log during range queries. 
+Wisckey leverages the same iterator-based interface for range queries as LevelDB but to make range queries efficient, WiscKey leverages the parallel I/O characteristic of SSD devices to prefetch values from the value-log during range queries. 
 
-WiscKey tracks the access pattern of a range query. Once a contiguous sequence of key-value pairs is requested, WiscKey starts reading the following keys from the LSM-tree sequentially. The values corresponding to those prefetched keys are resolved in parallel (multiple threads) from the value-log.
+WiscKey tracks the access pattern of a range query. Once a contiguous sequence of key-value pairs is requested, WiscKey starts reading the following keys from the LSM-tree sequentially. The values corresponding to those prefetched keys are resolved in parallel (using multiple threads) from the value-log.
 
 > BadgerDB uses `PrefetchSize (int)` and `PrefetchValues (bool)` in the `IteratorOptions` struct [`iterator.go`] to decide if the values have to be prefetched. The `DefaultIteratorOptions` defines 100 as the prefetch size.
 
@@ -275,13 +277,13 @@ WiscKey offers two optimizations:
 
 For each `put(key, value)` operation, WiscKey needs to append the key-value pair in the value-log. This means every `put` operation will require a `write` system call. With large writes (larger than 4 KB), the device throughput is fully utilized.
 
-To reduce the write-overhead, WiscKey buffers the incoming key-value pairs in a buffer and the buffer is flushed to value-log only when the buffer size exceeds a threshold or when the user requests a synchronous insertion.
+To reduce the write-overhead, WiscKey buffers the incoming key-value pairs in-memory and the buffer is flushed to value-log only when the buffer size exceeds a threshold or when the user requests a synchronous insertion.
 This requires a change in the `get` operation. 
 
 Assume that a `get` operation is able to find the value offset in the active memtable. Now, the system needs to look up the value-offset in the value-log to get the value. With the introduction of the value-log buffer, 
-the lookup operation will be performed in the value-log buffer and if the value-log offset is not found in the buffer, it actually reads from the value-log.
+the lookup operation will be performed in the value-log buffer first and if the value-log offset is not found in the buffer, it actually reads from the value-log.
 
-This optimization means that the buffered data can be lost during a crash. 
+*This optimization means that the buffered data can be lost during a crash.* 
 
 #### Remove the LSM-tree Log
 
@@ -292,9 +294,9 @@ So, removing the LSM-tree log is a safe optimization.
 
 ### Reference implementation of WiscKey
 
-[BadgerDB]() is an implementation of the WiscKey paper. We will briefly look at the `put` and the `get` implementations of BadgerDB.
+[BadgerDB](https://github.com/dgraph-io/badger) is an implementation of the WiscKey paper. We will briefly look at the `put` and the `get` implementations of BadgerDB.
 
-Let's start with `put(key , value)`.
+Let's start with `put(key, value)`.
 
 ```golang
 //Fields ommitted
@@ -335,20 +337,22 @@ func (db *DB) writeRequests(requests []*request) error {
 }
 ```
 
-BadgerDB implements snapshot transaction isolation. Let's assume the `commit()` method on the transaction is invoked. This method results in calling the `writeRequests`
-method through a single goroutine in a fashion that is very much similar to a [singular update queue](https://martinfowler.com/articles/patterns-of-distributed-systems/singular-update-queue.html).
+BadgerDB implements snapshot transaction isolation. Let's assume the `commit()` method on the transaction is invoked. The commit operation results in calling the `writeRequests`
+method on `db` through a single goroutine in a fashion that is very much similar to a [singular update queue](https://martinfowler.com/articles/patterns-of-distributed-systems/singular-update-queue.html).
 
-As a part of this method, the key-value pairs that are a part of the transaction get written to the value-log and then each request is written to the LSM-tree.
+As a part of this method, the key-value pairs are written to the value-log and then each request is written to the LSM-tree. 
 
 Let's look at the `writeToLSM` method to understand the content of the memtable.
 
 ```golang
 //Code ommitted
 func (db *DB) writeToLSM(reqest *request) error {
+    //Iterate through all the entries in the request
 	for i, entry := range reqest.Entries {
 		var err error
 		if db.opt.managedTxns || entry.skipVlogAndSetThreshold(db.valueThreshold()) {
-			//Write the entire key and the value in the memtable. Memtable is implemented using Skip list 
+			//Write the entire key and the value in the memtable. 
+			//Memtable is implemented using Skip list 
 			err = db.memtable.Put(entry.Key,
 				y.ValueStruct{
 					Value: entry.Value,
@@ -386,7 +390,8 @@ func (e *Entry) skipVlogAndSetThreshold(threshold int64) bool {
 }
 ```
 
-The method `writeToLSM` is writing the entire key-value pair in the LSM-tree if the size of the value is less than some threshold, else the encoded value of the `value pointer` is written to the LSM-tree.
+The method `writeToLSM` is writing the entire key-value pair in the memtable if the size of the value is less than some threshold, else the encoded value of the `value pointer` is written to the memtable. `ValuePointer` 
+references the key-value pair offset in a value-log.
 
 Let's look at the `get(key)` method.
 
@@ -404,7 +409,7 @@ func (txn *Txn) Get(key []byte) (item *Item, rerr error) {
 	item = new(Item)
 	seek := y.KeyWithTs(key, txn.readTs)
 	
-	//get the valueStruct corresponding to the key.
+	//Get the valueStruct corresponding to the key.
 	//db.get will perform a get operation in all the memtables (active and all the immutable memtables), 
 	//if the key is not found, it will perform a get across all the levels. 
 	valueStruct, err := txn.db.get(seek)
@@ -430,10 +435,10 @@ func (txn *Txn) Get(key []byte) (item *Item, rerr error) {
 ```
 
 The `Get(key)` method in the transaction does two things:
-1. Invokes the `get` method of the `db` abstraction to get the `valueStruct`
+1. Invokes the `get` method of the `db` abstraction to get an instance of `ValueStruct`
 2. If the key exists, it returns an `Item`. `ValueStruct` may or may not contain the value, so `Item` abstraction ensures that the value is fetched from the value-log if needed.
 
-Let's look at the method `yieldItemValue` in the `Item`. The idea is to decode the value pointer (get the object of `valuePointer` back from the byte array) and perform a random read
+Let's look at the method `yieldItemValue` in the `Item`. The idea is to decode the value pointer (get the instance of `valuePointer` back from the byte array) and perform a random read
 operation in the value-log.
 
 ```golang
@@ -480,7 +485,7 @@ func (txn *Txn) NewIterator(opt IteratorOptions) *Iterator {
 ```
 
 BadgerDB creates iterators across all the objects: all the memtables and all the SSTable files from Level0 to the last level, and returns an instance of `MergeIterator`. The `MergeIterator` organizes all the 
-iterators in form of a binary tree.
+iterators in the form of a binary tree.
 
 ```golang
 //Code ommitted
@@ -489,7 +494,7 @@ type MergeIterator struct {
 	right node
 }
 
-//y.Iterator is an interface that has various implementations: skiplist.NewUniIterator, MergeIterator
+//y.Iterator is an interface that has various implementations like skiplist.NewUniIterator, MergeIterator
 func NewMergeIterator(iters []y.Iterator, reverse bool) y.Iterator {
 	switch len(iters) {
 	case 2:
@@ -513,8 +518,8 @@ func NewMergeIterator(iters []y.Iterator, reverse bool) y.Iterator {
 }
 ```
 
-`Seek` is a recursive operation starting from the top-most iterator to the bottom most, each iterator may find some value for the key. (The same key may be present in the active memtable and in one SSTable.)
-`mi.fix()` resolves the key that will be returned from the `MergeIterator`.
+`Seek` by design is a recursive operation (imagine it to be a binary tree traversal). Each iterator may find some value for the key. (The same key may be present in the active memtable and in one SSTable.)
+So, `mi.fix()` resolves the key that will be returned from the `MergeIterator`.
 
 ```golang
 //Code ommitted
@@ -527,10 +532,28 @@ func (mi *MergeIterator) Seek(key []byte) {
 
 MergerIterator is available [here](https://github.com/dgraph-io/badger/blob/main/table/merge_iterator.go).
 
+### Conclusion
+
+We have finally reached here :).
+
+LSM-tree based storage engines typically include the following data structures:
+1. On-disk log file (WAL) to persist the writes.
+2. In-memory memtable(s).
+3. On-disk files organized in levels.
+
+LSM-trees offer higher write throughput because the writes are always sequential in nature, but reads are not so great because LSM-trees may have to scan multiple files or portions of multiple files.
+
+When designing a storage engine for SSDs, we should consider SSD characteristics:
+1. SSDs can wear out through repeated writes, the high write amplification in LSM-trees can significantly reduce the device lifetime.
+2. SSDs offer a large degree of internal parallelism
+
+The core ideas of WiscKey include separating values from keys in the LSM-tree to reduce write amplification and leveraging the parallel IO characteristic of SSD.
+
 ### References
 
 - [WiscKey](https://www.usenix.org/system/files/conference/fast16/fast16-papers-lu.pdf)
 - [LSM-tree](https://segmentfault.com/a/1190000041198407/en)
 - [Introducing persistent memory](https://kt.academy/article/pmem-introducing-persistent-memory)
+- [BadgerDB](https://github.com/dgraph-io/badger)
 
 
