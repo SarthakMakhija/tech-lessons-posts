@@ -65,8 +65,8 @@ The size of all files in each level is limited, and increases by a factor of ten
 
 In order to perform the `get(key)` operation, LevelDB performs the following steps:
 
-1. Perform `get` in the active memtable (RAM)
-2. If not found, perform `get` in the immutable memtable (RAM)
+1. Perform `get` in the active memtable (RAM),
+2. If not found, perform `get` in the immutable memtable (RAM),
 3. If not found, perform `get` in the files from Level0 to Level6. LevelDB ensures that the keys do not overlap in the files from Level1 to Level6 whereas keys in the Level0 files can overlap.
    1. This means that a `get` operation may involve multiple files in Level0 and one file at each level from Level1 to Level6
 
@@ -200,18 +200,104 @@ Point 2 means we should try to **leverage the parallelism offered by SSDs** when
 
 ### WiscKey proposal
 
+WiscKey proposes four key ideas:
+1. Separate values from keys, keeping only the keys in the LSM-tree, values go in a separate value-log.
+2. Leverage the parallel random read characteristic of SSDs during range queries.
+3. Introduce garbage collection to remove values corresponding to deleted keys from value-log.
+4. Remove LSM-tree log (WAL log) without sacrificing consistency.
+
+Let's discuss each of these ideas one by one.
+
 #### Separate values from keys
+
+Compaction is the reason for the major performance cost in LSM-trees. During compaction, multiple SSTable files are read in-memory, sorted and written back. This is also the reason
+for the higher write amplification in LevelDB. If we look at the compaction process carefully, we will realize that this process only needs to sort the keys, while values can be managed separately.
+Since keys are usually smaller than values, compacting only keys could significantly reduce the amount of data needed during the sorting.
+
+In WiscKey, only the location of the value is stored in the LSM-tree with the key, while the actual values are stored in a separate value-log file.
+
+The `put(key, value)` operation in WiscKey makes a small modification to the original `put` flow. Every `put(key, value)` in the WiscKey adds the `key-value pair` in the `value-log` and then adds the `key` along with the `key-value pair offset` in the memtable.
+Converting the active memtable to the immutable memtable, flushing the active memtable to disk and performing compaction process in the background remains the same. 
+
+> Memtables and SSTables in WiscKey contain keys along with the key-value pair offset from value-log. Given, keys are smaller than values, the amount of data needed during compaction is significantly reduced.
+
+Let's look at the flow of the `get(key)` operation. 
+
+1. Perform `get` in the active memtable (RAM),
+2. If not found, perform `get` in the immutable memtable (RAM),
+3. If not found, perform `get` in the SSTable files.
+
+If the `get` operation finds the key, a random seek to the key-value pair offset needs to be performed in the value-log to get the value. 
+This requires an additional IO for every `get` operation. The research paper claims that the LSM-tree of Wisckey is a lot smaller than LevelDB, a lookup may search fewer levels of table files and a significant portion of the LSM-tree can be easily cached in memory.
+
+Deleting a key will delete it from the LSM-tree but the value-log remains untouched. WiscKey proposes garbage collection to remove invalid (or dangling) values from value-log. <<More on this later.>>  
+
+> BadgerDB is an implementation of the WiscKey paper, but it makes a small modification to `put` and the `get` operations. If the value size is less than some threshold, the value will be put in the memtable else the value-offset will be put in the memtable. If the key is found during the `get` operation, BadgerDB loads the value from the value-log if the retrieved value is a value-offset. SSTables always contain the value-offset.   
+
 #### Leverage the internal parallelism of SSDs
+
+All the modern storage engines provide support for range queries. LevelDB provides the user with an `iterator-based` interface with `Seek(key)`, `Next()`, `Prev()`, `Key()` and `Value()` operations. To scan a range of key-value pairs, the client can first `Seek(key)` to the starting key, then call `Next()` or `Prev()` to search keys one by one. To retrieve the key or the value of the current iterator position, the client calls `Key()` or `Value()`, respectively.
+
+In LevelDB, since keys and values are stored together and sorted, a range query can sequentially read key-value pairs from SSTable files. However, since keys and values are stored separately in WiscKey, range queries require random reads (from value-log), and are hence not efficient.
+
+Wisckey leverages the same iterator-based interface for range queries. To make range queries efficient, WiscKey leverages the parallel I/O characteristic of SSD devices to prefetch values from the value-log during range queries. 
+
+WiscKey tracks the access pattern of a range query. Once a contiguous sequence of key-value pairs is requested, WiscKey starts reading the following keys from the LSM-tree sequentially. The values corresponding to those prefetched keys are resolved in parallel (multiple threads) from the value-log.
+
+> BadgerDB uses `PrefetchSize (int)` and `PrefetchValues (bool)` in the `IteratorOptions` struct [`iterator.go`] to decide if the values have to be prefetched. The `DefaultIteratorOptions` defines 100 as the prefetch size.
+
 #### Introduce garbage collection 
 
-### Challenges with WiscKey
+Wisckey stores only the keys in the LSM-tree and the values are managed separately. During compaction, the deleted keys will be removed from SSTable files but the values corresponding to the deleted keys will still be present in the value-log. Let's call those values as dangling values.
+To deal with dangling values, WiscKey proposes a lightweight garbage collector to reclaim free space in the value-log.
+
+Let's look at the structure of the value-log. Every entry in the value-log contains `key-size`, `value-size`, `key` and the `value`. The `head` end of this log corresponds to the end of the value-log where new values will be appended and the `tail` of this log is where garbage collection starts freeing space whenever it is triggered. 
+Only the part of the value-log between the tail and the head offset contains valid values and will be searched during lookups.
+
+<img class="align-center" src="/value-log.png" />
+
+Garbage involves the following steps:
+1. WiscKey reads a chunk of key-value pairs (several MBs) from the `tail` offset of the value-log. It then finds which of those values are valid by querying the LSM-tree. 
+2. After all the valid key-value pairs have been identified, the entire byte array containing the valid key-value pairs is appended to the end of the log.
+3. To avoid losing any data in case a crash happens during garbage collection, WiscKey calls `fsync` on the value-log.
+4. WiscKey needs to add the updated value’s addresses to the LSM-tree. So, it adds the key & value-offset pairs to the LSM-tree along with the current tail offset. The tail is stored in the LSM-tree as `<'tail', tail-value-log-offset>`.
+5. Finally, the free space is reclaimed and the head offset is stored in the LSM-tree.
+
+Let's discuss various optimizations proposed in the WiscKey paper.
 
 ### Optimizations
 
+WiscKey offers two optimizations:
+1. **Value-Log Write Buffer**: to buffer the key-value pairs before they are written to the value-log
+2. **Remove LSM-tree log**: use value-log as recovery mechanism
+
+#### Value-Log Write Buffer
+
+For each `put(key, value)` operation, WiscKey needs to append the key-value pair in the value-log. This means every `put` operation will require a `write` system call. With large writes (larger than 4 KB), the device throughput is fully utilized.
+
+To reduce the write-overhead, WiscKey buffers the incoming key-value pairs in a buffer and the buffer is flushed to value-log only when the buffer size exceeds a threshold or when the user requests a synchronous insertion.
+This requires a change in the `get` operation. 
+
+Assume that a `get` operation is able to find the value offset in the active memtable. Now, the system needs to look up the value-offset in the value-log to get the value. With the introduction of the value-log buffer, 
+the lookup operation will be performed in the value-log buffer and if the value-log offset is not found in the buffer, it actually reads from the value-log.
+
+This optimization means that the buffered data can be lost during a crash. 
+
+#### Optimizing the LSM-tree Log
+
+The value-log is storing the entire key-value pair. If a crash happens before the keys are persistent in the LSM-tree (and after they have been written to the value-log), they can be recovered by scanning the value-log. 
+In order to optimize the recovery of the LSM-tree from the value-log, the `head` offset of the value-log is periodically stored in the LSM-tree as `<'head', head-value-log-offset>`.
+When the database is opened, WiscKey starts the value-log scan from the most recent head position stored in the LSM-tree, and continues scanning until the end of the value-log.
+So, removing the LSM-tree log is a safe optimization.
+
 ### Reference implementation of WiscKey
+
+
 
 ### References
 
 - [WiscKey](https://www.usenix.org/system/files/conference/fast16/fast16-papers-lu.pdf)
-- [LSM tree](https://segmentfault.com/a/1190000041198407/en)
+- [LSM-tree](https://segmentfault.com/a/1190000041198407/en)
 - [Introducing persistent memory](https://kt.academy/article/pmem-introducing-persistent-memory)
+
+
