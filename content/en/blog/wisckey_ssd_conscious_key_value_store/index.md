@@ -114,7 +114,7 @@ Let's now understand "read and write amplification".
 
 <<<<Compaction>>>
 
-### Read-Write amplification
+### Read Write amplification
 
 HDDs, SDDs and NVMe SSDs are block storage devices. The smallest unit of exchange between an application and a block storage device is a block. Usually the size of a block is 4KB.
 Let's assume a key/value storage engine on a block storage device like HDD. When the key/value storage engine wants to fetch the value for a 128 bytes key, it must do the following:
@@ -190,7 +190,7 @@ If the index-block were not there, the same get operation would have happened ag
 **Quick summary**
 > The **read amplification in LevelDB is 336** and the **write amplification can be over 50**, in the worst case. <br/> A key idea while designing a storage engine is to minimize the read and write amplification to reduce IO latency. Also, SSDs can wear out through repeated writes, the high write amplification in LSM-trees can significantly reduce device lifetime.
 
-### SSD considerations
+### SSD considerations when designing a storage engine
 
 There are fundamental differences between SSDs and HDDs which should be considered when designing a storage engine. Let's look at some of the most important considerations:
 1. SSDs can wear out through repeated writes, the high write amplification in LSM-trees can significantly reduce the device lifetime. 
@@ -217,7 +217,7 @@ WiscKey proposes four key ideas:
 1. Separate values from keys, keeping only the keys in the LSM-tree, putting values in a separate value-log.
 2. Leverage the parallel random read characteristic of SSDs during range queries.
 3. Introduce garbage collection to remove values corresponding to deleted keys from value-log.
-4. Remove LSM-tree log (WAL log) without sacrificing consistency (under [Optimizations](#optimizations)).
+4. Remove LSM-tree log (WAL log) without sacrificing consistency (under [Optimizations](#optimizations-offered-by-wisckey)).
 
 Let's discuss each of these ideas one by one.
 
@@ -281,7 +281,7 @@ Garbage involves the following steps:
 
 Let's discuss various optimizations proposed in the WiscKey paper.
 
-### Optimizations
+### Optimizations offered by WiscKey
 
 WiscKey offers two optimizations:
 1. **Value-Log Write Buffer**: to buffer the key-value pairs before they are written to the value-log
@@ -299,7 +299,7 @@ the lookup operation will be performed in the value-log buffer first and if the 
 
 *This optimization means that the buffered data can be lost during a crash.* 
 
-#### Remove the LSM-tree Log
+#### Removal of LSM-tree Log
 
 The value-log is storing the entire key-value pair. If a crash happens before the keys are persistent in the LSM-tree (and after they have been written to the value-log), they can be recovered by scanning the value-log. 
 In order to optimize the recovery of the LSM-tree from the value-log, the `head` offset of the value-log is periodically stored in the LSM-tree as `<'head', head-value-log-offset>`.
@@ -556,12 +556,13 @@ LSM-tree based storage engines typically include the following data structures:
 3. On-disk files organized in levels.
 
 LSM-trees offer higher write throughput because the writes are always sequential in nature, but reads are not so great because LSM-trees may have to scan multiple files or portions of multiple files.
+One idea to improve the reads in LSM-trees is to reduce the size of SSTable files and cache some layers of SSTables.
 
-When designing a storage engine for SSDs, we should consider SSD characteristics:
+When designing a storage engine for SSDs, we should consider SSD characteristics including:
 1. SSDs can wear out through repeated writes, the high write amplification in LSM-trees can significantly reduce the device lifetime.
 2. SSDs offer a large degree of internal parallelism
 
-The core ideas of WiscKey include separating values from keys in the LSM-tree to reduce write amplification and leveraging the parallel IO characteristic of SSD.
+The core ideas of WiscKey include: separating values from keys in the LSM-tree to reduce write amplification and leveraging the parallel IO characteristic of SSD.
 
 ### References
 
