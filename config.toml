@@ -39,6 +39,8 @@ DefaultContentLanguageInSubdir = true
 [params]
   # Enable the darkmode toggle in header
   darkModeToggle = false
+
+  image = "/logo.png"
   
   # Enable search in header
   enableSearch = true
