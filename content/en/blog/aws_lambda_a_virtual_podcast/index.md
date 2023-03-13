@@ -4,7 +4,7 @@ title: "AWS Lambda - A Virtual Podcast"
 date: 2020-04-19
 description: "AWS Lambda is a serverless compute service and after having worked with it for some time, I felt it is a good time for me to share my learning and experiences. I have been thinking of writing an article in a \"Virtual Podcast format\" and felt this could be the one"
 tags: ["AWS Lambda", "Serverless"]
-thumbnail: /aws-lambda-virtual-podcast.jpg
+thumbnail: /aws-lambda-virtual-podcast.webp
 caption: "Photo by Gezer Amorim on Pexels"
 ---
 

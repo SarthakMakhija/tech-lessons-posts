@@ -4,7 +4,7 @@ title: "Kotlin Wishlist for Java"
 date: 2018-04-20
 description: "There is no doubt that Java has enjoyed a superior position when it comes to programming languages and is considered as one of the most important languages for development. However, there have been a number of languages developed on top of the JVM like Kotlin. After working on the \"data-anonymization\" project I realized that there are things that Java should consider importing from Kotlin."
 tags: ["Kotlin", "Java"]
-thumbnail: /wishlist.jpg
+thumbnail: /wishlist.webp
 caption: "Moved from dzone"
 ---
 

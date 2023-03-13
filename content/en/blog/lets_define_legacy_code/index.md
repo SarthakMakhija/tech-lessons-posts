@@ -4,7 +4,7 @@ title: "Let's define Legacy code"
 date: 2018-04-10
 description: "I have been having sleepless nights trying to add features in the code that we acquired from other company. I am dealing with the purest form of Legacy code. I am having a real hard time dealing with tangled, unstructured code that I have to work with, but I don’t understand a bit. Legacy code!. Let's understand what is Legacy code."
 tags: ["Legacy code", "Boy Scout Rule"]
-thumbnail: /legacy-code.jpg
+thumbnail: /legacy-code.webp
 caption: "Photo by Markus Spiske on Pexels"
 ---
 "I have been having sleepless nights trying to add features in the code that we acquired from other company. I am dealing with the purest form of *Legacy code*."

@@ -4,7 +4,7 @@ title: "Flips: Feature Flipping for Java"
 date: 2017-10-07
 description: "Flips is an implementation of the Feature Toggles pattern for Java and Spring (Spring Core / Spring MVC/ Spring Boot) based application. Feature Toggle is a powerful technique that allows teams to modify the system behavior and deliver new functionality to end-users rapidly and safely. Let's understand what \"Flips\" is all about"
 tags: ["Flips", "Feature toggles", "Spring", "Spring MVC"]
-thumbnail: /flips-feature-title-image.png
+thumbnail: /flips-feature-title-image.webp
 caption: "Background by Martin Adams on Unsplash"
 ---
 

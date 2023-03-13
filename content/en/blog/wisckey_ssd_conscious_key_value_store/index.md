@@ -4,7 +4,7 @@ title: "WiscKey: Separating Keys from Values in SSD-Conscious Storage"
 date: 2023-03-10
 description: "LSM-tree (Log structured merge tree) is a data structure typically used when dealing with write-heavy workloads. LSM-tree optimizes the write-path by performing sequential writes to disk. WiscKey is a persistent LSM-tree-based key-value store that separates keys from values to minimize read and write amplification. The design of WiscKey is highly SSD optimized, leveraging both the sequential and random performance characteristics of the device."
 tags: ["Storage engine", "LSM-tree", "WiscKey", "SSD-conscious"]
-thumbnail: /wisckey.jpg
+thumbnail: /wisckey.webp
 caption: "Background by Alex Conchillos on Pexels"
 ---
 
@@ -41,7 +41,7 @@ Let's take a look at the overall flow of `put(key: []byte, value: []byte)` and `
 Every `put(key, value)` in the LSM-tree adds the key-value pair in the C0 component and after C0 is full, the entire data is flushed to disk. LSM-trees treat `delete(key)` as another `put` which will put the key with a deleted marker. 
 
 After C0 is full, the entire data is flushed to disk. Simply speaking, the entire in-memory data consisting of key-value pairs is encoded in a byte array and written to disk. If the C1 component already exists on disk,   
-the buffered content is merged with the contents of C1. **More on this later. <<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>**
+the buffered content is merged with the contents of C1. 
 
 To ensure persistent writes, every `put(key, value)` *appends* the key-value pair to a [WAL](https://martinfowler.com/articles/patterns-of-distributed-systems/wal.html) file and then writes the key-value pair to the C0 component. Appending to a WAL file is also a sequential write to disk.   
 
@@ -51,7 +51,7 @@ to the disk resident component C1. This process continues until the value is fou
 **Quick summary**
 > LSM-tree is a collection of exponentially increasing sized components, C0 to Ck. <br/> Writes go to C0 (in RAM). <br/> After C0 is full, the entire data is flushed to disk. <br/> The get operation involves going through C0 to Ck.
 
-Let's look at the structure of LSM-tree in LevelDB to understand a bit more on C0 to Ck components. 
+Let's look at the structure of LSM-tree in LevelDB to understand a bit more on C0 to Ck components.
 
 ### LevelDB
 
@@ -104,15 +104,17 @@ SSTable files are organized into blocks (or sections). Typically, SSTable files 
 
 > A Bloom filter is a probabilistic data structure used to test whether an element is a set member. A bloom filter can query against large amounts of data and return either “possibly in the set” or “definitely not in the set”. More information on bloom filter is available [here](/blog/bloom_filter/).
 
-LSM-trees may end up reading a lot of files (or portions of files) in order to perform a `get` operation. What we need is a way to establish the relationship between the amount of data read (or written to) and the amount of data requested by the user.
-This relationship can later be used to question if the storage engine is doing too much IO or is the throughput suffering because of the additional IO? 
+Let's take a quick look at compaction.
+
+#### Compaction
+To maintain the size limit of each level, once the total size of a level L<sub>i</sub> exceeds its limit, the compaction thread will choose one file from L<sub>i</sub>, merge sort with all the overlapped files of L<sub>i+1</sub>, and generate new L<sub>i+1</sub> SSTable files.
+The compaction thread continues until all levels are within their size limits. Compaction process involves loading SSTable files in memory, performing merge sort on the files, removing the deleted keys and writing back those files.
+Compaction is an expensive process and the reason for high write-amplification in LevelDB.
 
 **Quick summary**
 > LevelDB uses WAL, memtables and SSTables as its data structures. <br/> Memtable is implemented using Skip list <br/> SSTables are sorted string tables and organized into levels, Level0 to Level6. <br/> SSTables are organized into index-block, bloom-filter block and data block. <br/> Puts go to WAL and the active memtable, gets go to active memtable -> immutable memtable -> SSTables. 
 
 Let's now understand "read and write amplification".
-
-<<<<Compaction>>>
 
 ### Read Write amplification
 
@@ -153,7 +155,7 @@ To find the value for a key within an SSTable file, LevelDB needs to read multip
 
 **Let's analyze the write amplification**.
 
-LSM-tree based storage engines need to perform file merges during compaction. <<<<Compaction link>>>>
+LSM-tree based storage engines need to perform file merges during [compaction](#compaction).
 
 In LevelDB, the size of the level L<sub>i</sub> is 10 times the size of the level L<sub>i-1</sub> (Size of Level2 is 100MB whereas the size of Level1 is 10MB). To merge a file from the level L<sub>i-1</sub> to L<sub>i</sub>, LevelDB may end up reading 10 files from 
 the level L<sub>i</sub> in the worst case and write back those 10 files after sorting. So, the write amplification of moving a file from one level to the next can be as high as 10. 
@@ -563,6 +565,8 @@ When designing a storage engine for SSDs, we should consider SSD characteristics
 2. SSDs offer a large degree of internal parallelism
 
 The core ideas of WiscKey include: separating values from keys in the LSM-tree to reduce write amplification and leveraging the parallel IO characteristic of SSD.
+
+I hope the article was worth your time. Feel free to share the feedback.
 
 ### References
 

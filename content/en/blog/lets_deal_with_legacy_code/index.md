@@ -4,7 +4,7 @@ title: "Let’s deal with Legacy code"
 date: 2018-04-12
 description: "This article is in continuation with the previous article \"Let’s define Legacy code\" where we defined Legacy code. Let's understand \"Broken Window Theory\" and add a new feature to Legacy code."
 tags: ["Legacy code", "Broken Window Theory", "Refactoring"]
-thumbnail: /legacy-code.jpg
+thumbnail: /legacy-code.webp
 caption: "Photo by Markus Spiske on Pexels"
 ---
 This article is in continuation with the <a href="/blog/lets_define_legacy_code/">previous article</a> where we defined some key aspects of Legacy code. In this article we will learn to deal with Legacy code.

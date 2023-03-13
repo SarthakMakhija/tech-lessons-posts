@@ -4,7 +4,7 @@ title: "Testing Serverless Journey"
 date: 2020-03-14
 description: "It is time to test our serverless journey which started with a web application involving an AWS lambda, an API Gateway and DynamoDB. By the end of this article we should be confident that our application works as it is supposed to. So, let's introduce LocalStack."
 tags: ["AWS Lambda", "Serverless", "Localstack"]
-thumbnail: /testing-serverless.png
+thumbnail: /testing-serverless.webp
 caption: "Background by Paul Van Cotthem on Unsplash"
 ---
 

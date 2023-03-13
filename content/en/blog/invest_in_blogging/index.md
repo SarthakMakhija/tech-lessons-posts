@@ -4,7 +4,7 @@ title: "Invest In Blogging"
 date: 2019-06-07
 description: "We often have a lot to share with people, this could be our learnings, our opinions and our experiences. There are times when we feel the need to get our ideas validated or get feedback from people. These are definitely some reasons to invest in blogging and connect with community."
 tags: ["Blogging"]
-thumbnail: /book-blog.jpg
+thumbnail: /book-blog.webp
 caption: "Moved from dzone"
 ---
 
