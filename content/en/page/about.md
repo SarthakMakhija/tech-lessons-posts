@@ -58,7 +58,7 @@ Flips is an implementation of [Feature Toggles](https://martinfowler.com/article
 
 The idea behind Flips is to let the users **implement toggles with minimum configuration and coding**. This library should work with Java8, Spring Core / Spring MVC / Spring Boot.
 
-I have a separate [blog](https://tech-lessons.in/flips-feature-flipping-for-java/) about this library.
+I have a separate [blog](https://tech-lessons.in/blog/flips_feature_flipping_for_java/) about this library.
 
 ## Next project
 My current interest is in *Designing storage engines and databases*, and I plan to build a key/value storage engine in Rust. The idea is to create a write-optimized storage engine using an LSM tree and provide read-optimized paths.
