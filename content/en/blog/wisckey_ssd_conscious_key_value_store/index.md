@@ -25,7 +25,7 @@ Let's look at the structure of LSM-tree to understand why it is write-optimized.
 
 <img class="align-center" src="/lsm-c0-ck.png" />
 
-> **Data structure choice for C0**: The data structure for C0 should maintain the keys in the sorted order and provide efficient reads and writes. This data structure could be a [treemap](https://docs.oracle.com/javase/8/docs/api/java/util/TreeMap.html) or a [red-black tree](https://en.wikipedia.org/wiki/Red%E2%80%93black_tree) or a [skip list](https://en.wikipedia.org/wiki/Skip_list). Of all these data structures, the Skip list is the one that supports versioned keys, the same key with different versions.
+> **Data structure choice for C0**: The data structure for C0 should maintain the keys in the sorted order (for range queries) and provide efficient reads and writes. This data structure could be a [hashmap](https://docs.oracle.com/javase/8/docs/api/java/util/HashMap.html), a [treemap](https://docs.oracle.com/javase/8/docs/api/java/util/TreeMap.html) or a [red-black tree](https://en.wikipedia.org/wiki/Red%E2%80%93black_tree) or a [skip list](https://en.wikipedia.org/wiki/Skip_list). Of all these data structures, the Skip list is the one that supports versioned keys, the same key with different versions.
 
 LSM-tree buffers the data in memory and performs a sequential write to disk after the in-memory buffer is full. The image below highlights the throughput difference between sequential and random writes on an NVMe SSD; the difference would be much higher on an HDD.
 
