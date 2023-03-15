@@ -72,13 +72,43 @@ In order to perform the `get(key)` operation, LevelDB performs the following ste
 3. If not found, perform `get` in the files from Level0 to Level6. LevelDB ensures that the keys do not overlap in the files from Level1 to Level6 whereas keys in the Level0 files can overlap.
    1. This means that a `get` operation may involve multiple files in Level0 and one file at each level from Level1 to Level6
 
-> LevelDB implements the in-memory components using [Skip list](https://en.wikipedia.org/wiki/Skip_list).
-   
-The below image represents the high-level architecture of LevelDB.
+**LevelDB implements the in-memory components using [Skip list](https://en.wikipedia.org/wiki/Skip_list)**.
+
+LevelDB stores keys in the memtable with versions (or tags). It is possible to insert the key "Storage" more than once; each time, it will have a different version. Such storage engines are called versioned storage engines.
+Skip list is a natural data structure choice for building versioned stores because it will place the same key with different versions next to each other.
+Below is the definition of `Add` method in LevelDB's memtable. The key-value pair and sequence number (u64) are encoded together.
+
+```C
+void MemTable::Add(SequenceNumber s, ValueType type, const Slice& key,
+                   const Slice& value) {
+  // Format of an entry is concatenation of:
+  //  key_size     : varint32 of internal_key.size()
+  //  key bytes    : char[internal_key.size()]
+  //  tag          : uint64((sequence << 8) | type)
+  //  value_size   : varint32 of value.size()
+  //  value bytes  : char[value.size()]
+  size_t key_size = key.size();
+  size_t val_size = value.size();
+  size_t internal_key_size = key_size + 8;
+  const size_t encoded_len = VarintLength(internal_key_size) +
+                             internal_key_size + VarintLength(val_size) +
+                             val_size;
+  char* buf = arena_.Allocate(encoded_len);
+  char* p = EncodeVarint32(buf, internal_key_size);
+  std::memcpy(p, key.data(), key_size);
+  p += key_size;
+  EncodeFixed64(p, (s << 8) | type);
+  p += 8;
+  p = EncodeVarint32(p, val_size);
+  std::memcpy(p, value.data(), val_size);
+  assert(p + val_size == buf + encoded_len);
+  table_.Insert(buf);
+}
+```
+
+Let's understand the high-level architecture of LevelDB.
 
 <img class="align-center" src="/leveldb.png" />
-
-> [BadgerDB](https://github.com/dgraph-io/badger) maintains an array of immutable memtables instead of one immutable memtable to optimize reads. The `get` operation searches the active memtable and if the key is not found, it searches the inactive (or immutable) memtables in the reverse order (the newest immutable memtable to the oldest immutable memtable).   
 
 Let's spend a few minutes understanding an SSTable file's structure before we move on.
 
@@ -258,6 +288,9 @@ All the modern storage engines provide support for range queries. LevelDB provid
 
 In LevelDB, since keys and values are stored together and sorted, a range query can sequentially read key-value pairs from SSTable files. However, since keys and values are stored separately in WiscKey, range queries require random reads (from value-log), and are inefficient.
 
+<img class="align-center" src="/sequential-reads-leveldb.png" />
+<img class="align-center" src="/random-reads-wisckey.png" />
+
 Wisckey leverages the same iterator-based interface for range queries as LevelDB. To make range queries efficient, WiscKey leverages the parallel I/O characteristic of SSD devices to prefetch values from the value-log during range queries.
 
 WiscKey tracks the access pattern of a range query. Once a contiguous sequence of key-value pairs is requested, WiscKey reads the following keys from the LSM-tree sequentially. The values corresponding to those prefetched keys are resolved in parallel (using multiple threads) from the value-log.
@@ -356,7 +389,7 @@ func (db *DB) writeRequests(requests []*request) error {
 }
 ```
 
-BadgerDB implements snapshot transaction isolation. Let's assume the `commit()` method on the transaction is invoked. The commit operation results in calling the `writeRequests`
+BadgerDB implements [snapshot transaction isolation](https://dl.acm.org/doi/abs/10.1145/2168836.2168853). Let's assume the `commit()` method on the transaction is invoked. The commit operation results in calling the `writeRequests`
 method on `db` through a single goroutine in a fashion that is very much similar to a [singular update queue](https://martinfowler.com/articles/patterns-of-distributed-systems/singular-update-queue.html).
 
 As a part of this method, the key-value pairs are written to the value-log and then each request is written to the LSM-tree. 
@@ -413,6 +446,9 @@ The method `writeToLSM` writes the entire key-value pair in the memtable if the 
 references the key-value pair offset in a value-log.
 
 Let's look at the `get(key)` method.
+
+> **BadgerDB maintains an array of immutable memtables to optimize reads.**
+ > The `get` operation searches the active memtable and if the key is not found, it searches the inactive (or immutable) memtables in the reverse order (the newest immutable memtable to the oldest immutable memtable). This results in more memory pressure but to avoid GC from scanning the memory occupied by memtables, BadgerDB implements [Skip list](https://github.com/dgraph-io/badger/blob/main/skl/skl.go) over a byte array.  
 
 ```golang
 //Code ommitted
