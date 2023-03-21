@@ -21,11 +21,7 @@ LSM-tree is a write-optimized data structure implemented by storage engines for 
 
 > Storage engine is a software module that provides data structures for efficient reads and writes. The two most common data structures are B+Tree (read-optimized) and LSM-tree (write-optimized).
 
-Let's look at the structure of LSM-tree to understand why it is write-optimized. LSM-tree consists of components of exponentially increasing sizes, C0 to Ck. C0 is a *RAM resident* component that stores key-value pairs sorted by key and supports efficient writes and reads, whereas C1 to Ck are *immutable disk-resident* components sorted by key.
-
-<img class="align-center" src="/lsm-c0-ck.png" />
-
-> **Data structure choice for C0**: The data structure for C0 should maintain the keys in the sorted order (for range queries) and provide efficient reads and writes. This data structure could be a [hashmap](https://docs.oracle.com/javase/8/docs/api/java/util/HashMap.html), a [treemap](https://docs.oracle.com/javase/8/docs/api/java/util/TreeMap.html) or a [red-black tree](https://en.wikipedia.org/wiki/Red%E2%80%93black_tree) or a [skip list](https://en.wikipedia.org/wiki/Skip_list). Of all these data structures, the Skip list is the one that supports versioned keys, the same key with different versions.
+Let's look at the structure of LSM-tree to understand why it is write-optimized. 
 
 LSM-tree buffers the data in memory and performs a sequential write to disk after the in-memory buffer is full. The image below highlights the throughput difference between sequential and random writes on an NVMe SSD; the difference would be much higher on an HDD.
 
@@ -36,13 +32,19 @@ LSM-tree buffers the data in memory and performs a sequential write to disk afte
 
 > LSM-tree-based storage engines offer better write throughput by performing sequential writes to disk.
 
+LSM-tree consists of components of exponentially increasing sizes, C0 to Ck. C0 is a *RAM resident* component that stores key-value pairs sorted by key and supports efficient writes and reads, whereas C1 to Ck are *immutable disk-resident* components sorted by key.
+
+<img class="align-center" src="/lsm-c0-ck.png" />
+
+> **Data structure choice for C0**: The data structure for C0 should maintain the keys in the sorted order (for range queries) and provide efficient reads and writes. This data structure could be a [hashmap](https://docs.oracle.com/javase/8/docs/api/java/util/HashMap.html), a [treemap](https://docs.oracle.com/javase/8/docs/api/java/util/TreeMap.html) or a [red-black tree](https://en.wikipedia.org/wiki/Red%E2%80%93black_tree) or a [skip list](https://en.wikipedia.org/wiki/Skip_list). Of all these data structures, the Skip list is the one that supports versioned keys, the same key with different versions.
+
 Let's take a look at the overall flow of `put(key: []byte, value: []byte)` and `get(key: []byte)` operations in the LSM-tree.
 
 Every `put(key, value)` in the LSM-tree adds the key-value pair in the C0 component, and after C0 is full, the entire data is flushed to disk. LSM-trees treat `delete(key)` as another `put`, which will put the key with a deleted marker.
 
-After C0 is full, the entire data is flushed to disk. All in-memory data consisting of key-value pairs is encoded in a byte array and written to disk. If the C1 component already exists on disk, the buffered content is merged with the contents of C1.
+After C0 is full, a new instance of C0 is created and the entire in-memory data is flushed to disk. All in-memory data consisting of key-value pairs is encoded in a byte array and written to disk. If the C1 component already exists on disk, the buffered content is merged with the contents of C1.
 
-To ensure persistent writes, every `put(key, value)` *appends* the key-value pair to a [WAL](https://martinfowler.com/articles/patterns-of-distributed-systems/wal.html) file and then writes the key-value pair to the C0 component. Appending to a WAL file is also a sequential write to disk.   
+Because all the new writes are kept in-memory, they can get lost in case of a failure. The durability guarantee is ensured by using a [WAL](https://martinfowler.com/articles/patterns-of-distributed-systems/wal.html). Every `put(key, value)` *appends* the key-value pair to a WAL file and then writes the key-value pair to the C0 component. Appending to a WAL file is also a sequential write to disk.   
 
 Every `get(key)` in the LSM-tree goes through the RAM based component to disk components from C1 to Ck in the order. The `get(key)` operation first queries the C0 component, if the value for the key is not found, the search proceeds
 to the disk resident component C1. This process continues until the value is found or all the disk resident components have been scanned. LSM-trees may need multiple reads for a point lookup. Hence, LSM-trees are most useful when inserts are more common than lookups. 
@@ -197,6 +199,25 @@ the level L<sub>i</sub> in the worst case and write back those ten files after s
 
 *We ignore the cost of moving a file from Level0 to Level1*.
 
+#### Why does LevelDB check only one SSTable file at each level from Level1 to Level6, for a read operation?
+
+*LevelDB ensures that the keys do not overlap in the files from Level1 to Level6*. This means range-based search on keys can be done in RAM to identify an SSTable at each level to search.   
+
+This approach can be highlighted with the following pseudocode: 
+
+```golang
+    //Compare the incoming key against the biggest keys in all the SSTable files at each level. 
+    //BiggestKey can be maintained in RAM for each SSTable file.
+	idx := sort.Search(len(level.table_files), func(index int) bool {
+		return CompareKeys(level.table_files[index].BiggestKey(), key) >= 0 
+	})
+	if idx >= len(level.table_files) {
+		// Given key is strictly > than every element we have.
+		return nil
+	}
+	return level.table_files[idx]
+```
+
 #### Why is the size of the index section 16KB?
 
 SSTables can contain more than one metadata or index section. Even if the index section is just 1KB, Block IO involves reading the entire disk block from the underlying storage. LevelDB has four index sections; each section involves reading a 4KB disk block. Hence, the data that is actually read for the index section is 16KB.
@@ -262,7 +283,7 @@ Compaction is the reason for the significant performance cost in LSM-trees. Mult
 for the high write amplification in LevelDB. If we look at the compaction process carefully, we will realize that this process only needs to sort the keys, while values can be managed separately.
 Since keys are usually smaller than values, compacting only keys could significantly reduce the amount of data needed during the sorting.
 
-In WiscKey, only the location of the value is stored in the LSM-tree along with the key, while the actual values are stored in a separate value-log file.
+*In WiscKey, only the location of the value is stored in the LSM-tree along with the key, while the actual values are stored in a separate value-log file.*
 
 The `put(key, value)` operation in WiscKey modifies the original `put` flow. Every `put(key, value)` in the WiscKey adds the `key-value pair` in the `value-log` and then adds the `key` along with the value-log offset in the memtable.
 Converting the active memtable to the immutable memtable, flushing the active memtable to disk and performing the compaction process in the background remain the same.
@@ -307,7 +328,7 @@ Only the part of the value-log between the tail and the head offset contains val
 
 <img class="align-center" src="/value-log.png" />
 
-Garbage involves the following steps:
+Garbage collection involves the following steps:
 1. WiscKey reads a chunk of key-value pairs (several MBs) from the `tail` offset of the value-log. It then finds which of those values are valid by querying the LSM-tree. 
 2. After all the valid key-value pairs are identified, the entire byte array containing the valid key-value pairs is appended to the end of the log.
 3. To avoid losing any data in case a crash happens during garbage collection, WiscKey calls `fsync` on the value-log.
