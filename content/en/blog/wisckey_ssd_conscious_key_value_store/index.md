@@ -201,13 +201,13 @@ the level L<sub>i</sub> in the worst case and write back those ten files after s
 
 #### Why does LevelDB check only one SSTable file at each level from Level1 to Level6, for a read operation?
 
-*LevelDB ensures that the keys do not overlap in the files from Level1 to Level6*. This means range-based search on keys can be done in RAM to identify an SSTable at each level to search.   
+*LevelDB ensures that the keys do not overlap in the files from Level1 to Level6*. This means a range-based search on keys can be done in RAM to identify an SSTable at each level to search.   
 
 This approach can be highlighted with the following pseudocode: 
 
 ```golang
     //Compare the incoming key against the biggest keys in all the SSTable files at each level. 
-    //BiggestKey can be maintained in RAM for each SSTable file.
+    //BiggestKey can be maintained in RAM for each SSTable file from level >= 1.
 	idx := sort.Search(len(level.table_files), func(index int) bool {
 		return CompareKeys(level.table_files[index].BiggestKey(), key) >= 0 
 	})
