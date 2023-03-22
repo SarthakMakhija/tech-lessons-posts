@@ -201,7 +201,7 @@ the level L<sub>i</sub> in the worst case and write back those ten files after s
 
 #### Why does LevelDB check only one SSTable file at each level from Level1 to Level6, for a read operation?
 
-*LevelDB ensures that the keys do not overlap in the files from Level1 to Level6*. This means a range-based search on keys can be done in RAM to identify an SSTable at each level to search.   
+*LevelDB ensures that the keys do not overlap in the files from Level1 to Level6*. This means a range-based search on keys can be done in RAM to identify an SSTable at each level to search.
 
 This approach can be highlighted with the following pseudocode: 
 
@@ -217,6 +217,8 @@ This approach can be highlighted with the following pseudocode:
 	}
 	return level.table_files[idx]
 ```
+
+Hence, LevelDB has to search one SSTable file at each level from Level1 to Level6 in the worst case.
 
 #### Why is the size of the index section 16KB?
 
@@ -307,9 +309,12 @@ A key in WiscKey will be deleted from the LSM-tree but the value-log remains unt
 
 All the modern storage engines provide support for range queries. LevelDB provides the clients with an `iterator-based` interface with `Seek(key)`, `Next()`, `Prev()`, `Key()` and `Value()` operations. To scan a range of key-value pairs, the client can first `Seek(key)` to the starting key, then call `Next()` or `Prev()` to search keys one by one. To retrieve the key or the value of the current iterator position, the client calls `Key()` or `Value()`, respectively.
 
-In LevelDB, since keys and values are stored together and sorted, a range query can sequentially read key-value pairs from SSTable files. However, since keys and values are stored separately in WiscKey, range queries require random reads (from value-log), and are inefficient.
+In LevelDB, since keys and values are stored together and sorted, a range query can sequentially read key-value pairs from SSTable files as shown in the image below.
 
 <img class="align-center" src="/sequential-reads-leveldb.png" />
+
+However, since keys and values are stored separately in WiscKey, range queries require random reads (from value-log), and are inefficient.
+
 <img class="align-center" src="/random-reads-wisckey.png" />
 
 Wisckey leverages the same iterator-based interface for range queries as LevelDB. To make range queries efficient, WiscKey leverages the parallel I/O characteristic of SSD devices to prefetch values from the value-log during range queries.
