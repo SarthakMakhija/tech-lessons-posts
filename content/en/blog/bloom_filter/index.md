@@ -415,7 +415,7 @@ The code for this article is available [here](https://github.com/SarthakMakhija/
 
 ### Mention
 
-Thank you, [Debasish Ghosh](https://twitter.com/debasishg) for reviewing the article providing feedback.
+Thank you, [Debasish Ghosh](https://twitter.com/debasishg) for reviewing the article and providing feedback.
 
 ### References
 

@@ -639,7 +639,7 @@ I hope the article was worth your time. Feel free to share the feedback.
 
 ### Mention
 
-Thank you, [Unmesh Joshi](https://github.com/unmeshjoshi) for reviewing the article providing feedback.
+Thank you, [Unmesh Joshi](https://github.com/unmeshjoshi) for reviewing the article and providing feedback.
 
 ### References
 
