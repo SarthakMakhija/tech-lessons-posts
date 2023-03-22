@@ -413,6 +413,10 @@ The working of the `get` method of `levelHandler` can be summarized as:
 
 The code for this article is available [here](https://github.com/SarthakMakhija/probabilistic-data-structures/tree/main/membership).
 
+### Mention
+
+Thank you, [Debasish Ghosh](https://twitter.com/debasishg) for reviewing the article providing feedback.
+
 ### References
 
 - [Bloom filter](https://en.wikipedia.org/wiki/Bloom_filter)

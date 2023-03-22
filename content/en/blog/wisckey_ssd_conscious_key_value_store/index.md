@@ -637,6 +637,10 @@ The core ideas of WiscKey include: separating values from keys in the LSM-tree t
 
 I hope the article was worth your time. Feel free to share the feedback.
 
+### Mention
+
+Thank you, [Unmesh Joshi](https://github.com/unmeshjoshi) for reviewing the article providing feedback.
+
 ### References
 
 - [WiscKey](https://www.usenix.org/system/files/conference/fast16/fast16-papers-lu.pdf)

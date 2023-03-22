@@ -323,6 +323,10 @@ The `Push` method results in incrementing the access frequency of the keys by in
 
 The code for this article is available [here](https://github.com/SarthakMakhija/probabilistic-data-structures/tree/main/frequency).
 
+### Mention
+
+Thank you, [Debasish Ghosh](https://twitter.com/debasishg) for reviewing the article providing feedback.
+
 ### References
 
 - [Count-min sketch](https://en.wikipedia.org/wiki/Count–min_sketch)
