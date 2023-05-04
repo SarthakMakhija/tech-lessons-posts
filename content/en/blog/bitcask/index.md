@@ -5,7 +5,7 @@ date: 2023-05-04
 description: "Bitcask is an embeddable key/value storage engine that is defined as a \"Log-Structured Hash Table\" in the paper that introduced it. The model of Bitcask is simple: all the
 key/value pairs are written to append-only files and an in-memory data structure contains a mapping between each key and the position of the value in the data file."
 tags: ["Bitcask", "Storage engine", "Log Structured"]
-thumbnail: /bitcask_title.jpg
+thumbnail: /bitcask_title.webp
 caption: "Background by Suzy Hazelwood on Pexels"
 ---
 
@@ -29,7 +29,7 @@ A bitcask instance consists of multiple data files on a disk. At any moment, onl
 Once a file is closed, it is considered immutable and will never be opened for writing again.
 
 <figure>
-    <img class="align-center-exclude-width-change" src="/bitcask_data_files.png" /> 
+    <img class="align-center-exclude-width-change" src="/bitcask_data_files.webp" /> 
 </figure>
 
 The active file is written by appending, which means sequential writes are performed on disk.
@@ -47,7 +47,7 @@ Thus, a Bitcask data file is a linear sequence of these entries.
 `KeyDir` is simply a hash table that maps every key in Bitcask to a fixed-size structure giving the file, offset, and size of the most recently written entry for that key.
 
 <figure>
-    <img class="align-center-exclude-width-change" src="/bitcask_keydir.png" /> 
+    <img class="align-center-exclude-width-change" src="/bitcask_keydir.webp" /> 
 </figure>
 
 Let's understand why Bitcask is both write and read-optimized.
@@ -369,7 +369,7 @@ the old ones. Therefore, a process for compaction that is referred to as "mergin
 the "live" or the latest versions of each present key.
 
 <figure>
-    <img class="align-center-exclude-width-change" src="/bitcask_merge.png" /> 
+    <img class="align-center-exclude-width-change" src="/bitcask_merge.webp" /> 
 </figure>
 
 Merge process needs to read all the immutable data files in memory, keep the live and the latest version of each key, and write the merged state
