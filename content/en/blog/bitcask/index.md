@@ -1,12 +1,12 @@
 ---
 author: "Sarthak Makhija"
 title: "Bitcask - A Log-Structured Hash Table"
-date: 2023-05-03
+date: 2023-05-04
 description: "Bitcask is an embeddable key/value storage engine that is defined as a \"Log-Structured Hash Table\" in the paper that introduced it. The model of Bitcask is simple: all the
 key/value pairs are written to append-only files and an in-memory data structure contains a mapping between each key and the position of the value in the data file."
 tags: ["Bitcask", "Storage engine", "Log Structured"]
 thumbnail: /bitcask_title.jpg
-caption: "Photo by Suzy Hazelwood on Pexels"
+caption: "Background by Suzy Hazelwood on Pexels"
 ---
 
 Bitcask is an embeddable key/value storage engine that is defined as a "Log-Structured Hash Table" in the paper that introduced it. Bitcask follows a simple model: all the
