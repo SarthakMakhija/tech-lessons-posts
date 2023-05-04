@@ -109,7 +109,7 @@ In order to read the value for a key, a lookup operation is performed in the `Ke
 Once the `Entry` corresponding to the key is found in the `KeyDir`, a read operation is performed in the file identified by the `Entry.FileId`. This read operation involves performing a `Seek` to the offset defined `Entry.Offset` in the file and then reading the entire byte slice `([]byte)` identified by the `Entry.EntryLength`.
 The correctness of the value retrieved is checked against the CRC stored and the value is then returned to the client.
 
-This operation is fast as it involves performing a single disk seek. It can be made faster by using file system's [read-ahead](https://en.wikipedia.org/wiki/Readahead) system call.
+This operation is fast as it involves performing a single disk seek. It can be made faster by using [read-ahead](https://en.wikipedia.org/wiki/Readahead) system call.
 
 The read operation can be represented with the following code:
 
@@ -152,7 +152,7 @@ func (kv *KVStore[Key]) Put(key Key, value []byte) error {
 ```
 
 1) `kv.segments.Append(key, value)` appends the key/value pair to the active segment(/data file)
-2) `kv.keyDirectory.Put(key, NewEntryFrom(appendEntryResponse))` creates a new entry in the `KeyDir`
+2) `kv.keyDirectory.Put(key, NewEntryFrom(appendEntryResponse))` creates a new entry in the `KeyDirectory`
 
 > My implementation uses the term Segment instead of Datafile and KeyDirectory instead of KeyDir.
 
