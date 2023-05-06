@@ -71,10 +71,11 @@ Currently, I am implementing an [LFU based cache](https://github.com/SarthakMakh
 ## Next project
 My current interest is in *Designing storage engines and databases*, and I plan to build a key/value storage engine in Rust. The idea is to create a write-optimized storage engine using an LSM tree and provide read-optimized paths.
 Some ideas that I would like to explore are:
-1. Separating values from keys: [WiscKey](https://www.usenix.org/system/files/conference/fast16/fast16-papers-lu.pdf)
-2. Explore [io_uring](https://unixism.net/loti/what_is_io_uring.html) and [glommio](https://github.com/DataDog/glommio)
-3. Cache bloom filters in memory
-4. Cache level-0 SSTables in memory
+1. Thread-per-core programming model 
+2. Separating values from keys: [WiscKey](https://www.usenix.org/system/files/conference/fast16/fast16-papers-lu.pdf)
+3. Explore [io_uring](https://unixism.net/loti/what_is_io_uring.html) and [glommio](https://github.com/DataDog/glommio)
+4. Cache bloom filters in memory
+5. Cache level-0 SSTables in memory
 
 ## Let's connect
 <div class="flex gap-x-3 flex-wrap gap-y-2">
