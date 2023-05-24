@@ -10,6 +10,8 @@ caption: "Background by Suzy Hazelwood on Pexels"
 
 https://en.wikipedia.org/wiki/Least_frequently_used
 
+https://dgraph.io/blog/post/introducing-ristretto-high-perf-go-cache/
+
 ### Measuring access frequency
 
 All LFU caches need to maintain the access frequency for each key.
@@ -175,7 +177,86 @@ impl<Key, Value> Store<Key, Value>
 }
 ```
 
+Let's bring another requirement: "memory bound cache".
+
 ### Making the cache memory bound
+
+We want to design a cache that uses a fixed amount of memory determined by some configuration parameter. 
+
+This requirement brings in two concepts:
+
+1) Every key/value pair should have some *weight*, and we should be able to determine the total weight used by the cache.
+2) We must ensure that the total cache weight does not cross the specified limit.
+
+> `Cached` uses the term "weight" to denote the space (/size).
+
+Let's understand the first point.
+
+In order to associate weight with each key/value pair, we can provide a method takes `weight` as a parameter along with `key` and `value`.
+[Cached](https://github.com/SarthakMakhija/cached/blob/main/src/cache/cached.rs) provides a method `put_with_weight()` that allows the clients to specify the weight associated with each key/value pair.
+
+Other option is to auto-calculate the weight for each key/value pair. In order to calculate the weight, we should be able to calculate the size of each key/value pair
+using functions like `std::mem::size_of_val()` or `std::mem::size_of()` and add to that the size of any additional metadata, like `expiry: Duration`, that might be stored. 
+
+The weight calculation in `Cached` is available [here](https://github.com/SarthakMakhija/cached/blob/main/src/cache/config/weight_calculation.rs).
+
+Now that we have calculated the weight of each key/value pair, we should be able to maintain the weight of each key and the total weight used by the cache.
+`Cached` uses [CacheWeight](https://github.com/SarthakMakhija/cached/blob/main/src/cache/policy/cache_weight.rs) as an abstraction to maintain the weight of each key in the cache, and it also manages the total weight used by the cache. 
+The weight of each key is maintained via `WeightedKey` abstraction that contains the `key`, `key_hash` and its `weight`.
+Every `put` results in increasing the *cache weight*, every delete results in reducing the *cache weight* and every update probably results in changing in the *cache weight*.
+
+```rust
+pub(crate) struct CacheWeight<Key>
+    where Key: Hash + Eq + Send + Sync + Clone + 'static, {
+    max_weight: Weight,
+    weight_used: RwLock<Weight>,
+    key_weights: DashMap<KeyId, WeightedKey<Key>>,
+}
+```
+
+We now have a weight associated with each key.
+
+### Admission and eviction policy
+
+Our cache is a memory bound cache and this poses an interesting challenge. 
+
+*Should we admit the incoming key/value pair after the cache has reached its weight? If yes, which keys should be evicted to create the space because we can not let 
+the total cache weight increase beyond some threshold?*
+
+This is where the paper [TinyLFU](https://dgraph.io/blog/refs/TinyLFU%20-%20A%20Highly%20Efficient%20Cache%20Admission%20Policy.pdf) comes into the picture. 
+The main idea is to only let in a new key/value pair if its access estimate is higher than that of the item being evicted. This simply means that the incoming
+key/value pair should be more valuable to the cache than some existing key/value pairs. 
+
+Let's look at the algorithm:
+
+**Approach**:
+1) Get an estimate of the access frequency of the incoming key. The incoming key has not been accessed yet, but we *might* get some access count
+   because of hash conflicts since we rely on the probabilistic data structure [count-min sketch](https://tech-lessons.in/blog/count_min_sketch/)
+   to maintain the access frequencies of the keys.
+2) What we are trying to do is get the approximate estimation of the access frequency if this key were admitted in the cache
+3) Get a sample of the existing keys that consist of `keyId`, its `weight` and `its access frequency`. *Sample size can be configurable.*
+4) Pick the key with the smallest access frequency from the sample (K1)
+5) If the access frequency of the incoming key is less than the access frequency of the key K1, then reject the incoming key because
+   its access frequency is less than the smallest access frequency in the sample.
+6) Else, `delete` the key `K1` and create the space in the cache. The space created will be equal to the `weight of K1`.
+7) Repeat the process until either the incoming key is rejected or enough space to accommodate the incoming key is created in the cache.
+
+`Cached` uses [AdmissionPolicy](https://github.com/SarthakMakhija/cached/blob/main/src/cache/policy/admission_policy.rs) to decide whether an incoming key/value pair should be admitted.
+This approach is called "Sampled LFU".
+
+There is still one more case to consider. What if there is a key with high access frequency, and it has not been seen for a while. Will it never get evicted?
+
+This point is around the recency of a key access and [TinyLFU](https://github.com/SarthakMakhija/cached/blob/main/src/cache/lfu/tiny_lfu.rs) ensures the recency of key access by `reset` method. 
+We have used `count-min sketch` to maintain the access frequency of each key and everytime a key is accessed, the frequency counter is incremented(*). 
+After N key increments, the counters get halved. 
+So, a key that has not been seen for a while would also have its counter reset to half of the original value; thereby providing a chance to the new incoming keys to get in.
+
+```
+DoorKeeper (??)
+Before we place a new key in TinyLFU, Ristretto uses a bloom filter to first check if the key has been seen before. Only if the key is already present in the bloom filter, is it inserted into the TinyLFU. This is to avoid polluting TinyLFU with a long tail of keys that are not seen more than once.
+
+When calculating ɛ of a key, if the item is included in the bloom filter, its frequency is estimated to be the Estimate from TinyLFU plus one. During a Reset of TinyLFU, the bloom filter is also cleared out.
+```
 
 ### Introducing BP-Wrapper
 
