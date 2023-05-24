@@ -8,6 +8,8 @@ thumbnail: /bitcask_title.webp
 caption: "Background by Suzy Hazelwood on Pexels"
 ---
 
+https://en.wikipedia.org/wiki/Least_frequently_used
+
 ### Measuring access frequency
 
 All LFU caches need to maintain the access frequency for each key.
@@ -74,7 +76,104 @@ of keys in each row.
 
 `Cached` proposes `K = 10` and does [performance benchmarks](https://github.com/SarthakMakhija/cached/blob/main/benches/benchmarks/frequency_counter.rs) with `K = 2` and `K = 10`.
 
+Let's understand a way store the key/value mapping.
+
 ### Storing key/value mapping
+
+We need a way to store the value by key. This is done by the [Store](https://github.com/SarthakMakhija/cached/blob/main/src/cache/store/mod.rs) abstraction in Cached.
+`Store` uses [DashMap](https://docs.rs/dashmap/latest/dashmap/) which is a concurrent associative array/hashmap. 
+
+`DashMap` maintains an array named `shards` and each element is a `RwLock` to a `HashMap`. The `put` operation identifies the `shard_index`, acquires a `write lock` 
+against that shard and writes to the `HashMap`.
+
+```rust
+pub struct DashMap<K, V, S = RandomState> {
+    shards: Box<[RwLock<HashMap<K, V, S>>]>,
+    //code omitted
+}
+```
+The following code represents `Store`.
+
+```rust
+pub(crate) struct Store<Key, Value>
+    where Key: Hash + Eq, {
+    store: DashMap<Key, StoredValue<Value>>,
+}
+
+pub struct StoredValue<Value> {
+    value: Value,
+    key_id: KeyId,
+    expire_after: Option<ExpireAfter>,
+    pub(crate) is_soft_deleted: bool,
+}
+```
+
+There is another decision to be made here. 
+
+How should we return the value to the clients? 
+
+- Option1: return a reference of the value
+- Option2: force the clients to provide a cloneable value as a part of the `put` operation and return the `Some<Value>` by cloning the value, if it exists for the key
+- Option3: provide both the options
+
+Let's look at Option1 first. In order to return a reference to the value we need to look into the `get` method of `DashMap`.
+
+```rust
+pub fn get<Q>(&'a self, key: &Q) -> Option<Ref<'a, K, V, S>>
+where
+    K: Borrow<Q>,
+    Q: Hash + Eq + ?Sized, { self._get(key) }
+
+pub struct Ref<'a, K, V, S = RandomState> {
+    _guard: RwLockReadGuard<'a, HashMap<K, V, S>>,
+    k: *const K,
+    v: *const V,
+}
+
+pub type RwLockReadGuard<'a, T> = lock_api::RwLockReadGuard<'a, RawRwLock, T>;
+
+//part of lock_api
+pub struct RwLockReadGuard<'a, R: RawRwLock, T: ?Sized> {
+    rwlock: &'a RwLock<R, T>,
+    marker: PhantomData<(&'a T, R::GuardMarker)>,
+}
+```
+
+- The `get` method of `DashMap` returns an `Option<Ref<'a, K, V, S>>`. 
+- `Ref` is a publicly available struct and has a lifetime annotation `'a` which is tied to the lifetime of `RwLockReadGuard`.
+- The lifetime of `RwLockReadGuard` of `DashMap` is tied to lifetime of `lock_api::RwLockReadGuard`. 
+- The lifetime of `RwLockReadGuard` is tied to the lifetime of `RwLock`
+
+This means if we decide to return a reference to the value for a key we are actually returning `DashMap's Ref` and also holding a lock against the shard that the key belongs to.
+
+The [Store](https://github.com/SarthakMakhija/cached/blob/main/src/cache/store/mod.rs) abstraction in `Cached` provides `get_ref` method that returns an instance of [KeyValueRef](https://github.com/SarthakMakhija/cached/blob/main/src/cache/store/key_value_ref.rs) which wraps `DashMap's Ref`.
+
+```rust
+pub(crate) fn get_ref(&self, key: &Key) -> Option<KeyValueRef<'_, Key, StoredValue<Value>>> {...}
+
+pub struct KeyValueRef<'a, Key, Value>
+    where Key: Eq + Hash {
+    key_value_ref: Ref<'a, Key, Value>,
+}
+```
+
+At the same time, `Store` provides `get` method if the value is cloneable, which returns an `Option<Value>`. This behavior will cause `DashMap` to hold the lock against the shard
+while the value is being read, clones the value, returns the value to the client, and drops the lock.
+
+```rust
+impl<Key, Value> Store<Key, Value>
+    where Key: Hash + Eq,
+          Value: Clone, {
+    pub(crate) fn get(&self, key: &Key) -> Option<Value> {
+        let maybe_value = self.store.get(key);
+        let mapped_value = maybe_value
+            .filter(|stored_value| stored_value.is_alive(&self.clock))
+            .map(|key_value_ref| { key_value_ref.value().value() }); //clone the value
+
+        mapped_value
+    }
+}
+```
 
 ### Making the cache memory bound
 
