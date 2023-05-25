@@ -214,7 +214,7 @@ pub(crate) struct CacheWeight<Key>
 }
 ```
 
-We now have a weight associated with each key.
+We now have a weight associated with each key/value pair.
 
 ### Admission and eviction policy
 
@@ -227,7 +227,7 @@ This is where the paper [TinyLFU](https://dgraph.io/blog/refs/TinyLFU%20-%20A%20
 The main idea is to only let in a new key/value pair if its access estimate is higher than that of the item being evicted. This simply means that the incoming
 key/value pair should be more valuable to the cache than some existing key/value pairs. 
 
-Let's look at the algorithm:
+Let's look at the approach:
 
 **Approach**:
 1) Get an estimate of the access frequency of the incoming key. The incoming key has not been accessed yet, but we *might* get some access count
@@ -241,24 +241,81 @@ Let's look at the algorithm:
 6) Else, `delete` the key `K1` and create the space in the cache. The space created will be equal to the `weight of K1`.
 7) Repeat the process until either the incoming key is rejected or enough space to accommodate the incoming key is created in the cache.
 
-`Cached` uses [AdmissionPolicy](https://github.com/SarthakMakhija/cached/blob/main/src/cache/policy/admission_policy.rs) to decide whether an incoming key/value pair should be admitted.
 This approach is called "Sampled LFU".
+`Cached` uses [AdmissionPolicy](https://github.com/SarthakMakhija/cached/blob/main/src/cache/policy/admission_policy.rs) to decide whether an incoming key/value pair should be admitted.
 
 There is still one more case to consider. What if there is a key with high access frequency, and it has not been seen for a while. Will it never get evicted?
 
-This point is around the recency of a key access and [TinyLFU](https://github.com/SarthakMakhija/cached/blob/main/src/cache/lfu/tiny_lfu.rs) ensures the recency of key access by `reset` method. 
-We have used `count-min sketch` to maintain the access frequency of each key and everytime a key is accessed, the frequency counter is incremented(*). 
-After N key increments, the counters get halved. 
-So, a key that has not been seen for a while would also have its counter reset to half of the original value; thereby providing a chance to the new incoming keys to get in.
+This point is around the recency of a key access and [TinyLFU](https://github.com/SarthakMakhija/cached/blob/main/src/cache/lfu/tiny_lfu.rs) ensures the recency of key access by a `reset` method. 
+We have used `count-min sketch` to maintain the access frequency of each key and everytime a key is accessed, the frequency counter is incremented.
+After N key increments, the counters get halved. So, a key that has not been seen for a while would also have its counter reset to half of the original value; 
+thereby providing a chance to the new incoming keys to get in.
 
-```
-DoorKeeper (??)
-Before we place a new key in TinyLFU, Ristretto uses a bloom filter to first check if the key has been seen before. Only if the key is already present in the bloom filter, is it inserted into the TinyLFU. This is to avoid polluting TinyLFU with a long tail of keys that are not seen more than once.
+>> [TinyLFU](https://github.com/SarthakMakhija/cached/blob/main/src/cache/lfu/tiny_lfu.rs) has a [FrequencyCounter](https://github.com/SarthakMakhija/cached/blob/main/src/cache/lfu/frequency_counter.rs) and a [DoorKeeper](https://github.com/SarthakMakhija/cached/blob/main/src/cache/lfu/doorkeeper.rs).
+>> DoorKeeper is implemented using a [Bloom filter](https://tech-lessons.in/blog/bloom_filter/). Before increasing the access frequency of a key in `FrequencyCounter` via
+>> `TinyLFU`, a check is done in the `DoorKeeper` to see if the key is present. Only if the key is present in the `DoorKeeper`, its access count is incremented.
+>> This is to ensure that `FrequencyCounter` does not end up having a long tail of keys that are not seen more than once. 
 
-When calculating ɛ of a key, if the item is included in the bloom filter, its frequency is estimated to be the Estimate from TinyLFU plus one. During a Reset of TinyLFU, the bloom filter is also cleared out.
-```
+<<We now have a,b,c...>>
+
+Let's understand contention.
 
 ### Introducing BP-Wrapper
+
+We have already seen `Store` and `count-min sketch` based `FrequencyCounter`. Technically, both these data structures are shared data structures and prone to [contention](https://stackoverflow.com/questions/1970345/what-is-thread-contention).
+
+Let's understand this with an example. Imagine there is a `get` request for an existing key "topic". The key has been accessed, so we should to increment the access counter for the key.
+`FrequencyCounter` is a shared data structure, so an option to increment the access counter is to take a lock on the entire data structure and then increment the 
+count. If multiple threads are trying to increase the access count for same or different keys, all these threads would be contending for a single write lock on `FrequencyCounter`.
+
+This is where the paper [BP-Wrapper](https://dgraph.io/blog/refs/bp_wrapper.pdf) comes in. This paper suggests two ways of dealing with contention *prefetching* and *batching*.
+
+`Cached` uses *batching* both with `get` and `put` operations. 
+
+#### Get
+
+A `get` operation returns the value for a key if it exists. It queries the `Store` and gets the value. The next step is to increase the access count for the key. This is where
+the idea of *batching* comes in. All the *gets* are batched in a ring-buffer like abstraction called [Pool](https://github.com/SarthakMakhija/cached/blob/main/src/cache/pool.rs). `Pool`
+is a collection of [Buffer](https://github.com/SarthakMakhija/cached/blob/main/src/cache/pool.rs) and each `Buffer` is a collection of hashes of the keys.
+
+Any time a key is accessed, it is added to a buffer within the `Pool`. When a buffer is full, it is drained. Draining involves sending the entire `Vec<KeyHash>` to a [BufferConsumer](https://github.com/SarthakMakhija/cached/blob/main/src/cache/buffer_event.rs).
+`BufferConsumer` is implemented using a single thread that receives the buffer content from a channel. The `BufferConsumer` on receiving the buffer content applies it to the `FrequencyCounter`, there by incrementing the frequency access of the keys.
+The channel size is kept small to further reduce contention and the memory footprint of collecting the buffer in memory. If the channel is full, the buffer content is dropped.
+
+[AdmissionPolicy](https://github.com/SarthakMakhija/cached/blob/main/src/cache/policy/admission_policy.rs) plays the role of `BufferConsumer` in `Cached`.
+
+>> The current implementation of `Cached` uses fine-grained lock over each buffer: `buffers: Vec<RwLock<Buffer<Consumer>>>`. The next release may change this implementation.
+
+#### Put
+
+The idea with `get` was to buffer the accesses and apply them to the `FrequencyCounter` when the buffer gets full. We can not apply the same idea with `put` because we want
+to serve the `put` operations as soon as possible. However, the idea of batching is still relevant with `put` (or any other write) operations. 
+
+Treat every write operation (`put`, `update`, `delete`) as a command, send to a [mpsc channel](https://doc.rust-lang.org/std/sync/mpsc/) and have a single thread receive
+commands from the channel and execute then one after the other.
+
+`Cached` follows the same idea. Every write operation goes as a [Command](https://github.com/SarthakMakhija/cached/blob/main/src/cache/command/mod.rs) to a 
+[CommandExecutor](https://github.com/SarthakMakhija/cached/blob/main/src/cache/command/command_executor.rs). `CommandExecutor` is implemented as a single thread
+that receives commands from a [crossbeam-channel](https://crates.io/crates/crossbeam-channel). Every time a command is received, it is executed by this single thread of execution.
+
+This design choice has obvious implications. 
+- There is no guarantee that a `put` operation will happen successfully because it may be rejected by the `AdmissionPolicy` as described in the section [Admission and eviction policy](#admission-and-eviction-policy)
+- All the write operations are processed at a later point in time
+
+The solution to both these points lie in providing the right feedback to the clients. `Cached` provides [CommandAcknowledgementHandle](https://github.com/SarthakMakhija/cached/blob/main/src/cache/command/acknowledgement.rs) as an abstraction that implements the [Future](https://doc.rust-lang.org/std/future/trait.Future.html) trait.
+Every write operation is returned an instance of [CommandSendResult](https://github.com/SarthakMakhija/cached/blob/main/src/cache/command/command_executor.rs) that wraps 
+`CommandAcknowledgement` which provides a `handle()` method to return a `CommandAcknowledgementHandle` to the clients. 
+
+Clients can perform `await` on the `CommandAcknowledgementHandle` and get the [CommandStatus](https://github.com/SarthakMakhija/cached/blob/main/src/cache/command/mod.rs).
+
+```rust
+#[tokio::main]
+ async fn main() {
+    let cached = CacheD::new(ConfigBuilder::new(100, 10, 100).build());
+    let status = cached.put("topic", "microservices").unwrap().handle().await;
+    assert_eq!(CommandStatus::Accepted, status);
+}
+```
 
 ### Measure metrics
 
