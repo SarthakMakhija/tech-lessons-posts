@@ -10,7 +10,6 @@ caption: "Background by Suzy Hazelwood on Pexels"
 
 https://en.wikipedia.org/wiki/Least_frequently_used
 
-https://dgraph.io/blog/post/introducing-ristretto-high-perf-go-cache/
 
 ### Measuring access frequency
 
@@ -317,7 +316,102 @@ Clients can perform `await` on the `CommandAcknowledgementHandle` and get the [C
 }
 ```
 
-### Measure metrics
+Let's jump on the metrics collection in the cache.
+
+### Measuring metrics
+
+At the end of the day we would like to know how our cache is behaving. We would like to collect at least some counter based metrics like *CacheHits*, *CacheMisses*, *KeysAdded* and *KeysDeleted* etc.
+
+Let's assume there are 16 such metrics that we want to collect. To do that, we can design a simple `ConcurrentStatsCounter` that can maintain an array of 16 entries and 
+each array element is of type `AtomicU64`. Every time an event happens like: a keys gets added in the cache, we go and increment its corresponding counter. 
+This approach can be represented with the following code: 
+
+```rust
+const TOTAL_STATS: usize = 16;
+
+#[repr(usize)]
+#[non_exhaustive]
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
+pub enum StatsType {
+   KeysAdded = 0,
+   KeysDeleted = 1,
+}
+
+pub(crate) struct ConcurrentStatsCounter {
+   entries: [AtomicU64; TOTAL_STATS],
+}
+
+pub(crate) fn add_key(&self) { self.add(StatsType::KeysAdded, 1); }
+
+fn add(&self, stats_type: StatsType, count: u64) {
+   self.entries[stats_type as usize].fetch_add(count, Ordering::AcqRel);
+}
+```
+
+The approach looks great. However, we need to understand the concept of `false sharing` before we conclude on the greatness of the approach. 
+
+The memory in the *L1*, *L2*, *L3* and *L4* processor cache is organized in units called "cache lines". 
+Cache line is the smallest unit of data transfer between the main memory and processor cache. If the cache line size is 64 bytes, then a contiguous block
+of 64 bytes will be transferred from RAM to processor cache for processing. The size of cache lines varies based on the type of the processor.
+For example, on *x86-64*, *aarch64*, and *powerpc64*, [cache line is 128 bytes](https://docs.rs/crossbeam/0.8.2/crossbeam/utils/struct.CachePadded.html).
+
+> Updating an atomic value invalidates the whole cache line it belongs to.
+
+Let's go back to our code now. Let's assume that the cache line size is 64 bytes. We have an array of `AtomicU64`, each `AtomicU64` takes *8 bytes* of memory. Our
+cache line size is *64 bytes*, that means eight `AtomicU64` values will lie in one cache line.
+
+Let's imagine that *thread1* running on core-1 increases the atomic value at *index 0* and *thread2* running on core-2 increases the atomic value at *index 1*.
+We know that both these atomic values lie on the same cache line and "updating an atomic value invalidates the whole cache line it belongs to". Invalidating a cache line 
+will result in fetching that chunk of memory from RAM again. 
+
+Consider that *thread1* running on core-1 updates the atomic value at *index 0*, which invalidates the entire cache line that this value belongs to. Now, *thread2*
+running on core-2 needs to update the value at *index 1* but the entire cache line is invalidated. So, the cache line (64 bytes) needs to be fetched from RAM.
+Reading/Writing from/to RAM is in the order of [80-100 ns](https://kt.academy/article/pmem-intro) compared to the same from *L1*, *L2*, *L3* and *L4* cache which is in the order of 1-10 ns.
+
+*thread2* running on core-2 updates the atomic value at *index 1* after the cache line is fetched. This update invalidates the entire cache line again and forces another
+fetch of the cache line from RAM. This is called "false sharing".
+
+We are using "atomics" to ensure that each thread updates its value atomically and because these values are on the
+same cache line, both the threads running on different cores end up **sharing** the same cache line for writing. This results in increased latency
+because of the repeated fetch of the cache lines from RAM. Imagine the extent of the problem with 128 cores.
+
+The way to deal with "false sharing" is to pad the values so that each `AtomicU64` lies on its own cache line. One option is to pad the values manually and other option
+is to use a library that can help with padding. `Cached` uses [CachePadded](https://docs.rs/crossbeam/0.8.2/crossbeam/utils/struct.CachePadded.html) to pad the values.
+
+With the introduction of `CachePadded`, this is how the code looks like:
+
+```rust
+const TOTAL_STATS: usize = 16;
+
+#[repr(usize)]
+#[non_exhaustive]
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
+pub enum StatsType {
+   KeysAdded = 0,
+   KeysDeleted = 1,
+}
+
+#[repr(transparent)]
+#[derive(Debug)]
+//introduce a new abstraction that wraps AtomicU64 inside CachePadded
+struct Counter(CachePadded<AtomicU64>);
+
+//entries are now containing Counters instead of AtomicU64
+pub(crate) struct ConcurrentStatsCounter {
+   entries: [Counter; TOTAL_STATS],   
+}
+
+pub(crate) fn add_key(&self) { self.add(StatsType::KeysAdded, 1); }
+
+fn add(&self, stats_type: StatsType, count: u64) {
+   //fetch_add is now available in Counter
+   self.entries[stats_type as usize].0.fetch_add(count, Ordering::AcqRel); 
+}
+```
+
+
+ 
+
 
 ### Measuring cache hit ratio
 
@@ -334,3 +428,4 @@ The source code of *Cached* is available [here](https://github.com/SarthakMakhij
 
 ### References
 
+- [Ristretto](https://dgraph.io/blog/post/introducing-ristretto-high-perf-go-cache/)
