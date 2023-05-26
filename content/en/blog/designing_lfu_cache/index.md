@@ -3,7 +3,7 @@ author: "Sarthak Makhija"
 title: "Designing an LFU cache"
 date: 2023-05-24
 description: ""
-tags: ["Cache", "TinyLFU", "Cached"]
+tags: ["Cache", "TinyLFU", "CacheD"]
 thumbnail: /bitcask_title.webp
 caption: "Background by Suzy Hazelwood on Pexels"
 ---
@@ -20,7 +20,7 @@ This is an opportunity to use a probabilistic data structure like [count-min ske
 > Count-min sketch (CM sketch) is a probabilistic data structure used to estimate the frequency of events in a data stream.
 > It relies on hash functions to map events to frequencies, but unlike a hash table, it uses only **sublinear space** at the expense of over-counting some events due to hash collisions. The count–min sketch was invented in 2003 by Graham Cormode and S. Muthu Muthukrishnan.
 
-`Cached` uses count-min sketch inside the abstraction [FrequencyCounter](https://github.com/SarthakMakhija/cached/blob/main/src/cache/lfu/frequency_counter.rs) to store the frequency for each key.
+**CacheD** uses count-min sketch inside the abstraction [FrequencyCounter](https://github.com/SarthakMakhija/cached/blob/main/src/cache/lfu/frequency_counter.rs) to store the frequency for each key.
 
 Count-min sketch is represented as a D*W matrix, where D is the total number of hash functions (or depth) and W is the width or the number of counters per hash function. 
 
@@ -56,36 +56,36 @@ fn matrix(total_counters: TotalCounters) -> [Row; ROWS] {
 
 We still need to make a decision on the number of counters. What should be the number of counters to get the closest estimate on the access frequency?
 
-We can start with a simple theory. If an LFU cache is going to contain N keys, then we can keep N counters in the count-min sketch. However, we need to consider
+We can start with a simple theory. If an LFU cache is going to contain N keys, then we can keep N counters per hash function in the count-min sketch. However, we need to consider
 hash conflicts. 
 
-Let's understand the logic of increment with the following pseudocode.
+Let's understand the logic of incrementing the access frequency of a key with the following pseudocode.
 
 ```rust
-    pub(crate) fn increment() {
+    pub(crate) fn increment_access_for(&self, key: Key) {
         // 1) Iterate through all the rows (row = 0 to depth = D)
         // 2) Get the hash of the incoming key
-        // 3) Perform `hash % self.total_counters` to identify the column index (width = W)
+        // 3) Perform `hash % self.total_counters` to identify the column index (with width = W)
         // 4) Increment the value at the identified column in the row R(i)
     }
 ```
 
-Keeping the counters same as the number of keys that would be contained in the cache would mean a higher error rate in the access frequency estimate (because of hash conflicts).
+Keeping the counters (imagine them as number of columns) same as the number of keys that would be contained in the cache would mean a higher error rate in the access frequency estimate (because of hash conflicts).
 
-To keep the estimates from wavering (/overestimating) too much because of hash conflicts, we need to have `counters = K times the number of keys`. Any choice of K is an attempt at reducing the hash conflict
+To keep the estimates from wavering (/over estimating) too much because of hash conflicts, we need to have `counters = K times the number of keys`. Any choice of K is an attempt at reducing the hash conflict
 of keys in each row. 
 
-`Cached` proposes `K = 10` and does [performance benchmarks](https://github.com/SarthakMakhija/cached/blob/main/benches/benchmarks/frequency_counter.rs) with `K = 2` and `K = 10`.
+**CacheD** proposes `K = 10` and does [performance benchmarks](https://github.com/SarthakMakhija/cached/blob/main/benches/benchmarks/frequency_counter.rs) with `K = 2` and `K = 10`.
 
-Let's understand a way store the key/value mapping.
+We have a way of measuring the access frequency of each key. Let's understand a way to store the key/value mapping.
 
 ### Storing key/value mapping
 
 We need a way to store the value by key. This is done by the [Store](https://github.com/SarthakMakhija/cached/blob/main/src/cache/store/mod.rs) abstraction in Cached.
 `Store` uses [DashMap](https://docs.rs/dashmap/latest/dashmap/) which is a concurrent associative array/hashmap. 
 
-`DashMap` maintains an array named `shards` and each element is a `RwLock` to a `HashMap`. The `put` operation identifies the `shard_index`, acquires a `write lock` 
-against that shard and writes to the `HashMap`.
+`DashMap` maintains an array named `shards` and each element is a `RwLock` to a `HashMap`. The `put` operation for a key identifies the `shard_index`, acquires a `write lock` 
+against that shard and writes to the `HashMap` in the identified shard.
 
 ```rust
 pub struct DashMap<K, V, S = RandomState> {
@@ -93,7 +93,7 @@ pub struct DashMap<K, V, S = RandomState> {
     //code omitted
 }
 ```
-The following code represents `Store`.
+We are build our key/value mapping on top of `DashMap`. The following code represents `Store`.
 
 ```rust
 pub(crate) struct Store<Key, Value>
@@ -111,10 +111,10 @@ pub struct StoredValue<Value> {
 
 There is another decision to be made here. 
 
-How should we return the value to the clients? 
+How should we return the value to the clients as a part of the `get` operation? 
 
 - Option1: return a reference of the value
-- Option2: force the clients to provide a cloneable value as a part of the `put` operation and return the `Some<Value>` by cloning the value, if it exists for the key
+- Option2: force the clients to provide a cloneable value as a part of the `put` operation and return `Some<Value>` by cloning the value, if it exists for the key
 - Option3: provide both the options
 
 Let's look at Option1 first. In order to return a reference to the value we need to look into the `get` method of `DashMap`.
@@ -145,9 +145,9 @@ pub struct RwLockReadGuard<'a, R: RawRwLock, T: ?Sized> {
 - The lifetime of `RwLockReadGuard` of `DashMap` is tied to lifetime of `lock_api::RwLockReadGuard`. 
 - The lifetime of `RwLockReadGuard` is tied to the lifetime of `RwLock`
 
-This means if we decide to return a reference to the value for a key we are actually returning `DashMap's Ref` and also holding a lock against the shard that the key belongs to.
+This means if we decide to return a reference to the value for a key we are actually returning `DashMap's Ref` and also *holding a lock* against the *shard* that the key belongs to.
 
-The [Store](https://github.com/SarthakMakhija/cached/blob/main/src/cache/store/mod.rs) abstraction in `Cached` provides `get_ref` method that returns an instance of [KeyValueRef](https://github.com/SarthakMakhija/cached/blob/main/src/cache/store/key_value_ref.rs) which wraps `DashMap's Ref`.
+The [Store](https://github.com/SarthakMakhija/cached/blob/main/src/cache/store/mod.rs) abstraction in **CacheD** provides `get_ref` method that returns an instance of [KeyValueRef](https://github.com/SarthakMakhija/cached/blob/main/src/cache/store/key_value_ref.rs) which wraps `DashMap's Ref`.
 
 ```rust
 pub(crate) fn get_ref(&self, key: &Key) -> Option<KeyValueRef<'_, Key, StoredValue<Value>>> {...}
@@ -159,7 +159,7 @@ pub struct KeyValueRef<'a, Key, Value>
 ```
 
 At the same time, `Store` provides `get` method if the value is cloneable, which returns an `Option<Value>`. This behavior will cause `DashMap` to hold the lock against the shard
-while the value is being read, clones the value, returns the value to the client, and drops the lock.
+while the value is being read, clones the value, returns the value to the client, and drops the lock. This is a tradeoff (of sorts) in both the methods: `get_ref` and `get`. 
 
 ```rust
 impl<Key, Value> Store<Key, Value>
@@ -184,23 +184,24 @@ We want to design a cache that uses a fixed amount of memory determined by some 
 
 This requirement brings in two concepts:
 
-1) Every key/value pair should have some *weight*, and we should be able to determine the total weight used by the cache.
-2) We must ensure that the total cache weight does not cross the specified limit.
+1) Every key/value pair should take some size, and we should be able to determine the total size used by the cache.
+2) We must ensure that the total cache size does not cross the specified limit.
 
-> `Cached` uses the term "weight" to denote the space (/size).
+> **CacheD** uses the term "weight" to denote the space (/size).
 
 Let's understand the first point.
 
-In order to associate weight with each key/value pair, we can provide a method takes `weight` as a parameter along with `key` and `value`.
+To associate weight with each key/value pair, we can provide a variant of the `put` method takes `weight` as a parameter along with `key` and `value`.
 [Cached](https://github.com/SarthakMakhija/cached/blob/main/src/cache/cached.rs) provides a method `put_with_weight()` that allows the clients to specify the weight associated with each key/value pair.
 
 Other option is to auto-calculate the weight for each key/value pair. In order to calculate the weight, we should be able to calculate the size of each key/value pair
-using functions like `std::mem::size_of_val()` or `std::mem::size_of()` and add to that the size of any additional metadata, like `expiry: Duration`, that might be stored. 
+using functions like `std::mem::size_of_val()` or `std::mem::size_of()` and add to that the size of any additional metadata, like `expiry: Duration`, that might be stored
+for each key/value pair. 
 
-The weight calculation in `Cached` is available [here](https://github.com/SarthakMakhija/cached/blob/main/src/cache/config/weight_calculation.rs).
+The weight calculation in **CacheD** is available [here](https://github.com/SarthakMakhija/cached/blob/main/src/cache/config/weight_calculation.rs).
 
 Now that we have calculated the weight of each key/value pair, we should be able to maintain the weight of each key and the total weight used by the cache.
-`Cached` uses [CacheWeight](https://github.com/SarthakMakhija/cached/blob/main/src/cache/policy/cache_weight.rs) as an abstraction to maintain the weight of each key in the cache, and it also manages the total weight used by the cache. 
+**CacheD** uses [CacheWeight](https://github.com/SarthakMakhija/cached/blob/main/src/cache/policy/cache_weight.rs) as an abstraction to maintain the weight of each key in the cache, and it also maintains the total weight used by the cache. 
 The weight of each key is maintained via `WeightedKey` abstraction that contains the `key`, `key_hash` and its `weight`.
 Every `put` results in increasing the *cache weight*, every delete results in reducing the *cache weight* and every update probably results in changing in the *cache weight*.
 
@@ -213,7 +214,7 @@ pub(crate) struct CacheWeight<Key>
 }
 ```
 
-We now have a weight associated with each key/value pair.
+We have weight associated with each key/value pair.
 
 ### Admission and eviction policy
 
@@ -224,7 +225,7 @@ the total cache weight increase beyond some threshold?*
 
 This is where the paper [TinyLFU](https://dgraph.io/blog/refs/TinyLFU%20-%20A%20Highly%20Efficient%20Cache%20Admission%20Policy.pdf) comes into the picture. 
 The main idea is to only let in a new key/value pair if its access estimate is higher than that of the item being evicted. This simply means that the incoming
-key/value pair should be more valuable to the cache than some existing key/value pairs and this also improves hit ratios. 
+key/value pair should be more valuable to the cache than some existing key/value pairs and this also improves the hit ratio. 
 
 Let's look at the approach:
 
@@ -232,32 +233,29 @@ Let's look at the approach:
 1) Get an estimate of the access frequency of the incoming key. The incoming key has not been accessed yet, but we *might* get some access count
    because of hash conflicts since we rely on the probabilistic data structure [count-min sketch](https://tech-lessons.in/blog/count_min_sketch/)
    to maintain the access frequencies of the keys.
-2) What we are trying to do is get the approximate estimation of the access frequency if this key were admitted in the cache
-3) Get a sample of the existing keys that consist of `keyId`, its `weight` and `its access frequency`. *Sample size can be configurable.*
-4) Pick the key with the smallest access frequency from the sample (K1)
-5) If the access frequency of the incoming key is less than the access frequency of the key K1, then reject the incoming key because
+2) Get a sample of the existing keys (from `CacheWeight`) that consists of `keyId`, its `weight` and `its access frequency`. *Sample size can be configurable.*
+3) Pick the key with the smallest access frequency from the sample. Let's call this key *K1*.
+4) If the access frequency of the incoming key is less than the access frequency of the key *K1*, then reject the incoming key because
    its access frequency is less than the smallest access frequency in the sample.
-6) Else, `delete` the key `K1` and create the space in the cache. The space created will be equal to the `weight of K1`.
-7) Repeat the process until either the incoming key is rejected or enough space to accommodate the incoming key is created in the cache.
+5) Else, `delete` the key *K1* and create the space in the cache. The space created will be equal to the `weight of K1`.
+6) Repeat the process until either the incoming key is rejected or enough space to accommodate the incoming key is created in the cache.
 
 This approach is called "Sampled LFU".
-`Cached` uses [AdmissionPolicy](https://github.com/SarthakMakhija/cached/blob/main/src/cache/policy/admission_policy.rs) to decide whether an incoming key/value pair should be admitted.
+**CacheD** uses [AdmissionPolicy](https://github.com/SarthakMakhija/cached/blob/main/src/cache/policy/admission_policy.rs) abstraction to decide whether an incoming key/value pair should be admitted.
 
 There is still one more case to consider. What if there is a key with high access frequency, and it has not been seen for a while. Will it never get evicted?
 
-This point is around the recency of a key access and [TinyLFU](https://github.com/SarthakMakhija/cached/blob/main/src/cache/lfu/tiny_lfu.rs) abstraction ensures the recency of key access by a `reset` method. 
+This point is around the recency of key access.The [TinyLFU](https://github.com/SarthakMakhija/cached/blob/main/src/cache/lfu/tiny_lfu.rs) abstraction ensures the recency of key access by a `reset` method. 
 We have used `count-min sketch` to maintain the access frequency of each key and everytime a key is accessed, the frequency counter is incremented.
 After N key increments, the counters get halved. So, a key that has not been seen for a while would also have its counter reset to half of the original value; 
 thereby providing a chance to the new incoming keys to get in. *[TinyLFU paper section: Freshness Mechanism](https://dgraph.io/blog/refs/TinyLFU%20-%20A%20Highly%20Efficient%20Cache%20Admission%20Policy.pdf)
 
->> [TinyLFU](https://github.com/SarthakMakhija/cached/blob/main/src/cache/lfu/tiny_lfu.rs) has a [FrequencyCounter](https://github.com/SarthakMakhija/cached/blob/main/src/cache/lfu/frequency_counter.rs) and a [DoorKeeper](https://github.com/SarthakMakhija/cached/blob/main/src/cache/lfu/doorkeeper.rs).
->> DoorKeeper is implemented using a [Bloom filter](https://tech-lessons.in/blog/bloom_filter/). Before increasing the access frequency of a key in `FrequencyCounter` via
->> `TinyLFU`, a check is done in the `DoorKeeper` to see if the key is present. Only if the key is present in the `DoorKeeper`, its access count is incremented.
+>> The abstraction [TinyLFU](https://github.com/SarthakMakhija/cached/blob/main/src/cache/lfu/tiny_lfu.rs) has a [FrequencyCounter](https://github.com/SarthakMakhija/cached/blob/main/src/cache/lfu/frequency_counter.rs) and a [DoorKeeper](https://github.com/SarthakMakhija/cached/blob/main/src/cache/lfu/doorkeeper.rs).
+>> DoorKeeper is implemented using a [Bloom filter](https://tech-lessons.in/blog/bloom_filter/). Before increasing the access frequency of a key in `FrequencyCounter`,
+>> a check is done in the `DoorKeeper` to see if the key is present. Only if the key is present in the `DoorKeeper`, its access count is incremented.
 >> This is to ensure that `FrequencyCounter` does not end up having a long tail of keys that are not seen more than once. 
 
-<<We now have a,b,c...>>
-
-Let's understand contention.
+Our cache is a concurrent cache, so let's understand a way to deal with contention.
 
 ### Introducing BP-Wrapper
 
@@ -269,31 +267,31 @@ count. If multiple threads are trying to increase the access count for same or d
 
 This is where the paper [BP-Wrapper](https://dgraph.io/blog/refs/bp_wrapper.pdf) comes in. This paper suggests two ways of dealing with contention *prefetching* and *batching*.
 
-`Cached` uses *batching* both with `get` and `put` operations. 
+**CacheD** uses *batching* both with `get` and `put` operations. 
 
 #### Get
 
-A `get` operation returns the value for a key if it exists. It queries the `Store` and gets the value. The next step is to increase the access count for the key. This is where
+A `get` operation returns the value for a key, if it exists. It queries the `Store` and gets the value. The next step involved in `get` is to increase the access count for the key. This is where
 the idea of *batching* comes in. All the *gets* are batched in a ring-buffer like abstraction called [Pool](https://github.com/SarthakMakhija/cached/blob/main/src/cache/pool.rs). `Pool`
 is a collection of [Buffer](https://github.com/SarthakMakhija/cached/blob/main/src/cache/pool.rs) and each `Buffer` is a collection of hashes of the keys.
 
 Any time a key is accessed, it is added to a buffer within the `Pool`. When a buffer is full, it is drained. Draining involves sending the entire `Vec<KeyHash>` to a [BufferConsumer](https://github.com/SarthakMakhija/cached/blob/main/src/cache/buffer_event.rs).
-`BufferConsumer` is implemented using a single thread that receives the buffer content from a channel. The `BufferConsumer` on receiving the buffer content applies it to the `FrequencyCounter`, there by incrementing the frequency access of the keys.
+`BufferConsumer` is implemented using a single thread that receives the buffer content from a [channel](https://crates.io/crates/crossbeam-channel). The `BufferConsumer` on receiving the buffer content applies it to the `FrequencyCounter`, there by incrementing the frequency access of the keys.
 The channel size is kept small to further reduce contention and the memory footprint of collecting the buffer in memory. If the channel is full, the buffer content is dropped.
 
-[AdmissionPolicy](https://github.com/SarthakMakhija/cached/blob/main/src/cache/policy/admission_policy.rs) plays the role of `BufferConsumer` in `Cached`.
+[AdmissionPolicy](https://github.com/SarthakMakhija/cached/blob/main/src/cache/policy/admission_policy.rs) plays the role of `BufferConsumer` in **CacheD**.
 
->> The current implementation of `Cached` uses fine-grained lock over each buffer: `buffers: Vec<RwLock<Buffer<Consumer>>>`. The next release may change this implementation.
+>> The current implementation of **CacheD** uses fine-grained lock over each buffer: `buffers: Vec<RwLock<Buffer<Consumer>>>`. The next release may change this implementation.
 
 #### Put
 
 The idea with `get` was to buffer the accesses and apply them to the `FrequencyCounter` when the buffer gets full. We can not apply the same idea with `put` because we want
 to serve the `put` operations as soon as possible. However, the idea of batching is still relevant with `put` (or any other write) operations. 
 
-Treat every write operation (`put`, `update`, `delete`) as a command, send to a [mpsc channel](https://doc.rust-lang.org/std/sync/mpsc/) and have a single thread receive
+The idea is to treat every write operation (`put`, `update`, `delete`) as a command, send to a [mpsc channel](https://doc.rust-lang.org/std/sync/mpsc/) and have a single thread receive
 commands from the channel and execute then one after the other.
 
-`Cached` follows the same idea. Every write operation goes as a [Command](https://github.com/SarthakMakhija/cached/blob/main/src/cache/command/mod.rs) to a 
+**CacheD** follows the same idea. Every write operation goes as a [Command](https://github.com/SarthakMakhija/cached/blob/main/src/cache/command/mod.rs) to a 
 [CommandExecutor](https://github.com/SarthakMakhija/cached/blob/main/src/cache/command/command_executor.rs). `CommandExecutor` is implemented as a single thread
 that receives commands from a [crossbeam-channel](https://crates.io/crates/crossbeam-channel). Every time a command is received, it is executed by this single thread of execution.
 
@@ -301,7 +299,7 @@ This design choice has obvious implications.
 - There is no guarantee that a `put` operation will happen successfully because it may be rejected by the `AdmissionPolicy` as described in the section [Admission and eviction policy](#admission-and-eviction-policy)
 - All the write operations are processed at a later point in time
 
-The solution to both these points lie in providing the right feedback to the clients. `Cached` provides [CommandAcknowledgementHandle](https://github.com/SarthakMakhija/cached/blob/main/src/cache/command/acknowledgement.rs) as an abstraction that implements the [Future](https://doc.rust-lang.org/std/future/trait.Future.html) trait.
+The solution to both these points lies in providing the right feedback to the clients. **CacheD** provides [CommandAcknowledgementHandle](https://github.com/SarthakMakhija/cached/blob/main/src/cache/command/acknowledgement.rs) as an abstraction that implements the [Future](https://doc.rust-lang.org/std/future/trait.Future.html) trait.
 Every write operation is returned an instance of [CommandSendResult](https://github.com/SarthakMakhija/cached/blob/main/src/cache/command/command_executor.rs) that wraps 
 `CommandAcknowledgement` which provides a `handle()` method to return a `CommandAcknowledgementHandle` to the clients. 
 
@@ -316,7 +314,7 @@ Clients can perform `await` on the `CommandAcknowledgementHandle` and get the [C
 }
 ```
 
-Let's jump on the metrics collection in the cache.
+We have most of the building blocks for our cache, let's now jump to the metrics collection in the cache.
 
 ### Measuring metrics
 
@@ -335,6 +333,7 @@ const TOTAL_STATS: usize = 16;
 pub enum StatsType {
    KeysAdded = 0,
    KeysDeleted = 1,
+   //+ others
 }
 
 pub(crate) struct ConcurrentStatsCounter {
@@ -353,7 +352,7 @@ The approach looks great. However, we need to understand the concept of `false s
 #### False sharing
 
 The memory in the *L1*, *L2*, *L3* and *L4* processor cache is organized in units called "cache lines". 
-Cache line is the smallest unit of data transfer between the main memory and processor cache. If the cache line size is 64 bytes, then a contiguous block
+Cache line is the smallest unit of data transfer between the main memory and the processor cache. If the cache line size is 64 bytes, then a contiguous block
 of 64 bytes will be transferred from RAM to processor cache for processing. The size of cache lines varies based on the type of the processor.
 For example, on *x86-64*, *aarch64*, and *powerpc64*, [cache line is 128 bytes](https://docs.rs/crossbeam/0.8.2/crossbeam/utils/struct.CachePadded.html).
 
@@ -366,19 +365,19 @@ Let's imagine that *thread1* running on core-1 increases the atomic value at *in
 We know that both these atomic values lie on the same cache line and "updating an atomic value invalidates the whole cache line it belongs to". Invalidating a cache line 
 will result in fetching that chunk of memory from RAM again. 
 
-Consider that *thread1* running on core-1 updates the atomic value at *index 0*, which invalidates the entire cache line that this value belongs to. Now, *thread2*
+Consider that *thread1* running on core-1 updates the atomic value at *index 0*, and this invalidates the entire cache line that this value belongs to. Now, *thread2*
 running on core-2 needs to update the value at *index 1* but the entire cache line is invalidated. So, the cache line (64 bytes) needs to be fetched from RAM.
 Reading/Writing from/to RAM is in the order of [80-100 ns](https://kt.academy/article/pmem-intro) compared to the same from *L1*, *L2*, *L3* and *L4* cache which is in the order of 1-10 ns.
 
 *thread2* running on core-2 updates the atomic value at *index 1* after the cache line is fetched. This update invalidates the entire cache line again and forces another
-fetch of the cache line from RAM. This is called "false sharing". 
+fetch of the cache line from RAM. This fetch/re-fetch/re-re-fetch of cache line is the courtesy of "false sharing". 
 
-We are using "atomics" to ensure that each thread updates its value atomically and because these values are on the
+> We are using "atomics" to ensure that each thread updates its value atomically and because these values are on the
 same cache line, both the threads running on different cores end up **sharing** the same cache line for **writing**. This results in increased latency
 because of the repeated fetch of the cache line(s) from RAM. Imagine the extent of the problem with 128 cores.
 
 The way to deal with "false sharing" is to pad the values so that each `AtomicU64` lies on its own cache line. One option is to pad the values manually and other option
-is to use a library that can help with padding. `Cached` uses [CachePadded](https://docs.rs/crossbeam/0.8.2/crossbeam/utils/struct.CachePadded.html) to pad the values.
+is to use a library that can help with padding. **CacheD** uses [CachePadded](https://docs.rs/crossbeam/0.8.2/crossbeam/utils/struct.CachePadded.html) to pad the values.
 
 With the introduction of `CachePadded`, this is how the code looks like:
 
@@ -391,6 +390,7 @@ const TOTAL_STATS: usize = 16;
 pub enum StatsType {
    KeysAdded = 0,
    KeysDeleted = 1,
+   //+ others
 }
 
 #[repr(transparent)]
@@ -399,6 +399,8 @@ pub enum StatsType {
 struct Counter(CachePadded<AtomicU64>);
 
 //entries are now containing Counters instead of AtomicU64
+//each Counter is a CachePadded AtomicU64
+//therefore, each AtomicU64 is now placed on its own cache line
 pub(crate) struct ConcurrentStatsCounter {
    entries: [Counter; TOTAL_STATS],   
 }
@@ -411,9 +413,9 @@ fn add(&self, stats_type: StatsType, count: u64) {
 }
 ```
 
-### Measuring cache hit ratio
+We are done with all the building block :). Great job. Let's understand a way to measure cache-hit ratio.
 
-Now it is the time to measure cache hit ratio.  
+### Measuring cache-hit ratio
 
 Hit ratio is defined by the following formula:
 
@@ -427,7 +429,7 @@ Let's understand the problem better. We need the following:
 
 1) A distribution of elements of type `T`
    - It should consist of values (/elements) within the specified range
-   - It should have some way of defining the repetition of elements
+   - It should have some way of defining the repetition of elements (some elements should occur M times, some should occur P times while some should occur just 1 time) 
 2) For each element, perform a `get` operation in the cache
    - This results in measuring the hits and misses
 3) If the element is not present, perform a `put` operation in the cache
@@ -436,28 +438,28 @@ Let's understand the problem better. We need the following:
 #### Distribution of elements
 
 Distribution of elements is a collection of N elements of type `T` that will be loaded in the cache via `put` operation and the elements from this distribution
-will be queried from the cache via `get` operation.
+will be queried from the cache via `get` operation. This distribution should be able to repeat elements based on some logic.  
 
 Let's take a look at [Zipf\'s law](https://en.wikipedia.org/wiki/Zipf's_law). 
 
 >> Zipf's law often holds, approximately, when a list of measured values is sorted in decreasing order. It states that the value of the nth entry is inversely proportional to n.
 >> The best known instance of Zipf's law applies to the frequency table of words in a text or corpus of natural language. 
 >> Namely, it is usually found that the most common word occurs approximately twice as often as the next common one, three times as often as the third most common, and so on. For example, in the Brown Corpus of American English text, the word "the" is the most frequently occurring word, and by itself accounts for nearly 7% of all word occurrences (69,971 out of slightly over 1 million). True to Zipf's Law, the second-place word "of" accounts for slightly over 3.5% of words (36,411 occurrences), followed by "and" (28,852).
->> ([Taken from](https://en.wikipedia.org/wiki/Zipf's_law)). 
+>> ([Referenced from](https://en.wikipedia.org/wiki/Zipf's_law)). 
 
 If the words are ranked according to their frequencies in a large collection, then the frequency will decline as the rank increases, so a small number of items appear very often, and a large number rarely occur. ([Reference](https://www.techtarget.com/whatis/definition/Zipfs-Law)).
 
-We can use the idea Zipf distribution to check cache hits because it will cause some elements to appear frequently, while the other elements will appear rarely. In rust ecosystem, the crate [rand_distr](https://docs.rs/rand_distr/0.4.3/rand_distr/struct.Zipf.html)
+This idea pretty much matches what we want. We can use the Zipf distribution to check cache hits because it will cause some elements to appear frequently, while the other elements will appear rarely. In rust ecosystem, the crate [rand_distr](https://docs.rs/rand_distr/0.4.3/rand_distr/struct.Zipf.html)
 provides the Zipf distribution.
 
 We have the distribution sorted out. Now, we can write a benchmark that loads K elements of the distribution in a cache with weight W. All we need to do is identify K and W.
 
-The idea is to have a large enough distribution sample and `Cached` uses a distribution size of *16 * 100_000*, that means the Zipf distribution will contain *16 * 100_000*
+The idea is to have a large enough distribution sample and **CacheD** uses a distribution size of *16 * 100_000*, that means the Zipf distribution will contain *16 * 100_000*
 elements with the biggest value as *16 * 100_000*. So, our K = *16 * 100_000*. 
 
-Each key/value pair that is being loaded is of type `u64` and the total weight of a key/value pair is *40 bytes*.  
+Each key/value pair that is being loaded is of type `u64` and the weight of a single key/value pair is *40 bytes*.  
 
-We want the cache weight to be less than the total weight of the incoming elements to simulate rejections. We keep the cache weight to be *1/16*th of the total weight of the incoming elements.
+We want the cache weight to be less than the total weight of the incoming elements to simulate [rejections](#admission-and-eviction-policy). We keep the cache weight to be *1/16*th of the total weight of the incoming elements.
 That means, the cache weight (W) = *100_000 * 40 bytes*. That's it, we are now ready to run the [benchmark](https://github.com/SarthakMakhija/cached/blob/main/benches/benchmarks/cache_hits.rs).
 
 ```rust
@@ -468,13 +470,12 @@ const CAPACITY: usize = 100_000;
 const COUNTERS: TotalCounters = (CAPACITY * 10) as TotalCounters;
 
 /// Defines the total size of the cache.
-/// It is kept to CAPACITY * 40 because the benchmark inserts keys and values of type u64.
+/// It is kept to CAPACITY * 40 because the benchmark inserts keys and values with weight 40.
 const WEIGHT: Weight = (CAPACITY * 40) as Weight;
 
 /// Defines the total sample size that is used for generating Zipf distribution.
 /// Here, ITEMS is 16 times the CAPACITY to provide a larger sample for Zipf distribution.
-/// W/C = 16, W denotes the sample size, and C is the cache size (denoted by CAPA)
-/// [TinyLFU](https://dgraph.io/blog/refs/TinyLFU%20-%20A%20Highly%20Efficient%20Cache%20Admission%20Policy.pdf)
+/// W/C = 16, W denotes the sample size, and C is the cache size
 const ITEMS: usize = CAPACITY * 16;
 
 pub fn cache_hits_single_threaded_exponent_1_001(criterion: &mut Criterion) {
@@ -513,11 +514,13 @@ pub fn cache_hits_single_threaded_exponent_1_001(criterion: &mut Criterion) {
 }
 ```
 
-### Mentions
+The results for cache-hits in **CacheD** is available [here](https://github.com/SarthakMakhija/cached#measuring-cache-hit-ratio). 
+
+That's it. We have all the building blocks needed to build an LFU based cache.
 
 ### Code
 
-The source code of *Cached* is available [here](https://github.com/SarthakMakhija/cached) and the crate is available [here](https://crates.io/crates/tinylfu-cached). 
+The source code of **CacheD** is available [here](https://github.com/SarthakMakhija/cached) and the crate is available [here](https://crates.io/crates/tinylfu-cached). 
 
 ### Relevant research papers
 
@@ -527,3 +530,5 @@ The source code of *Cached* is available [here](https://github.com/SarthakMakhij
 ### References
 
 - [Ristretto](https://dgraph.io/blog/post/introducing-ristretto-high-perf-go-cache/)
+- [Zipf\'s law wikipedia](https://en.wikipedia.org/wiki/Zipf's_law)
+- [Zipf\'s law techtarget](https://www.techtarget.com/whatis/definition/Zipfs-Law)
