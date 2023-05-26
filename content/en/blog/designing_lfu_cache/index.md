@@ -4,8 +4,8 @@ title: "Designing an LFU cache"
 date: 2023-05-24
 description: ""
 tags: ["Cache", "TinyLFU", "CacheD"]
-thumbnail: /bitcask_title.webp
-caption: "Background by Suzy Hazelwood on Pexels"
+thumbnail: /lfu-cache-title.webp
+caption: "Background by Drift Shutterbug on Pexels"
 ---
 
 https://en.wikipedia.org/wiki/Least_frequently_used
