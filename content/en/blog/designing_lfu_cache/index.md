@@ -224,7 +224,7 @@ the total cache weight increase beyond some threshold?*
 
 This is where the paper [TinyLFU](https://dgraph.io/blog/refs/TinyLFU%20-%20A%20Highly%20Efficient%20Cache%20Admission%20Policy.pdf) comes into the picture. 
 The main idea is to only let in a new key/value pair if its access estimate is higher than that of the item being evicted. This simply means that the incoming
-key/value pair should be more valuable to the cache than some existing key/value pairs. 
+key/value pair should be more valuable to the cache than some existing key/value pairs and this also improves hit ratios. 
 
 Let's look at the approach:
 
@@ -245,10 +245,10 @@ This approach is called "Sampled LFU".
 
 There is still one more case to consider. What if there is a key with high access frequency, and it has not been seen for a while. Will it never get evicted?
 
-This point is around the recency of a key access and [TinyLFU](https://github.com/SarthakMakhija/cached/blob/main/src/cache/lfu/tiny_lfu.rs) ensures the recency of key access by a `reset` method. 
+This point is around the recency of a key access and [TinyLFU](https://github.com/SarthakMakhija/cached/blob/main/src/cache/lfu/tiny_lfu.rs) abstraction ensures the recency of key access by a `reset` method. 
 We have used `count-min sketch` to maintain the access frequency of each key and everytime a key is accessed, the frequency counter is incremented.
 After N key increments, the counters get halved. So, a key that has not been seen for a while would also have its counter reset to half of the original value; 
-thereby providing a chance to the new incoming keys to get in.
+thereby providing a chance to the new incoming keys to get in. *[TinyLFU paper section: Freshness Mechanism](https://dgraph.io/blog/refs/TinyLFU%20-%20A%20Highly%20Efficient%20Cache%20Admission%20Policy.pdf)
 
 >> [TinyLFU](https://github.com/SarthakMakhija/cached/blob/main/src/cache/lfu/tiny_lfu.rs) has a [FrequencyCounter](https://github.com/SarthakMakhija/cached/blob/main/src/cache/lfu/frequency_counter.rs) and a [DoorKeeper](https://github.com/SarthakMakhija/cached/blob/main/src/cache/lfu/doorkeeper.rs).
 >> DoorKeeper is implemented using a [Bloom filter](https://tech-lessons.in/blog/bloom_filter/). Before increasing the access frequency of a key in `FrequencyCounter` via
@@ -350,6 +350,8 @@ fn add(&self, stats_type: StatsType, count: u64) {
 
 The approach looks great. However, we need to understand the concept of `false sharing` before we conclude on the greatness of the approach. 
 
+#### False sharing
+
 The memory in the *L1*, *L2*, *L3* and *L4* processor cache is organized in units called "cache lines". 
 Cache line is the smallest unit of data transfer between the main memory and processor cache. If the cache line size is 64 bytes, then a contiguous block
 of 64 bytes will be transferred from RAM to processor cache for processing. The size of cache lines varies based on the type of the processor.
@@ -369,11 +371,11 @@ running on core-2 needs to update the value at *index 1* but the entire cache li
 Reading/Writing from/to RAM is in the order of [80-100 ns](https://kt.academy/article/pmem-intro) compared to the same from *L1*, *L2*, *L3* and *L4* cache which is in the order of 1-10 ns.
 
 *thread2* running on core-2 updates the atomic value at *index 1* after the cache line is fetched. This update invalidates the entire cache line again and forces another
-fetch of the cache line from RAM. This is called "false sharing".
+fetch of the cache line from RAM. This is called "false sharing". 
 
 We are using "atomics" to ensure that each thread updates its value atomically and because these values are on the
-same cache line, both the threads running on different cores end up **sharing** the same cache line for writing. This results in increased latency
-because of the repeated fetch of the cache lines from RAM. Imagine the extent of the problem with 128 cores.
+same cache line, both the threads running on different cores end up **sharing** the same cache line for **writing**. This results in increased latency
+because of the repeated fetch of the cache line(s) from RAM. Imagine the extent of the problem with 128 cores.
 
 The way to deal with "false sharing" is to pad the values so that each `AtomicU64` lies on its own cache line. One option is to pad the values manually and other option
 is to use a library that can help with padding. `Cached` uses [CachePadded](https://docs.rs/crossbeam/0.8.2/crossbeam/utils/struct.CachePadded.html) to pad the values.
@@ -409,11 +411,107 @@ fn add(&self, stats_type: StatsType, count: u64) {
 }
 ```
 
-
- 
-
-
 ### Measuring cache hit ratio
+
+Now it is the time to measure cache hit ratio.  
+
+Hit ratio is defined by the following formula:
+
+```rust
+Hit ratio = number of hits/(number of hits + number of misses) 
+or 
+Hit ratio as percentage = (number of hits/(number of hits + number of misses)) * 100
+```
+
+Let's understand the problem better. We need the following:
+
+1) A distribution of elements of type `T`
+   - It should consist of values (/elements) within the specified range
+   - It should have some way of defining the repetition of elements
+2) For each element, perform a `get` operation in the cache
+   - This results in measuring the hits and misses
+3) If the element is not present, perform a `put` operation in the cache
+   - This results in adding a new element from the distribution in the cache
+
+#### Distribution of elements
+
+Distribution of elements is a collection of N elements of type `T` that will be loaded in the cache via `put` operation and the elements from this distribution
+will be queried from the cache via `get` operation.
+
+Let's take a look at [Zipf\'s law](https://en.wikipedia.org/wiki/Zipf's_law). 
+
+>> Zipf's law often holds, approximately, when a list of measured values is sorted in decreasing order. It states that the value of the nth entry is inversely proportional to n.
+>> The best known instance of Zipf's law applies to the frequency table of words in a text or corpus of natural language. 
+>> Namely, it is usually found that the most common word occurs approximately twice as often as the next common one, three times as often as the third most common, and so on. For example, in the Brown Corpus of American English text, the word "the" is the most frequently occurring word, and by itself accounts for nearly 7% of all word occurrences (69,971 out of slightly over 1 million). True to Zipf's Law, the second-place word "of" accounts for slightly over 3.5% of words (36,411 occurrences), followed by "and" (28,852).
+>> ([Taken from](https://en.wikipedia.org/wiki/Zipf's_law)). 
+
+If the words are ranked according to their frequencies in a large collection, then the frequency will decline as the rank increases, so a small number of items appear very often, and a large number rarely occur. ([Reference](https://www.techtarget.com/whatis/definition/Zipfs-Law)).
+
+We can use the idea Zipf distribution to check cache hits because it will cause some elements to appear frequently, while the other elements will appear rarely. In rust ecosystem, the crate [rand_distr](https://docs.rs/rand_distr/0.4.3/rand_distr/struct.Zipf.html)
+provides the Zipf distribution.
+
+We have the distribution sorted out. Now, we can write a benchmark that loads K elements of the distribution in a cache with weight W. All we need to do is identify K and W.
+
+The idea is to have a large enough distribution sample and `Cached` uses a distribution size of *16 * 100_000*, that means the Zipf distribution will contain *16 * 100_000*
+elements with the biggest value as *16 * 100_000*. So, our K = *16 * 100_000*. 
+
+Each key/value pair that is being loaded is of type `u64` and the total weight of a key/value pair is *40 bytes*.  
+
+We want the cache weight to be less than the total weight of the incoming elements to simulate rejections. We keep the cache weight to be *1/16*th of the total weight of the incoming elements.
+That means, the cache weight (W) = *100_000 * 40 bytes*. That's it, we are now ready to run the [benchmark](https://github.com/SarthakMakhija/cached/blob/main/benches/benchmarks/cache_hits.rs).
+
+```rust
+/// Defines the total number of key/value pairs that may be loaded in the cache
+const CAPACITY: usize = 100_000;
+
+/// Defines the total number of counters used to measure the access frequency.
+const COUNTERS: TotalCounters = (CAPACITY * 10) as TotalCounters;
+
+/// Defines the total size of the cache.
+/// It is kept to CAPACITY * 40 because the benchmark inserts keys and values of type u64.
+const WEIGHT: Weight = (CAPACITY * 40) as Weight;
+
+/// Defines the total sample size that is used for generating Zipf distribution.
+/// Here, ITEMS is 16 times the CAPACITY to provide a larger sample for Zipf distribution.
+/// W/C = 16, W denotes the sample size, and C is the cache size (denoted by CAPA)
+/// [TinyLFU](https://dgraph.io/blog/refs/TinyLFU%20-%20A%20Highly%20Efficient%20Cache%20Admission%20Policy.pdf)
+const ITEMS: usize = CAPACITY * 16;
+
+pub fn cache_hits_single_threaded_exponent_1_001(criterion: &mut Criterion) {
+   criterion.bench_function("Cached.get()", |bencher| {
+      let runtime = Builder::new_multi_thread()
+              .worker_threads(1)
+              .enable_all()
+              .build()
+              .unwrap();
+
+      bencher.to_async(runtime).iter_custom(|iterations| {
+         async move {
+            let cached = CacheD::new(ConfigBuilder::new(COUNTERS, CAPACITY, WEIGHT).build());
+            let distribution = distribution_with_exponent(ITEMS as u64, ITEMS, 1.001); //Zipf exponent
+
+            let hit_miss_recorder = HitsMissRecorder::new();
+            let mut index = 0;
+
+            let start = Instant::now();
+            for _ in 0..CAPACITY*16 {
+               let option = cached.get(&distribution[index]);
+               if option.is_some() {
+                  hit_miss_recorder.record_hit();
+               } else {
+                  hit_miss_recorder.record_miss();
+               }
+               cached.put_with_weight(distribution[index], distribution[index], 40).unwrap().handle().await;
+               index += 1;
+            }
+            cached.shutdown();
+            println!("{:?} %", hit_miss_recorder.ratio());
+            start.elapsed()
+         }
+      });
+   });
+}
+```
 
 ### Mentions
 
