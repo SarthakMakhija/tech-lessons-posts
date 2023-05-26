@@ -1,15 +1,25 @@
 ---
 author: "Sarthak Makhija"
 title: "Designing an LFU cache"
-date: 2023-05-24
-description: ""
+date: 2023-05-26
+description: "I had been working on building an in-memory LFU cache (least frequently used cache) and now that it is done, I thought of writing about the building blocks of an LFU cache. This article shares the building blocks of an LFU cache along with the ideas from two research papers: BP-Wrapper and TinyLFU."
 tags: ["Cache", "TinyLFU", "CacheD"]
 thumbnail: /lfu-cache-title.webp
 caption: "Background by Drift Shutterbug on Pexels"
 ---
 
-https://en.wikipedia.org/wiki/Least_frequently_used
+I had been working on building an in-memory LFU cache (least frequently used cache) and now that it is done, I thought of writing about the building blocks of an LFU cache. This article shares the building blocks of an LFU cache along with the ideas from two research papers: [TinyLFU](https://dgraph.io/blog/refs/TinyLFU%20-%20A%20Highly%20Efficient%20Cache%20Admission%20Policy.pdf) and [BP-Wrapper](https://dgraph.io/blog/refs/bp_wrapper.pdf) 
 
+[CacheD](https://github.com/SarthakMakhija/cached) is the name of my cache, and it is inspired from [Ristretto](https://github.com/dgraph-io/ristretto).
+I know **CacheD** is a very creative name. Thank you. 
+
+Let's get started.
+
+### LFU cache
+
+According to [Wikipedia](https://en.wikipedia.org/wiki/Least_frequently_used): Least Frequently Used (LFU) is a type of cache algorithm used to manage memory within a computer. The standard characteristics of this method involve the system *keeping track of the number of times a block is referenced in memory*. When the *cache is full* and requires more room the system will *purge* the item with the *lowest reference frequency*.
+
+Let's understand the building blocks of an LFU cache starting with a way to measure access frequency.
 
 ### Measuring access frequency
 
