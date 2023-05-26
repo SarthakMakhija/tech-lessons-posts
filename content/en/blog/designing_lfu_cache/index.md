@@ -1,6 +1,6 @@
 ---
 author: "Sarthak Makhija"
-title: "Designing an LFU cache"
+title: "Designing an in-memory LFU cache"
 date: 2023-05-26
 description: "I had been working on building an in-memory LFU cache (least frequently used cache) and now that it is done, I thought of writing about the building blocks of an LFU cache. This article shares the building blocks of an LFU cache along with the ideas from two research papers: BP-Wrapper and TinyLFU."
 tags: ["Cache", "TinyLFU", "CacheD"]
@@ -19,7 +19,7 @@ Let's get started.
 
 According to [Wikipedia](https://en.wikipedia.org/wiki/Least_frequently_used): Least Frequently Used (LFU) is a type of cache algorithm used to manage memory within a computer. The standard characteristics of this method involve the system *keeping track of the number of times a block is referenced in memory*. When the *cache is full* and requires more room the system will *purge* the item with the *lowest reference frequency*.
 
-Let's understand the building blocks of an LFU cache starting with a way to measure access frequency.
+Let's now understand the building blocks of an LFU cache starting with a way to measure the access frequency.
 
 ### Measuring access frequency
 
@@ -224,7 +224,7 @@ pub(crate) struct CacheWeight<Key>
 }
 ```
 
-We have weight associated with each key/value pair.
+We have the weight associated with each key/value pair.
 
 ### Admission and eviction policy
 
@@ -255,7 +255,7 @@ This approach is called "Sampled LFU".
 
 There is still one more case to consider. What if there is a key with high access frequency, and it has not been seen for a while. Will it never get evicted?
 
-This point is around the recency of key access.The [TinyLFU](https://github.com/SarthakMakhija/cached/blob/main/src/cache/lfu/tiny_lfu.rs) abstraction ensures the recency of key access by a `reset` method. 
+This point is around the recency of key access.The [TinyLFU](https://github.com/SarthakMakhija/cached/blob/main/src/cache/lfu/tiny_lfu.rs) abstraction ensures the recency of key access by the `reset` method. 
 We have used `count-min sketch` to maintain the access frequency of each key and everytime a key is accessed, the frequency counter is incremented.
 After N key increments, the counters get halved. So, a key that has not been seen for a while would also have its counter reset to half of the original value; 
 thereby providing a chance to the new incoming keys to get in. *[TinyLFU paper section: Freshness Mechanism](https://dgraph.io/blog/refs/TinyLFU%20-%20A%20Highly%20Efficient%20Cache%20Admission%20Policy.pdf)
@@ -286,7 +286,7 @@ the idea of *batching* comes in. All the *gets* are batched in a ring-buffer lik
 is a collection of [Buffer](https://github.com/SarthakMakhija/cached/blob/main/src/cache/pool.rs) and each `Buffer` is a collection of hashes of the keys.
 
 Any time a key is accessed, it is added to a buffer within the `Pool`. When a buffer is full, it is drained. Draining involves sending the entire `Vec<KeyHash>` to a [BufferConsumer](https://github.com/SarthakMakhija/cached/blob/main/src/cache/buffer_event.rs).
-`BufferConsumer` is implemented using a single thread that receives the buffer content from a [channel](https://crates.io/crates/crossbeam-channel). The `BufferConsumer` on receiving the buffer content applies it to the `FrequencyCounter`, there by incrementing the frequency access of the keys.
+`BufferConsumer` is implemented using a single thread that receives the buffer content from a [channel](https://crates.io/crates/crossbeam-channel). The `BufferConsumer` on receiving the buffer content applies it to the `FrequencyCounter`, there by incrementing the frequency access of the entire set of keys.
 The channel size is kept small to further reduce contention and the memory footprint of collecting the buffer in memory. If the channel is full, the buffer content is dropped.
 
 [AdmissionPolicy](https://github.com/SarthakMakhija/cached/blob/main/src/cache/policy/admission_policy.rs) plays the role of `BufferConsumer` in **CacheD**.
@@ -371,7 +371,7 @@ For example, on *x86-64*, *aarch64*, and *powerpc64*, [cache line is 128 bytes](
 Let's go back to our code now. Let's assume that the cache line size is 64 bytes. We have an array of `AtomicU64`, each `AtomicU64` takes *8 bytes* of memory. Our
 cache line size is *64 bytes*, that means eight `AtomicU64` values will lie in one cache line.
 
-Let's imagine that *thread1* running on core-1 increases the atomic value at *index 0* and *thread2* running on core-2 increases the atomic value at *index 1*.
+Let's imagine that *thread1* running on core-1 will update the atomic value at *index 0* and *thread2* running on core-2 will update the atomic value at *index 1*.
 We know that both these atomic values lie on the same cache line and "updating an atomic value invalidates the whole cache line it belongs to". Invalidating a cache line 
 will result in fetching that chunk of memory from RAM again. 
 
@@ -384,7 +384,7 @@ fetch of the cache line from RAM. This fetch/re-fetch/re-re-fetch of cache line 
 
 > We are using "atomics" to ensure that each thread updates its value atomically and because these values are on the
 same cache line, both the threads running on different cores end up **sharing** the same cache line for **writing**. This results in increased latency
-because of the repeated fetch of the cache line(s) from RAM. Imagine the extent of the problem with 128 cores.
+because of the repeated fetch of the cache line(s) from RAM. This is called "false sharing". Imagine the extent of the problem with 128 cores.
 
 The way to deal with "false sharing" is to pad the values so that each `AtomicU64` lies on its own cache line. One option is to pad the values manually and other option
 is to use a library that can help with padding. **CacheD** uses [CachePadded](https://docs.rs/crossbeam/0.8.2/crossbeam/utils/struct.CachePadded.html) to pad the values.
@@ -408,7 +408,7 @@ pub enum StatsType {
 //introduce a new abstraction that wraps AtomicU64 inside CachePadded
 struct Counter(CachePadded<AtomicU64>);
 
-//entries are now containing Counters instead of AtomicU64
+//entries now contains Counters instead of AtomicU64
 //each Counter is a CachePadded AtomicU64
 //therefore, each AtomicU64 is now placed on its own cache line
 pub(crate) struct ConcurrentStatsCounter {
@@ -526,7 +526,7 @@ pub fn cache_hits_single_threaded_exponent_1_001(criterion: &mut Criterion) {
 
 The results for cache-hits in **CacheD** is available [here](https://github.com/SarthakMakhija/cached#measuring-cache-hit-ratio). 
 
-That's it. We have all the building blocks needed to build an LFU based cache.
+That's it. We have all the building blocks needed to build an in-memory LFU cache.
 
 ### Code
 
