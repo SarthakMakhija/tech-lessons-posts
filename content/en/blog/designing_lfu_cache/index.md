@@ -24,7 +24,7 @@ Let's now understand the building blocks of an LFU cache, starting with a way to
 ### Measuring access frequency
 
 All LFU caches need to maintain the access frequency for each key.
-Storing the access frequency in a `HashMap` like data structure would mean that the space used to store the frequency is directly proportional to the number of keys in the cache.
+Storing the access frequency in a `HashMap`-like data structure would mean that the space used to store the frequency is directly proportional to the number of keys in the cache.
 This is an opportunity to use a probabilistic data structure like [count-min sketch](https://tech-lessons.in/blog/count_min_sketch/) and make a trade-off between the accuracy of the access frequency and the space used to store the frequency.  
 
 > Count-min sketch (CM sketch) is a probabilistic data structure that estimates the frequency of events in a data stream.
@@ -302,7 +302,7 @@ to serve the `put` operations as soon as possible. However, batching is still re
 The idea is to treat every write operation (`put`, `update`, `delete`) as a command, send it to a [mpsc channel](https://doc.rust-lang.org/std/sync/mpsc/) and have a single thread receive
 commands from the channel and execute them one after the other.
 
-**CacheD** follows the same idea. Every write operation goes as a [Command](https://github.com/SarthakMakhija/cached/blob/main/src/cache/command/mod.rs) to a 
+**CacheD** follows the same idea. Every write operation goes as a [Command](https://github.com/SarthakMakhija/cached/blob/main/src/cache/command/mod.rs) to the 
 [CommandExecutor](https://github.com/SarthakMakhija/cached/blob/main/src/cache/command/command_executor.rs). `CommandExecutor` is implemented as a single thread
 that receives commands from a [crossbeam-channel](https://crates.io/crates/crossbeam-channel). Every time a command is received, it is executed by this single thread of execution.
 
@@ -438,9 +438,9 @@ Hit ratio as percentage = (number of hits/(number of hits + number of misses)) *
 
 Let's understand the problem better. We need the following:
 
-1) A distribution of elements of type `T`
-   - It should consist of values (/elements) within the specified range
-   - It should have some way of defining the repetition of elements (some elements should occur M times, some should occur P times, while some should occur just one time) 
+1) A distribution of elements of type `T`. We will be performing `get` and `put` operations using the elements of this distribution. The distribution:
+   - should consist of values (/elements) within the specified range
+   - should have some way of defining the repetition of elements (some elements should occur M times, some should occur P times, while some should occur just one time) 
 2) For each element, perform a `get` operation in the cache
    - This results in measuring the hits and misses
 3) If the element is not present, perform a `put` operation in the cache
@@ -463,7 +463,7 @@ If the words are ranked according to their frequencies in a large collection, th
 This idea matches what we want. We can use the Zipf distribution to check cache hits because it will cause some elements to appear frequently while others will appear rarely. In the rust ecosystem, the crate [rand_distr](https://docs.rs/rand_distr/0.4.3/rand_distr/struct.Zipf.html)
 provides the Zipf distribution.
 
-We have the distribution sorted out. Now, we can write a benchmark that loads K elements of the distribution in a cache with weight W. All we need to do is identify K and W.
+We have the distribution part sorted out. Now, we can write a benchmark that loads K elements of the distribution in a cache with weight W. All we need to do is identify K and W.
 
 The idea is to have a large enough distribution sample, and **CacheD** uses a distribution size of *16 * 100_000*, which means the Zipf distribution will contain *16 * 100_000*
 elements with the biggest value as *16 * 100_000*. So, our K = *16 * 100_000*. 
