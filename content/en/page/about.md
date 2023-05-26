@@ -27,6 +27,11 @@ I am an application developer at ThoughtWorks. I had worked with Citigroup and T
 
 I love working on my projects in my free time. Some of my projects include –
 
+🔹 **[CacheD](https://github.com/SarthakMakhija/cached)**
+
+**CacheD** is a [high performance](https://github.com/SarthakMakhija/cached/tree/main/benches/results), [LFU](https://dgraph.io/blog/refs/TinyLFU%20-%20A%20Highly%20Efficient%20Cache%20Admission%20Policy.pdf) based in-memory cache in Rust inspired by [Ristretto](https://github.com/dgraph-io/ristretto).
+The crate for **CacheD** is available [here](https://crates.io/crates/tinylfu-cached). 
+
 🔹 **[bitcask](https://github.com/SarthakMakhija/bitcask)**
 
 This is the golang implementation of Riak's [bitcask](https://riak.com/assets/bitcask-intro.pdf) paper. This project is for educational purposes only. The idea is to provide a reference implementation of bitcask to help anyone interested in storage engines understand the basics of building a persistent key-value storage engine.
@@ -63,10 +68,6 @@ Flips is an implementation of [Feature Toggles](https://martinfowler.com/article
 The idea behind Flips is to let the users **implement toggles with minimum configuration and coding**. This library should work with Java8, Spring Core / Spring MVC / Spring Boot.
 
 I have a separate [blog](https://tech-lessons.in/blog/flips_feature_flipping_for_java/) about this library.
-
-## Current projects
-
-Currently, I am implementing an [LFU based cache](https://github.com/SarthakMakhija/cached) in rust. 
 
 ## Next project
 My current interest is in *Designing storage engines and databases*, and I plan to build a key/value storage engine in Rust. The idea is to create a write-optimized storage engine using an LSM tree and provide read-optimized paths.
