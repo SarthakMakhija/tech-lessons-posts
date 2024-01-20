@@ -4,7 +4,7 @@ title: About Me
 date: 2023-02-24
 description:
 keywords: ["about-me", "contact"]
-type: about
+type: page
 ---
 
 <style>
@@ -18,10 +18,19 @@ type: about
 </style>
 
 <div class="self-container">
-    <p><img class="self-image" alt="Sarthak Makhija" src="/self.png"></p> 
-    <p class="self">Sarthak Makhija</p>
+    <p><img class="self-image" alt="Sarthak Makhija" src="/self.png"></p>
 </div>
-I am an application developer at ThoughtWorks. I had worked with Citigroup and TCS before I joined ThoughtWorks.
+
+I am Sarthak Makhija, and I am an application developer at ThoughtWorks. I had worked with Citigroup and TCS before I joined ThoughtWorks.
+
+I am currently leading a team that is developing a **strongly consistent** **distributed** **key/value storage** engine with support for **rich queries**.
+
+The technical ideas of our distributed key/value storage engine include:
+- [golang](https://go.dev/) as the programming language
+- [etcd](https://etcd.io/) as the metadata store 
+- [raft (/multi-raft)](https://raft.github.io/) as the consensus algorithm and 
+- [two-phase commit](https://martinfowler.com/articles/patterns-of-distributed-systems/two-phase-commit.html) with serial isolation level
+- [blast](https://github.com/SarthakMakhija/blast-core) to do the load testing
 
 ## My Projects
 
