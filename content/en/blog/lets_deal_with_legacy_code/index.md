@@ -7,7 +7,7 @@ tags: ["Legacy code", "Broken Window Theory", "Refactoring"]
 thumbnail: /legacy-code.webp
 caption: "Photo by Markus Spiske on Pexels"
 ---
-This article is in continuation with the <a href="/blog/lets_define_legacy_code/">previous article</a> where we defined some key aspects of Legacy code. In this article we will learn to deal with Legacy code.
+This article is in continuation with the <a href="/en/blog/lets_define_legacy_code/">previous article</a> where we defined some key aspects of Legacy code. In this article we will learn to deal with Legacy code.
 Before we begin with an example, let’s take a moment to understand <em class="markup--em markup--p-em">Broken Window Theory.</em></p>
 
 <img class="align-center" title="Broken Window Theory" src="/broken-window.jpeg" alt="Broken Window Theory" />
@@ -96,7 +96,7 @@ The team decides to discuss different ways to handle this new requirement in leg
 
 {{< youtube aGGoW8YENKo >}}
 
-And the team agrees to improve the code before implementing the new functionality. Scott and Jessica will be pairing on this. But, where do they start from? As mentioned in their discussion, they need to understand the code first, so they decide to write [Characterization Test(s)](/blog/lets_define_legacy_code#which-tests-to-write).
+And the team agrees to improve the code before implementing the new functionality. Scott and Jessica will be pairing on this. But, where do they start from? As mentioned in their discussion, they need to understand the code first, so they decide to write [Characterization Test(s)](/en/blog/lets_define_legacy_code#which-tests-to-write).
 
 ### First Characterization Test
 Scott> How many tests should we write?

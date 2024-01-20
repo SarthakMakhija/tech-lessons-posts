@@ -128,7 +128,7 @@ With that said, we want to make the system better keeping the focus on the task.
 
 {{< youtube 0U83rST3ang >}}
 
-Let's move on to the [next article](/blog/lets_deal_with_legacy_code/) that explains how to deal with legacy code.
+Let's move on to the [next article](/en/blog/lets_deal_with_legacy_code/) that explains how to deal with legacy code.
 
 ### References
 - Working Effectively with Legacy code

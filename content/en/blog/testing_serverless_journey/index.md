@@ -8,7 +8,7 @@ thumbnail: /testing-serverless.webp
 caption: "Background by Paul Van Cotthem on Unsplash"
 ---
 
-It is time to test our [Serverless journey](/blog/beginning_serverless_journey) which started with a web application that involved an AWS lambda, an API Gateway and DynamoDB. 
+It is time to test our [Serverless journey](/en/blog/beginning_serverless_journey) which started with a web application that involved an AWS lambda, an API Gateway and DynamoDB. 
 
 We had some unit tests for our controller, service and request objects. But, these tests don't give us the kind of confidence we need to deploy our application. At this stage we don't even know if the query that is written in the repository is going to work properly or not, forget about releasing the application.
 
@@ -580,4 +580,4 @@ Here is a quick glimpse of the sequence of events that happen when the integrati
 
 <img class="align-center" src="/serverless-localstack.png" />
 
-Let's move on to our last [article](/blog/concluding_serverless_journey) and see everything in action on an AWS account.
+Let's move on to our last [article](/en/blog/concluding_serverless_journey) and see everything in action on an AWS account.

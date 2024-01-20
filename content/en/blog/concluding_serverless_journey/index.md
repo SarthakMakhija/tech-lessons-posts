@@ -8,7 +8,7 @@ thumbnail: /concluding-serverless.png
 caption: "Background by Tamara Schipchinskaya on Unsplash"
 ---
 
-We have come a long way in our [Serverless journey](/blog/beginning_serverless_journey). This journey which started with building a serverless application has finally come to a stage where we can see all
+We have come a long way in our [Serverless journey](/en/blog/beginning_serverless_journey). This journey which started with building a serverless application has finally come to a stage where we can see all
 our hard work in action. We will be deploying our application in this article.
 
 We will be using [AWS CDK](https://docs.aws.amazon.com/cdk/latest/guide/home.html) to deploy our application. Before we start using CDK, let's quickly look at what is CDK -

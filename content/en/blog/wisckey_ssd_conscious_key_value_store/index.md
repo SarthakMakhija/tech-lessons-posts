@@ -133,7 +133,7 @@ SSTable files are organized into blocks (or sections). SSTable files in all the 
 
 **Data block** contains the actual data; the key-value pairs in the sorted order by key
 
-> A Bloom filter is a probabilistic data structure used to test whether an element is a set member. A bloom filter can query against large amounts of data and return either “possibly in the set” or “definitely not in the set”. More information on bloom filter is available [here](/blog/bloom_filter/).
+> A Bloom filter is a probabilistic data structure used to test whether an element is a set member. A bloom filter can query against large amounts of data and return either “possibly in the set” or “definitely not in the set”. More information on bloom filter is available [here](/en/blog/bloom_filter/).
 
 Let's take a quick look at compaction.
 
