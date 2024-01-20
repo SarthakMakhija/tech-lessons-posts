@@ -71,7 +71,7 @@ async fn put_a_key_value() {
 }
 ```
 
-I have a separate [blog](https://tech-lessons.in/blog/designing_lfu_cache/) on designing LFU cache.
+I have a separate [blog](/en/blog/designing_lfu_cache/) on designing LFU cache.
 
 ### 🔹 [Goselect](https://github.com/SarthakMakhija/goselect)
 
@@ -148,4 +148,4 @@ class EmailSender{
 
 *Feature sendEmail is enabled if the property `feature.send.email` is set to `true`.*
 
-I have a separate [blog](https://tech-lessons.in/blog/flips_feature_flipping_for_java/) about this library.
+I have a separate [blog](/en/blog/flips_feature_flipping_for_java/) about this library.
