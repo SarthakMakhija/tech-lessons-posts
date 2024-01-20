@@ -28,9 +28,9 @@ I am currently leading a team that is developing a **strongly consistent** **dis
 The technical ideas of our distributed key/value storage engine include:
 - [golang](https://go.dev/) as the programming language
 - [etcd](https://etcd.io/) as the metadata store 
+- [badger](https://github.com/dgraph-io/badger) as the key/value storage engine
 - [raft (/multi-raft)](https://raft.github.io/) as the consensus algorithm and 
 - [two-phase commit](https://martinfowler.com/articles/patterns-of-distributed-systems/two-phase-commit.html) with serial isolation level
-- [blast](https://github.com/SarthakMakhija/blast-core) to do the load testing
 
 ## Let's connect
 <div class="flex gap-x-3 flex-wrap gap-y-2">

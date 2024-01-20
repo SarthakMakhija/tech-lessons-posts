@@ -11,11 +11,11 @@ type: page
 
 I love working on my projects in my free time.
 
-🔹 **[Flips](https://github.com/Feature-Flip/flips)**
+### 🔹 [Flips](https://github.com/Feature-Flip/flips)
 
 Flips is an implementation of [Feature Toggles](https://martinfowler.com/articles/feature-toggles.html) pattern for Java. 
 
-Feature Toggles are a powerful technique, allowing teams to change system behaviour without changing the code.
+Feature Toggles are a powerful technique that allow teams to change system behaviour without changing the code.
 
 The idea behind Flips is to let the users **implement toggles with minimum configuration and coding**. This library is implemented in **Java** and uses **Spring MVC**.
 
@@ -33,7 +33,7 @@ class EmailSender{
 
 I have a separate [blog](https://tech-lessons.in/blog/flips_feature_flipping_for_java/) about this library.
 
-🔹 **[Data-anon](https://github.com/dataanon/data-anon)**
+### 🔹 [Data-anon](https://github.com/dataanon/data-anon)
 
 Data Anonymization tool helps build **anonymized production data dumps**, which can be used for performance testing, security testing, debugging and development. This tool is implemented in **Kotlin** and works with Java 8 & Kotlin.
 
@@ -71,24 +71,24 @@ fun main(args: Array<String>) {
 }
 ```
 
-🔹 **[Gamifying Refactoring](http://gamifying-refactoring.github.io/)**
+### 🔹 [Gamifying Refactoring](http://gamifying-refactoring.github.io/)
 
 Refactoring is fun to learn and practice. It is even more fun to understand it together by playing a game.
 
-I created the idea of Gamifying refactoring which is run as a workshop in TW. 
+I created the idea of Gamifying refactoring which is run as a game (/mini workshop) in TW. 
 
-The idea behind the same is to **identify** code smells, **justify** each of them by going beyond **ilities**, finish all of this in a fixed time and get points for your team.
+The idea behind this game is to **identify** code smells, **justify** each of them by going beyond **ilities**, finish all of this in a fixed time and win points for your team.
 
-🔹 **[goselect](https://github.com/SarthakMakhija/goselect)**
+### 🔹 [Goselect](https://github.com/SarthakMakhija/goselect)
 
 goselect provides SQL-like ‘select’ interface for files. This means one can execute a select query like:
 
 `select name, path, size from . where or(like(name, result.*), eq(isdir, true)) order by 3 desc`
-to get the filename, file path and size of all the files that are directories or their names begin with the term result. 
+to get the filename, file path and size of all the files that are either directories or their names begin with the term result. 
 
 This tool is implemented in **golang**.
 
-🔹 **[CacheD](https://github.com/SarthakMakhija/cached)**
+### 🔹 [CacheD](https://github.com/SarthakMakhija/cached)
 
 **CacheD** is a [high performance](https://github.com/SarthakMakhija/cached/tree/main/benches/results), [LFU](https://dgraph.io/blog/refs/TinyLFU%20-%20A%20Highly%20Efficient%20Cache%20Admission%20Policy.pdf) based in-memory cache in **Rust** inspired by [Ristretto](https://github.com/dgraph-io/ristretto).
 
@@ -107,9 +107,10 @@ async fn put_a_key_value() {
 }
 ```
 
-🔹 **[Blast](https://github.com/SarthakMakhija/blast)**
+### 🔹 [Blast](https://github.com/SarthakMakhija/blast)
 
 **blast** is a load generator for TCP servers, especially if such servers maintain persistent connections. It is implemented in **golang**.
+It is used in my current project to do the load testing of the distributed key/value storage engine that we are building.
 
 **blast** provides the following features:
 
@@ -129,7 +130,7 @@ async fn put_a_key_value() {
 
 The above command sends 200000 requests with the payload defined in the file `payload`, over 10 TCP connections using 100 concurrent workers.
 
-🔹 **[Clearcheck](https://github.com/SarthakMakhija/clearcheck)**
+### 🔹 [Clearcheck](https://github.com/SarthakMakhija/clearcheck)
 
 Write expressive and elegant assertions with ease!
 
