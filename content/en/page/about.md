@@ -3,7 +3,7 @@ author: Sarthak Makhija
 title: About Me
 date: 2023-02-24
 description:
-keywords: ["about-us", "contact"]
+keywords: ["about-me", "contact"]
 type: about
 ---
 
