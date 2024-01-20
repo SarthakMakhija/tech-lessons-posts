@@ -71,6 +71,8 @@ async fn put_a_key_value() {
 }
 ```
 
+I have a separate [blog](https://tech-lessons.in/blog/designing_lfu_cache/) on designing LFU cache.
+
 ### 🔹 [Goselect](https://github.com/SarthakMakhija/goselect)
 
 goselect provides SQL-like ‘select’ interface for files. This means one can execute a select query like:
