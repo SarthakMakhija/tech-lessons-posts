@@ -91,3 +91,65 @@ mod tests {
 
 It is a decent start, and we can make our first commit.
 
+We have implemented the `MembershipAssertion` trait for `&str` type. We also need the methods of the `MembershipAssertion` trait for the `String` type.
+
+Let's implement the trait for the `String` type. 
+
+```rust
+impl MembershipAssertion for String {
+    fn should_contain_a_digit(&self) -> &Self {
+        let contains_a_digit = self.chars().any(|ch| ch.is_numeric());
+        if !contains_a_digit {
+            panic!("assertion failed: {:?} should contain a digit", self);
+        }
+        self
+    }
+}
+
+#[cfg(test)]
+mod string_tests {
+    use crate::MembershipAssertion;
+
+    #[test]
+    fn should_contain_a_digit() {
+        let password = String::from("P@@sw0rd1 zebra alpha");
+        password.should_contain_a_digit();
+    }
+
+    #[test]
+    fn should_not_be_empty_and_contain_a_digit() {
+        let password = String::from("P@@sw0rd1 zebra alpha");
+        password.should_not_be_empty().should_contain_a_digit();
+    }
+}
+```
+
+We have duplicated the method `should_contain_a_digit` for `&str` and `String`. Let's make the first attempt to remove the duplication.
+
+```rust
+impl MembershipAssertion for String {
+    fn should_contain_a_digit(&self) -> &Self {
+        (self as &str).should_contain_a_digit();
+        self
+    }
+}
+```
+
+We can convert `String` to a `reference to string slice` and invoke the respective methods on `&str`. With this approach, the implementation
+of `MembershipAssertion` on `String` looks like the following:
+
+```rust
+impl MembershipAssertion for String {
+    fn should_contain_a_digit(&self) -> &Self {
+        (self as &str).should_contain_a_digit();
+        self
+    }
+
+    fn should_not_be_empty(&self) -> &Self {
+        (self as &str).should_not_be_empty();
+        self
+    }
+}
+```
+
+Time to make our next commit. 
