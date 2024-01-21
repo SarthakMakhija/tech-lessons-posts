@@ -200,11 +200,81 @@ for a constrained `T`.
 Rust [File](https://doc.rust-lang.org/std/fs/struct.File.html) type takes `AsRef<Path>`, which means any `P` which can be represented as a [Path](https://doc.rust-lang.org/std/path/struct.Path.html)
 can be passed as an argument.
 ```rust
-//open from Rust's file type.
+// open method from Rust' file type.
 pub fn open<P: AsRef<Path>>(path: P) -> Result<File> {..}
 ```
 
 With the introduction of `AsRef<str>` change, we have taken care of the duplication between implementations of `MembershipAssertion`, and we can
 now remove our original implementation of `MembershipAssertion` for `String` and `&str` types.
 
+### Leverage blanket trait implementation
+
+This crate will also offer assertions related to ordered comparison (greater than, less than, greater than equal to, less than equal to) for various types. Let's
+provide such a trait.
+
+```rust
+pub trait OrderedAssertion<T: PartialOrd> {
+    fn should_be_greater_than(&self, other: T) -> &Self;
+    fn should_not_be_greater_than(&self, other: T) -> &Self;
+    // other methods
+}
+```
+The trait `OrderedAssertion` is generic over `T: PartialOrd`. [PartialOrd](https://doc.rust-lang.org/std/cmp/trait.PartialOrd.html) trait allows ordered comparison (>, <. >=, <=) between types.
+
+We have an option of implementing `OrderedAssertion` for various types like `i8`, `i16`, `i32`, `&str` etc. or we can implement `OrderedAssertion`
+for a constrained `T`.
+
+Let's attempt implementing `OrderedAssertion` for any type `T` that implements `PartialOrd`.
+
+```rust
+impl<T> OrderedAssertion<T> for T
+    where T: PartialOrd + Debug {
+    fn should_be_greater_than(&self, other: T) -> &Self {
+        if self <= &other {
+            panic!("{:?} should be greater than {:?}", self, other)
+        }
+        self
+    }
+
+    fn should_not_be_greater_than(&self, other: T) -> &Self {
+        if self > &other {
+            panic!("{:?} should not be greater than {:?}", self, other)
+        }
+        self
+    }
+}
+```
+
+ 
+Note, the operators (>=, <) translate to a method call [partial_cmp](https://doc.rust-lang.org/std/cmp/trait.PartialOrd.html#tymethod.partial_cmp) inside the `PartialOrd` trait. 
+The method `partial_cmp` takes parameters by reference for comparison. Hence, we are doing the comparisons using references `(self <= &other)`.
+
+```rust
+#[cfg(test)]
+mod ordering_tests {
+    use crate::OrderedAssertion;
+
+    #[test]
+    fn should_be_greater_than_other() {
+        let rank = 12.90;
+        rank.should_be_greater_than(10.23);
+    }
+
+    #[test]
+    fn should_be_greater_than_other_with_string() {
+        let name = "junit";
+        name.should_be_greater_than("assert");
+    }
+}
+```
+
+The advantage of implementing a trait for any `T` (with or without constraint() is obvious. It removes duplication!!! 
+
+### Introducing Matchers
+
+### Matchers and lifetimes
+
+### Matcher composition
+
+### Conclusion 
 
