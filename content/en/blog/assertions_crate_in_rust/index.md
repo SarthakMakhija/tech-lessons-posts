@@ -34,7 +34,7 @@ pass_phrase.should_not_be_empty()
     .should_not_contain_ignoring_case("word");
 ```
 
-### Let's get started - beginning with extension methods
+### Getting started - beginning with extension methods
 
 The first thing that we need is provide custom methods on the built-in types. In the password validation example, we have methods like
 `should_contain_all_characters` and `should_contain_a_digit` over `string` (or `&str`).
@@ -207,7 +207,7 @@ pub fn open<P: AsRef<Path>>(path: P) -> Result<File> {..}
 With the introduction of `AsRef<str>` change, we have taken care of the duplication between implementations of `MembershipAssertion`, and we can
 now remove our original implementation of `MembershipAssertion` for `String` and `&str` types.
 
-### Leverage blanket trait implementation
+### Leveraging blanket trait implementation
 
 This crate will also offer assertions related to ordered comparison (greater than, less than, greater than equal to, less than equal to) for various types. Let's
 provide such a trait.
@@ -272,9 +272,144 @@ The advantage of implementing a trait for any `T` (with or without constraint() 
 
 ### Introducing Matchers
 
+Let's take a look at the implementation of `OrderedAssertion` again.
+
+```rust
+impl<T> OrderedAssertion<T> for T
+    where T: PartialOrd + Debug {
+    fn should_be_greater_than(&self, other: T) -> &Self {
+        if self <= &other {
+            panic!("{:?} should be greater than {:?}", self, other)
+        }
+        self
+    }
+
+    fn should_not_be_greater_than(&self, other: T) -> &Self {
+        if self > &other {
+            panic!("{:?} should not be greater than {:?}", self, other)
+        }
+        self
+    }
+}
+```
+
+There is still subtle duplication between the implementations of `should_be_greater_than` and `should_not_be_greater_than`. 
+
+Let's take a closer look to understand the duplication:
+- In comparison: `self <= &other` and `self > &other`, both the methods are doing comparisons which are inverted.
+- In the panic message: `panic!("{:?} should be greater than {:?}", self, other)` and `panic!("{:?} should not be greater than {:?}", self, other)`,
+both the methods are causing panic with messages which are inverted.
+
+The same form of duplication will be observed between different method pairs: 
+- `should_be_empty`, `should_not_be_empty` 
+- `should_be_greater_than`, `should_not_be_greater_than`
+- etc
+
+This duplication is caused because of the change in the condition for examining the data: *self must be **less than** other*, *self must be **greater than** other*.
+
+We can deal with the duplication by introducing an abstraction that:
+- can examine the data and verify that the data conforms to specific criteria.
+- can invert its behavior.
+
+The question is what would be the name of such an abstraction? In the world of assertions, such an object is called matcher. I asked [bard](https://bard.google.com/chat) to define *Matcher*? It gave me the following definition:  
+
+> Matchers provide the granular tools for carrying out the assertions. They examine the data and verify that the data conforms to specific criteria.
+
+This is an opportunity for us to introduce matchers. We can introduce a set of diverse matchers, each implementing the `Matcher` trait to work with specific data types, ensuring flexibility and precision in our checks.
+
+```rust
+pub trait Matcher<T> {
+    fn test(&self, value: &T) -> MatcherResult;
+}
+```
+
+`Matcher` is the base trait that works on any generic type `T`. It defines a method `test` that returns an instance of `MatcherResult`.
+
+```rust
+pub struct MatcherResult {
+    passed: bool,
+    failure_message: String,
+    inverted_failure_message: String,
+}
+```
+
+`MatcherResult` which will play a crucial role in inverting a matcher.
+
+Let's implement `MembershipMatcher` for string. It should be capable of testing the following:
+
+- if the given string contains a digit.
+- if the given string contains the specified character.
+
+```rust
+pub enum MembershipMatcher {
+    ADigit,
+    Char(char),
+}
+
+impl<T> Matcher<T> for MembershipMatcher
+    where T: AsRef<str>
+{
+    fn test(&self, value: &T) -> MatcherResult {
+        match self {
+            MembershipMatcher::ADigit => MatcherResult::formatted(
+                value.as_ref().chars().any(|ch| ch.is_numeric()),
+                format!("{:?} should contain a digit", value.as_ref()),
+                format!("{:?} should not contain a digit", value.as_ref()),
+            ),
+            MembershipMatcher::Char(ch) => MatcherResult::formatted(
+                value.as_ref().chars().any(|source| &source == ch),
+                format!("{:?} should contain the character {:?}", value.as_ref(), ch),
+                format!("{:?} should not contain the character {:?}", value.as_ref(), ch),
+            ),
+        }
+    }
+}
+
+pub fn contain_a_digit() -> MembershipMatcher {
+    MembershipMatcher::ADigit
+}
+
+pub fn contain_a_character(ch: char) -> MembershipMatcher {
+    MembershipMatcher::Char(ch)
+}
+```
+
+A few things to observe:
+- `MembershipMatcher` implements `Matcher<T>` for any `T` which can be represented as string.
+- We use enum to represent `MembershipMatcher` because it allows logical grouping of matchers and each enum variant can hold its own data.
+- Each arm of the `match` expression returns an instance of `MatcherResult`.
+- We also provide public functions to return appropriate instances of `MembershipMatcher`.
+- `MembershipMatcher` only implements positive assertions, thus taking the duplication out. However, we still need to invert matchers.
+- `MembershipMatcher` also knows about the error messages that should be returned if the assertion using this matcher fails.
+
+Let's add a few tests.
+
+```rust
+#[cfg(test)]
+mod tests {
+    use crate::{contain_a_character, contain_a_digit, Matcher};
+
+    #[test]
+    fn should_contain_a_digit() {
+        let matcher = contain_a_digit();
+        assert!(matcher.test(&"password@1").passed);
+    }
+
+    #[test]
+    fn should_contain_a_char() {
+        let matcher = contain_a_character('@');
+        assert!(matcher.test(&"password@1").passed);
+    }
+}
+```
+
+It is a decent start to matchers but we still need to answer a few questions:
+- How to connect assertions and matchers?
+- How to invert a matcher?
+
 ### Matchers and lifetimes
 
 ### Matcher composition
 
-### Conclusion 
+### Conclusion (with clearcheck reference) 
 
