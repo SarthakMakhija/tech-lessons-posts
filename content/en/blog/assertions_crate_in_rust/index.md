@@ -124,7 +124,7 @@ mod string_tests {
 }
 ```
 
-We have simply duplicated the method `should_contain_a_digit` for `&str` and `String` and verified that it works for `String` type. 
+We have simply duplicated the method `should_contain_a_digit` for `&str` and `String` and verified that it works for both the types. 
 
 Let's make an attempt to remove the duplication.
 
@@ -146,7 +146,8 @@ impl MembershipAssertion for String {
 ```
 
 This approach removes the duplication, but it is still unnecessary delegation - all the methods in the `String` implementation delegate 
-to the respective implementation in the `&str` type. The question is can we do better?
+to the respective implementation in the `&str` type. This might not look like a huge thing but if we add a few more methods in the `MembershipAssertion`
+trait, the delegation will become obvious. So the question is, can we do better?
 
 ### Understanding AsRef
 
@@ -159,7 +160,7 @@ pub trait MembershipAssertion {
 }
 ```
 
-The idea is to provide an implementation of `MembershipAssertion` for `String` type. Rust provides various types which can be represented as string.
+The idea is to provide an implementation of `MembershipAssertion` for all the types which can be represented as string. Rust provides various such types:
 
 - String: //TODO 
 - str:    //TODO
@@ -185,16 +186,14 @@ impl<T> MembershipAssertion for T
 We are implementing `MembershipAssertion` for any `T` where T implements [AsRef<str>](https://doc.rust-lang.org/std/convert/trait.AsRef.html) and [Debug](https://doc.rust-lang.org/std/fmt/trait.Debug.html) trait.
 
 Jim Blandy in the book [Programming Rust](https://www.oreilly.com/library/view/programming-rust-2nd/9781492052586/?_gl=1*14ve435*_ga*MTQxOTMyMjU5Ni4xNjg5MjQ4Mjgy*_ga_092EL089CH*MTcwNTgzNjI5OC4zOS4xLjE3MDU4MzYzMDQuNTQuMC4w) says: when a type implements `AsRef<U>`, that means you can borrow a `reference of U` from the type.
-This means, if a type `T` implements `AsRef<str>` we should be able to borrow a `reference of str` from the type `T`.
+This means, if a type implements `AsRef<str>` we should be able to borrow a `reference of str` from that type.
 
 In Rust, both `String` and `&str` type implements `AsRef<str>` which means all the methods of `MembershipAssertion` are now available on `String`
 and `&str`. Please find the reference [here](https://doc.rust-lang.org/std/convert/trait.AsRef.html#:~:text=Since%20both%20String%20and%20%26str,accept%20both%20as%20input%20argument). 
 
 We need the `T` to implement `Debug` trait because we are formatting it in the `panic` macro.
 
-With this change, we can remove our original implementation of `MembershipAssertion` for `String` and `&str` types.
-
-A couple of things before we move on:
+Quick revisit: 
 - Rust allows implementing a trait for any `T`. This is called *blanket trait implementation*. In our case, we are implementing `MembershipAssertion`
 for a constrained `T`.
 - The trait `AsRef` provides a lot of flexibility in the function signature. The method [open](https://doc.rust-lang.org/std/fs/struct.File.html#method.open) in
@@ -204,4 +203,8 @@ can be passed as an argument.
 //open from Rust's file type.
 pub fn open<P: AsRef<Path>>(path: P) -> Result<File> {..}
 ```
+
+With the introduction of `AsRef<str>` change, we have taken care of the duplication between implementations of `MembershipAssertion`, and we can
+now remove our original implementation of `MembershipAssertion` for `String` and `&str` types.
+
 
