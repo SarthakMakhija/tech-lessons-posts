@@ -308,14 +308,15 @@ The same form of duplication will be observed between different method pairs:
 This duplication is caused because of the change in the condition for examining the data: *self must be **less than** other*, *self must be **greater than** other*.
 
 We can deal with the duplication by introducing an abstraction that:
-- can examine the data and verify that the data conforms to specific criteria.
-- can invert its behavior.
+- Can **examine the data** and **verify** that the data conforms to **specific criteria**.
+- Can invert its behavior so that we **won't** be required to write any **conditional code** for implementing **negative assertions**. 
 
 The question is what would be the name of such an abstraction? In the world of assertions, such an object is called matcher. I asked [bard](https://bard.google.com/chat) to define *Matcher*? It gave me the following definition:  
 
 > Matchers provide the granular tools for carrying out the assertions. They examine the data and verify that the data conforms to specific criteria.
 
-This is an opportunity for us to introduce matchers. We can introduce a set of diverse matchers, each implementing the `Matcher` trait to work with specific data types, ensuring flexibility and precision in our checks.
+Let's introduce matchers in the code. We can introduce a set of diverse matchers, each implementing the `Matcher` trait to work with specific data types, ensuring flexibility and precision in our checks.
+The important part is that we will only be implementing matchers to deal with positive assertions.
 
 ```rust
 pub trait Matcher<T> {
@@ -335,7 +336,7 @@ pub struct MatcherResult {
 
 `MatcherResult` which will play a crucial role in inverting a matcher.
 
-Let's implement `MembershipMatcher` for string. It should be capable of testing the following:
+Let's implement `MembershipMatcher` for string. It should be capable of testing:
 
 - if the given string contains a digit.
 - if the given string contains the specified character.
@@ -377,10 +378,10 @@ pub fn contain_a_character(ch: char) -> MembershipMatcher {
 A few things to observe:
 - `MembershipMatcher` implements `Matcher<T>` for any `T` which can be represented as string.
 - We use enum to represent `MembershipMatcher` because it allows logical grouping of matchers and each enum variant can hold its own data.
-- Each arm of the `match` expression returns an instance of `MatcherResult`.
+- Each arm of the `match` expression returns an appropriate instance of `MatcherResult`.
 - We also provide public functions to return appropriate instances of `MembershipMatcher`.
-- `MembershipMatcher` only implements positive assertions, thus taking the duplication out. However, we still need to invert matchers.
-- `MembershipMatcher` also knows about the error messages that should be returned if the assertion using this matcher fails.
+- `MembershipMatcher` only implements positive assertions, thus taking the duplication out. *However, we still need to invert matchers.*
+- `MembershipMatcher` also knows about the error messages that should be returned if the assertion(s) using this matcher fails.
 
 Let's add a few tests.
 
