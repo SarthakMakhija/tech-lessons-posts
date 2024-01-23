@@ -645,7 +645,166 @@ mod tests {
 Here, we declare `chars` as an array, and its reference is passed to the function `contain_any_characters`. Rust will drop `chars` at the end 
 of the inner block, however matcher outlives the reference. Rust does not allow dangling references and thus it results in a compilation error. 
 
-### Matcher composition
+How do we decide if matchers should have a reference of the extra data or own the data?
+
+We need to answer a few questions to take this decision:
+1. This crate will be used in testing (unit/integration/functional/any other). Is it ok if a matcher takes the ownership of extra data?
+2. Do you care about the consistency of ownership vs borrow concept? Do you want all the matchers to have a reference to extra data or take ownership? 
+3. Are you going to build a concept that [combines various matchers](#matcher-composition) and can the different lifetime of various matchers
+cause any problems?
+
+### Matcher composition : using trait objects
+
+We now have matcher as a citizen in the code. I think it is worth building a concept that allows us to combine various matchers using operators: 
+**and**, **or**. 
+
+//TODO: Highlight why can't we build matchers using generics
+
+All we need is an abstraction that allows us to combine various matchers.
+
+```rust
+enum Kind {
+    And,
+    Or,
+}
+
+pub struct Matchers<T> {
+    matchers: Vec<Box<dyn Matcher<T>>>,
+    kind: Kind,
+}
+```
+
+Here, `Matchers` is the abstraction that represents a vector of `any Matcher` that operates on a `T`. The syntax: 
+`matchers:  Vec<Box<dyn Matcher<T>>>` looks a little scary, so let's break it down.
+
+What we need is a collection of objects of type `Matcher<T>`. The first component of `matchers` is simple, `Vector<T>`.
+
+In Rust, [Box](https://doc.rust-lang.org/std/boxed/struct.Box.html) is a pointer type that uniquely owns a heap allocation of type T. 
+`Box::new(x: T)` allocates memory on heap and then places `x` into it.
+
+`Box<dyn Matcher<T>` is called a [trait object](https://doc.rust-lang.org/book/ch17-02-trait-objects.html). 
+
+A trait object points to both an instance of a type implementing a trait and a table that is used to look up trait methods on that type at runtime. 
+We create a trait object by specifying either `&` reference or a `Box<T>` smart pointer, then the `dyn` keyword, and then specifying the relevant trait.
+Trait objects enable storing objects regardless of their specific types, as long as they fulfill the required behavior specified by a trait.
+
+> When we use trait objects, Rust must use [dynamic dispatch](https://doc.rust-lang.org/book/ch17-02-trait-objects.html). 
+
+So the expression `matchers: Vec<Box<dyn Matcher<T>>>` refers to a vector of trait objects which implement the `Matcher<T>` trait. 
+
+Let's now implement a builder to create a `Matchers` object. (*I am only going to describe the **and** operator.*)
+
+```rust
+pub struct MatchersBuilder<T> {
+    matchers: Vec<Box<dyn Matcher<T>>>,
+}
+
+impl<T: Debug> MatchersBuilder<T> {
+    pub fn start_building(matcher: Box<dyn Matcher<T>>) -> Self {
+        MatchersBuilder {
+            matchers: vec![matcher]
+        }
+    }
+
+    pub fn push(mut self, matcher: Box<dyn Matcher<T>>) -> Self {
+        self.matchers.push(matcher);
+        self
+    }
+
+    pub fn combine_as_and(self) -> Matchers<T> {
+        Matchers::and(self.matchers)
+    }
+}
+```
+
+`MatchersBuilder` allows composing multiple matchers and it can be used as the following:
+
+```rust
+MatchersBuilder::start_building(Box::new(contain_a_digit()))
+    .push(Box::new(contain_any_characters(&['#', '&'])))
+    .push(Box::new(contain_a_character('0')))
+    .combine_as_and()
+```
+
+Finally, `Matchers` is going to implement the `Matcher<T>` trait. This is what makes the crate really powerful. 
+Anyone can create their custom matchers and use them in the assertion(s) of their choice.
+
+```rust
+impl<T: Debug> Matcher<T> for Matchers<T> {
+    fn test(&self, value: &T) -> MatcherResult {
+        let results = self
+            .matchers
+            .iter()
+            .map(|matcher| matcher.test(value))
+            .collect::<Vec<_>>();
+
+        match self.kind {
+            Kind::And => MatcherResult::formatted(
+                results.iter().all(|result| result.passed),
+                messages(
+                    &results,
+                    |result| !result.passed,
+                    |result| result.failure_message.clone(),
+                ),
+                messages(
+                    &results,
+                    |result| result.passed,
+                    |result| result.inverted_failure_message.clone(),
+                ),
+            ),
+            //Kind::Or skipped
+        }
+    }
+}
+
+fn messages<P, M>(results: &[MatcherResult], predicate: P, mapper: M) -> String
+    where
+        P: Fn(&&MatcherResult) -> bool,
+        M: Fn(&MatcherResult) -> String,
+{
+    results
+        .iter()
+        .filter(predicate)
+        .map(mapper)
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+```
+
+Let's see the concept of custom matchers in action.
+
+```rust
+#[cfg(test)]
+mod custom_string_matchers_tests {
+    use std::fmt::Debug;
+
+    use crate::{contain_a_character, contain_a_digit, contain_any_characters, Matchers, MatchersBuilder, Should};
+
+    fn be_a_valid_password<T: AsRef<str> + Debug>() -> Matchers<T> {
+        MatchersBuilder::start_building(Box::new(contain_a_digit()))
+            .push(Box::new(contain_any_characters(&['#', '&', '@'])))
+            .push(Box::new(contain_a_character('0')))
+            .combine_as_and()
+    }
+
+    trait PasswordAssertion {
+        fn should_be_a_valid_password(&self) -> &Self;
+    }
+
+    impl PasswordAssertion for &str {
+        fn should_be_a_valid_password(&self) -> &Self {
+            self.should(&be_a_valid_password());
+            self
+        }
+    }
+
+    #[test]
+    fn should_be_a_valid_password() {
+        let password = "P@@sw0rd9082";
+        password.should_be_a_valid_password();
+    }
+}
+```
 
 ### Conclusion (with clearcheck reference) 
 
