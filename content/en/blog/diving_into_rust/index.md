@@ -1,10 +1,14 @@
 ---
 author: "Sarthak Makhija"
-title: "Building an assertions crate in Rust"
+title: "Diving into Rust by building an assertions crate"
 date: 2024-01-21
-description: ""
-tags: ["Rust", "Assertions", "Elegant-assertions"]
-thumbnail: /aws-lambda-virtual-podcast.webp
+description: "
+As Rust projects grow in size and complexity, the need for sophisticated error handling tools becomes ever more pressing. 
+Traditional methods like panics and asserts, while useful, can be limited and cumbersome.
+Let's build an assertions crate that offers elegant and powerful assertions, while simultaneously diving into the diverse landscape of Rust features. 
+"
+tags: ["Rust", "Assertions", "Elegant-assertions", "Clearcheck"]
+thumbnail: /diving-in-rust.jpg
 caption: ""
 ---
 
@@ -409,7 +413,7 @@ It is a decent start to matchers but we still need to answer a few questions:
 - How to connect assertions and matchers?
 - How to invert a matcher?
 
-### Connecting assertions and matchers
+### Connecting assertions and matchers - using blanket trait and dyn trait 
 
 We have **assertions** which serve as the cornerstone of the test cases, defining the exact expectations the code must fulfill.
 They act as a contract, ensuring that each data type (/data structure) adheres to its intended behavior.
@@ -525,6 +529,7 @@ pub enum MembershipMatcher<'a> {
 Time to discuss lifetimes.
 
 ### Matchers and lifetimes
+
 
 ### Matcher composition
 

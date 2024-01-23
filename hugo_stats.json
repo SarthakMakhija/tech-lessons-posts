@@ -292,7 +292,7 @@
       "compaction",
       "conclusion",
       "conclusion-with-clearcheck-reference",
-      "connecting-assertions-and-matchers",
+      "connecting-assertions-and-matchers---using-blanket-trait-and-dyn-trait",
       "connecting-the-dots",
       "controller-unit-tests",
       "creating-custom-annotations",
