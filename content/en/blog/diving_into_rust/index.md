@@ -8,7 +8,7 @@ Traditional methods like panics and asserts, while useful, can be limited and cu
 Let's build an assertions crate that offers elegant and powerful assertions, while simultaneously diving into the diverse landscape of Rust features. 
 "
 tags: ["Rust", "Assertions", "Elegant-assertions", "Clearcheck"]
-thumbnail: /diving-in-rust.jpg
+thumbnail: /diving-into-rust.jpg
 caption: ""
 ---
 
