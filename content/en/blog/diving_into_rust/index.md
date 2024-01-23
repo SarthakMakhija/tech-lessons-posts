@@ -658,9 +658,7 @@ cause any problems?
 We now have matcher as a citizen in the code. I think it is worth building a concept that allows us to combine various matchers using operators: 
 **and**, **or**. 
 
-//TODO: Highlight why can't we build matchers using generics
-
-All we need is an abstraction that allows us to combine various matchers.
+We can build a `Matchers` concept that contains a collection of `Matcher<T>` trait.
 
 ```rust
 enum Kind {
@@ -668,31 +666,47 @@ enum Kind {
     Or,
 }
 
+pub struct Matchers<T, M: Matcher<T>> {
+    matchers: Vec<M>,
+    kind: Kind,
+    inner: PhantomData<T>,
+}
+```
+
+Our first attempt is to create a `Matchers` abstraction that holds a vector of `M`, where `M` is a `Matcher` that operates on a `T`.
+
+In Rust, generics undergo [monomorphization](https://rustc-dev-guide.rust-lang.org/backend/monomorph.html) which means the compiler 
+produces a different copy of the generic code for each concrete type needed. This means if the generic type `Option<T>` is used with `f64` and `i32`, 
+the compiler will produce two copies of `Option`, which would be like `Option_f64` and `Option_i32`.
+
+Given our definition of `Matchers`, Rust will emit different copies of `Matchers` for each concrete type of `Matcher`. This also means that Rust
+will not allow us to combine different types of matcher objects, even if all of them implement the `Matcher<T>` trait for the same `T`.
+
+So, we need a different way to combine matchers.
+
+Rust offers [trait object](https://doc.rust-lang.org/book/ch17-02-trait-objects.html), which points to both an instance of a type implementing a trait and a table that is used to look up trait methods on that type at runtime.
+We create a trait object by specifying either `&` reference or a `Box<T>` smart pointer, then the `dyn` keyword, and then specifying the relevant trait.
+Trait objects enable storing objects regardless of their specific types, as long as they fulfill the required behavior specified by a trait.
+
+> When we use trait objects, Rust must use [dynamic dispatch](https://doc.rust-lang.org/book/ch17-02-trait-objects.html).
+
+> In Rust, [Box](https://doc.rust-lang.org/std/boxed/struct.Box.html) is a pointer type that uniquely owns a heap allocation of type T.
+> `Box::new(x: T)` allocates memory on heap and then places `x` into it.
+
+We can now represent `Matchers` using a vector of trait objects, which implement the `Matcher<T>` trait.
+
+```rust
 pub struct Matchers<T> {
     matchers: Vec<Box<dyn Matcher<T>>>,
     kind: Kind,
 }
 ```
 
-Here, `Matchers` is the abstraction that represents a vector of `any Matcher` that operates on a `T`. The syntax: 
-`matchers:  Vec<Box<dyn Matcher<T>>>` looks a little scary, so let's break it down.
+Let's now implement a builder to create a `Matchers` object.
 
-What we need is a collection of objects of type `Matcher<T>`. The first component of `matchers` is simple, `Vector<T>`.
-
-In Rust, [Box](https://doc.rust-lang.org/std/boxed/struct.Box.html) is a pointer type that uniquely owns a heap allocation of type T. 
-`Box::new(x: T)` allocates memory on heap and then places `x` into it.
-
-`Box<dyn Matcher<T>` is called a [trait object](https://doc.rust-lang.org/book/ch17-02-trait-objects.html). 
-
-A trait object points to both an instance of a type implementing a trait and a table that is used to look up trait methods on that type at runtime. 
-We create a trait object by specifying either `&` reference or a `Box<T>` smart pointer, then the `dyn` keyword, and then specifying the relevant trait.
-Trait objects enable storing objects regardless of their specific types, as long as they fulfill the required behavior specified by a trait.
-
-> When we use trait objects, Rust must use [dynamic dispatch](https://doc.rust-lang.org/book/ch17-02-trait-objects.html). 
-
-So the expression `matchers: Vec<Box<dyn Matcher<T>>>` refers to a vector of trait objects which implement the `Matcher<T>` trait. 
-
-Let's now implement a builder to create a `Matchers` object. (*I am only going to describe the **and** operator.*)
+(*I am only going to describe the **and** operator, and **positive assertions***. 
+You can refer to the code [here](https://github.com/SarthakMakhija/clearcheck/blob/main/src/matchers/compose/mod.rs) for composition with 
+inverted assertions.)
 
 ```rust
 pub struct MatchersBuilder<T> {
