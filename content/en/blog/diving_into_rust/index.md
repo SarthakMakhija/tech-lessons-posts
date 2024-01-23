@@ -204,7 +204,7 @@ impl<T> MembershipAssertion for T
 
 We are implementing `MembershipAssertion` for any `T` where T implements [AsRef<str>](https://doc.rust-lang.org/std/convert/trait.AsRef.html) and [Debug](https://doc.rust-lang.org/std/fmt/trait.Debug.html) trait.
 
-Jim Blandy, Jason Orendorff and Leonora F.S Tindall in the book [Programming Rust](https://www.oreilly.com/library/view/programming-rust-2nd/9781492052586/?_gl=1*14ve435*_ga*MTQxOTMyMjU5Ni4xNjg5MjQ4Mjgy*_ga_092EL089CH*MTcwNTgzNjI5OC4zOS4xLjE3MDU4MzYzMDQuNTQuMC4w) says: when a type implements `AsRef<U>`, that means you can borrow a `reference of U` from the type.
+Jim Blandy, Jason Orendorff and Leonora F.S Tindall in the book [Programming Rust](https://www.oreilly.com/library/view/programming-rust-2nd/9781492052586/) says: when a type implements `AsRef<U>`, that means you can borrow a `reference of U` from the type.
 This means, if a type implements `AsRef<str>` we should be able to borrow a `reference of str` from that type.
 
 In Rust, both `String` and `&str` type implements `AsRef<str>` which means all the methods of `MembershipAssertion` are now available on `String`
@@ -548,9 +548,37 @@ Time to discuss lifetimes.
 
 ### Matchers and lifetimes
 
-//TODO: Introduce lifetimes
+Every reference in Rust has a lifetime, which is the stretch of the program for which the reference is valid. A **reference** can be treated as a **pointer managed by Rust**.
+We have already seen a reference in the form of `&str`. Rust does not have nil or dangling references.
 
-Let's take option 1, where the `MembershipMatcher` provides an enum variant `AnyChars` which holds a reference to a slice of char.
+Consider the below code:
+
+```rust
+fn main() { 
+    let reference: &i32;                | --- 'a starts            
+    {                                   |
+        let value: i32 = 10;            |    | --- 'b starts
+        reference = &value;             |    | --- 'b ends
+    }                                   |
+    println!("{}", reference);          | --- 'a ends      
+}
+```
+
+The code above creates a variable `reference` that refers to an `i32`. We use the lifetime annotations `'a` and `'b` to denotes the lifetimes of
+`reference` and `value`. Rust does not allow dangling references that means the variable `reference` can not outlive `value`. This can also be stated
+as: "the lifetime of the variable `reference` must be at less than or equal to the lifetime of the variable `value`".
+
+The above code fails with the the following error:
+
+```rust
+    reference = &value;
+                ^^^^^^ borrowed value does not live long enough
+```
+
+> Lifetimes in Rust ensure that all the references and the container objects holding the references are always valid.   
+
+Let's make an attempt to design our matcher which will hold reference to extra data (**Option2**), which means our matcher will now have lifetime annotation.
+`MembershipMatcher` will now provide an enum variant `AnyChars`.
 
 ```rust
 pub enum MembershipMatcher<'a> {
@@ -668,8 +696,11 @@ How do we decide if matchers should have a reference of the extra data or own th
 We need to answer a few questions to take this decision:
 1. This crate will be used in testing (unit/integration/functional/any other). Is it ok if a matcher takes the ownership of extra data?
 2. Do you care about the consistency of ownership vs borrow concept? Do you want all the matchers to have a reference to extra data or take ownership? 
-3. Are you going to build a concept that [combines various matchers](#matcher-composition) and can the different lifetime of various matchers
+3. Are you going to build a concept that [combines various matchers](#matcher-composition) and can the different lifetimes of various matchers
 cause any problems?
+
+I recently finished an assertions crate called [clearcheck](https://github.com/SarthakMakhija/clearcheck) and I decided to to have matchers
+own their data.
 
 ### Matcher composition : using trait objects
 
@@ -835,9 +866,13 @@ mod custom_string_matchers_tests {
 }
 ```
 
-### Conclusion (with clearcheck reference) 
+### Conclusion
+
+That's it for this article. I hope it was worth your time. 
+
+I have an assertions crate called [clearcheck](https://github.com/SarthakMakhija/clearcheck). Do take a look if it excites you.
 
 ### References
 
-[Programming Rust]()
-[Rust lang]()
+- [The Rust Programming Language](https://doc.rust-lang.org/book/)
+- [Programming Rust](https://www.oreilly.com/library/view/programming-rust-2nd/9781492052586/)
