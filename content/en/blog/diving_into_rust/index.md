@@ -58,7 +58,7 @@ pub trait MembershipAssertion {
 
 `MembershipAssertion` defines methods: `should_contain_a_digit`, `should_not_contain_a_digit` and `should_not_be_empty`, all of which returns reference to `Self` to allow chaining.
 
-Let's implement the trait for a reference to string slice (`&str`). *(I will only implement should_contain_a_digit for the article).*
+Let's implement the trait for a string slice (`&str`). *(I will only implement should_contain_a_digit for the article).*
 
 ```rust
 impl MembershipAssertion for &str {
@@ -133,7 +133,7 @@ We have simply duplicated the method `should_contain_a_digit` for `&str` and `St
 
 Let's make an attempt to remove the duplication.
 
-We can convert the `String` type to a `reference to string slice` and invoke the respective methods on `&str`. With this approach, the implementation
+We can convert the `String` type to a `string slice` and invoke the respective methods on `&str`. With this approach, the implementation
 of `MembershipAssertion` on `String` looks like the following:
 
 ```rust
@@ -167,9 +167,23 @@ pub trait MembershipAssertion {
 
 The idea is to provide an implementation of `MembershipAssertion` for all the types which can be represented as string. Rust provides various such types:
 
-- String: //TODO 
-- str:    //TODO
-- &str:   //TODO
+- **String**: is a mutable and resizable buffer holding UTF-8 text. The buffer is allocated on heap.  
+- **&str**: is a reference to a run of UTF-8 text owned by someone else. `&str` is a fat pointer, it contains both
+the address of the actual string and its length.
+
+The below code and the visual highlights the types: `String`, and `&str`.
+
+```rust
+let value: String = String::from("RUST");
+let value_ref: &str = &value[1..];
+```
+
+<div class="align-center">
+    <img src="/string-vs-str.png" alt="String vs &str"/>
+</div>
+
+> In Rust, the string literals are of type &str and the actual literals are allocated on pre-allocated read-only
+> memory.
 
 It will be great to implement `MembershipAssertion` for any `T`, where `T` that it can be represented as `String` (or `&str`).
 
@@ -250,7 +264,6 @@ impl<T> OrderedAssertion<T> for T
 }
 ```
 
- 
 Note, the operators (>=, <) translate to a method call [partial_cmp](https://doc.rust-lang.org/std/cmp/trait.PartialOrd.html#tymethod.partial_cmp) inside the `PartialOrd` trait. 
 The method `partial_cmp` takes parameters by reference for comparison. Hence, we are doing the comparisons using references `(self <= &other)`.
 
@@ -822,3 +835,6 @@ mod custom_string_matchers_tests {
 
 ### Conclusion (with clearcheck reference) 
 
+### References
+
+[](https://stackoverflow.com/questions/24158114/what-are-the-differences-between-rusts-string-and-str)
