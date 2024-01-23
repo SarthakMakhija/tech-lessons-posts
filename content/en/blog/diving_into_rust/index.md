@@ -598,6 +598,51 @@ mod matcher_tests {
 }
 ```
 
+This works fine. Let's play with Rust lifetimes for a bit by adding a few tests.
+
+```rust
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn should_contain_any_chars() {
+        let matcher;                                            
+        {                                                       
+            let chars = &['@', '#', '.'];                       
+            matcher = contain_any_characters(chars);            
+        }                                                           
+        assert!(matcher.test(&"password@1").passed);            
+    }
+}
+```
+
+We declare a `matcher` variable in the outer block which is initialized in the inner block. We would like the character slice to live at least as long as the matcher, 
+otherwise matcher would pointer to an already dropped character slice. 
+
+It might appear that `chars` will be dropped as soon as the inner block ends, and the above code will not compile. 
+However, Rust extends the lifetime of `chars` to match the lifetime of the variable `matcher` which is till the end of the function. 
+The above code compiles just fine.
+
+Let's take another example where Rust results in compilation error. It is a slight change in the test, but an important one.
+
+```rust
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn should_contain_any_chars_compiler_error() {
+        let matcher;
+        {
+            let chars = ['@', '#', '.'];
+            matcher = contain_any_characters(&chars);
+                                             ^^^^^^ borrowed value does not live long enough
+        }
+        assert!(matcher.test(&"password@1").passed); - chars dropped here while still borrowed
+    }
+}
+```
+
+Here, we declare `chars` as an array, and its reference is passed to the function `contain_any_characters`. Rust will drop `chars` at the end 
+of the inner block, however matcher outlives the reference. Rust does not allow dangling references and hence it results in a compilation error. 
+
 ### Matcher composition
 
 ### Conclusion (with clearcheck reference) 
