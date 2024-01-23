@@ -506,18 +506,9 @@ This means if we invoke the method `should_contain_a_digit` on the `String` type
 a reference to `String`.  
 
 Let's consider that our string `MembershipMatcher` starts providing support for testing whether a string contains any of the given characters.
-Should the matcher now hold a vector of chars or a reference to a slice of chars?
+Should the matcher now hold a reference to a slice of char or a vector of char? 
 
-**Option1**: `MembershipMatcher` provides an enum variant `AnyChars` which holds a vector of chars.
-```rust
-pub enum MembershipMatcher {
-    ADigit,
-    Char(char),
-    AnyChars(Vec<char>),
-}
-```
-
-**Option2**: `MembershipMatcher` provides an enum variant `AnyChars` which holds a reference to a slice of char.
+**Option1**: `MembershipMatcher` provides an enum variant `AnyChars` which holds a reference to a slice of char.
 ```rust
 pub enum MembershipMatcher<'a> {
     ADigit,
@@ -526,10 +517,86 @@ pub enum MembershipMatcher<'a> {
 }
 ```
 
+**Option2**: `MembershipMatcher` provides an enum variant `AnyChars` which holds a vector of char.
+```rust
+pub enum MembershipMatcher {
+    ADigit,
+    Char(char),
+    AnyChars(Vec<char>),
+}
+```
+
 Time to discuss lifetimes.
 
 ### Matchers and lifetimes
 
+//TODO: Introduce lifetimes
+
+Let's take option 1, where the `MembershipMatcher` provides an enum variant `AnyChars` which holds a reference to a slice of char.
+
+```rust
+pub enum MembershipMatcher<'a> {
+    ADigit,
+    Char(char),
+    AnyChars(&'a [char])
+}
+```
+
+The `MembershipMatcher` holds a reference to a slice of char for some lifetime `'a`. This means:
+- `MembershipMatcher` must live for the stretch of the program which is **at most** as big as the stretch defined by `'a`. 
+- `MembershipMatcher` must not outlive the reference
+
+This decision requires us to make the following changes:
+
+```rust
+impl<'a, T> Matcher<T> for MembershipMatcher<'a>
+    where T: AsRef<str>
+{
+    fn test(&self, value: &T) -> MatcherResult {
+        match self {
+            //skipping ADigit and Char variants
+            MembershipMatcher::AnyChars(chars) => MatcherResult::formatted(
+                chars.iter().any(|ch| value.as_ref().contains(*ch)),
+                format!("{:?} should contain any of the characters {:?}", value.as_ref(), chars),
+                format!("{:?} should not any of contain the characters {:?}", value.as_ref(), chars),
+            )
+        }
+    }
+}
+
+pub fn contain_a_digit<'a>() -> MembershipMatcher<'a> {
+    MembershipMatcher::ADigit
+}
+
+pub fn contain_a_character<'a>(ch: char) -> MembershipMatcher<'a> {
+    MembershipMatcher::Char(ch)
+}
+
+pub fn contain_any_characters<'a>(chars: &'a [char]) -> MembershipMatcher<'a> {
+    MembershipMatcher::AnyChars(chars)
+}
+```
+
+Introduce lifetime annotation in the `impl`, the public methods `contain_a_digit`, `contain_a_character` and  `contain_any_characters`.
+
+> The lifetime defined in the last method `contain_any_characters` can be removed. Historically, all the rust methods with reference(s) as 
+> parameter(s) required the developers to specify lifetime annotation(s). With time, rust developers realized some common patterns and created
+> a set of lifetime elision rules. One of those rules states: if a function accepts a single reference parameter, then the
+> lifetime of that reference will be assigned as the lifetime of the return value.
+
+We can now add a test.
+
+```rust
+#[cfg(test)]
+mod matcher_tests {
+
+    #[test]
+    fn should_contain_any_chars() {
+        let matcher = contain_any_characters(&['@', '#', '.']);
+        assert!(matcher.test(&"password@1").passed);
+    }
+}
+```
 
 ### Matcher composition
 
