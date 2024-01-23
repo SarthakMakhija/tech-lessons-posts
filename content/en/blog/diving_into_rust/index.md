@@ -9,7 +9,7 @@ Let's build an assertions crate that offers elegant and powerful assertions, whi
 "
 tags: ["Rust", "Assertions", "Elegant-assertions", "Clearcheck"]
 thumbnail: /diving-into-rust.jpg
-caption: ""
+caption: "Background by Dana Tentis on Pexels"
 ---
 
 As Rust projects grow in size and complexity, the need for sophisticated error handling tools becomes ever more pressing. 
@@ -577,7 +577,9 @@ pub fn contain_any_characters<'a>(chars: &'a [char]) -> MembershipMatcher<'a> {
 }
 ```
 
-Introduce lifetime annotation in the `impl`, the public methods `contain_a_digit`, `contain_a_character` and  `contain_any_characters`.
+We have introduced lifetime annotation `'a` in the `impl`, the public methods `contain_a_digit`, `contain_a_character` and  `contain_any_characters`.
+This lifetime annotation tells the compiler that `MembershipMatcher` lives for the duration defined by `'a`, which in turn is the lifetime
+of the character slice. 
 
 > The lifetime defined in the last method `contain_any_characters` can be removed. Historically, all the rust methods with reference(s) as 
 > parameter(s) required the developers to specify lifetime annotation(s). With time, rust developers realized some common patterns and created
@@ -641,7 +643,7 @@ mod tests {
 ```
 
 Here, we declare `chars` as an array, and its reference is passed to the function `contain_any_characters`. Rust will drop `chars` at the end 
-of the inner block, however matcher outlives the reference. Rust does not allow dangling references and hence it results in a compilation error. 
+of the inner block, however matcher outlives the reference. Rust does not allow dangling references and thus it results in a compilation error. 
 
 ### Matcher composition
 
