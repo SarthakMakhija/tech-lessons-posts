@@ -204,7 +204,7 @@ impl<T> MembershipAssertion for T
 
 We are implementing `MembershipAssertion` for any `T` where T implements [AsRef<str>](https://doc.rust-lang.org/std/convert/trait.AsRef.html) and [Debug](https://doc.rust-lang.org/std/fmt/trait.Debug.html) trait.
 
-Jim Blandy in the book [Programming Rust](https://www.oreilly.com/library/view/programming-rust-2nd/9781492052586/?_gl=1*14ve435*_ga*MTQxOTMyMjU5Ni4xNjg5MjQ4Mjgy*_ga_092EL089CH*MTcwNTgzNjI5OC4zOS4xLjE3MDU4MzYzMDQuNTQuMC4w) says: when a type implements `AsRef<U>`, that means you can borrow a `reference of U` from the type.
+Jim Blandy, Jason Orendorff and Leonora F.S Tindall in the book [Programming Rust](https://www.oreilly.com/library/view/programming-rust-2nd/9781492052586/?_gl=1*14ve435*_ga*MTQxOTMyMjU5Ni4xNjg5MjQ4Mjgy*_ga_092EL089CH*MTcwNTgzNjI5OC4zOS4xLjE3MDU4MzYzMDQuNTQuMC4w) says: when a type implements `AsRef<U>`, that means you can borrow a `reference of U` from the type.
 This means, if a type implements `AsRef<str>` we should be able to borrow a `reference of str` from that type.
 
 In Rust, both `String` and `&str` type implements `AsRef<str>` which means all the methods of `MembershipAssertion` are now available on `String`
@@ -401,7 +401,7 @@ A few things to observe:
 - `MembershipMatcher` only implements positive assertions, thus taking the duplication out. *However, we still need to invert matchers.*
 - `MembershipMatcher` also knows about the error messages that should be returned if the assertion(s) using this matcher fails.
 
-Let's add a few tests.
+Time to add a few tests.
 
 ```rust
 #[cfg(test)]
@@ -426,7 +426,7 @@ It is a decent start to matchers but we still need to answer a few questions:
 - How to connect assertions and matchers?
 - How to invert a matcher?
 
-### Connecting assertions and matchers - using blanket trait and dyn trait 
+### Connecting assertions and matchers - using blanket trait and trait object
 
 We have **assertions** which serve as the cornerstone of the test cases, defining the exact expectations the code must fulfill.
 They act as a contract, ensuring that each data type (/data structure) adheres to its intended behavior.
@@ -466,9 +466,14 @@ We provide a trait `Should` which is implemented for any `T`.
 
 The method `should` takes a matcher as a parameter, invokes the test method passing `self` as the argument and panics if the matcher fails. 
 
-The method `should` takes a parameter `matcher: &dyn Matcher<T>`which is read as "reference to any object of type Matcher which takes T as a generic parameter".
+The method `should` takes a parameter `matcher: &dyn Matcher<T>` which is a trait object in Rust. The [trait object](https://doc.rust-lang.org/book/ch17-02-trait-objects.html) 
+points to both an instance of a type implementing a trait and a table that is used to look up trait methods on that type at runtime.
+We create a trait object by specifying either `&` reference or a `Box<T>` smart pointer, then the `dyn` keyword, and then specifying the relevant trait.
+
+> When we use trait objects, Rust must use [dynamic dispatch](https://doc.rust-lang.org/book/ch17-02-trait-objects.html).
+
 The expression `dyn Matcher<T>` refers to any `Matcher` of type `T` and is unsized. Rust compiler needs all the method parameters to have a fixed size,
-hence we use `reference to any Matcher<T> -> matcher: &dyn Matcher<T>`. A reference (or a borrow) is a simple pointer in Rust which can never be null or dangling.
+hence we use `reference to any Matcher<T> -> matcher: &dyn Matcher<T>`.
 
 Similarly, we can define a trait that inverts the given matcher.
 
@@ -695,13 +700,10 @@ the compiler will produce two copies of `Option`, which would be like `Option_f6
 Given our definition of `Matchers`, Rust will emit different copies of `Matchers` for each concrete type of `Matcher`. This also means that Rust
 will not allow us to combine different types of matcher objects, even if all of them implement the `Matcher<T>` trait for the same `T`.
 
-So, we need a different way to combine matchers.
-
-Rust offers [trait object](https://doc.rust-lang.org/book/ch17-02-trait-objects.html), which points to both an instance of a type implementing a trait and a table that is used to look up trait methods on that type at runtime.
+So, we need a different way to combine matchers. We have already seen [trait objects](#connecting-assertions-and-matchers---using-blanket-trait-and-trait-object),
+which point to both an instance of a type implementing a trait and a table that is used to look up trait methods on that type at runtime.
 We create a trait object by specifying either `&` reference or a `Box<T>` smart pointer, then the `dyn` keyword, and then specifying the relevant trait.
-Trait objects enable storing objects regardless of their specific types, as long as they fulfill the required behavior specified by a trait.
-
-> When we use trait objects, Rust must use [dynamic dispatch](https://doc.rust-lang.org/book/ch17-02-trait-objects.html).
+Trait objects enable storing objects (inside a struct) regardless of their specific types, as long as they fulfill the required behavior specified by a trait.
 
 > In Rust, [Box](https://doc.rust-lang.org/std/boxed/struct.Box.html) is a pointer type that uniquely owns a heap allocation of type T.
 > `Box::new(x: T)` allocates memory on heap and then places `x` into it.
@@ -837,4 +839,5 @@ mod custom_string_matchers_tests {
 
 ### References
 
-[](https://stackoverflow.com/questions/24158114/what-are-the-differences-between-rusts-string-and-str)
+[Programming Rust]()
+[Rust lang]()
