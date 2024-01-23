@@ -47,11 +47,12 @@ Let's start by defining a trait.
 ```rust
 pub trait MembershipAssertion {
     fn should_contain_a_digit(&self) -> &Self;
+    fn should_not_contain_a_digit(&self) -> &Self;
     fn should_not_be_empty(&self) -> &Self;
 }
 ```
 
-`MembershipAssertion` defines methods: `should_contain_a_digit` and `should_not_be_empty`, both of which returns reference to `Self` to allow chaining.
+`MembershipAssertion` defines methods: `should_contain_a_digit`, `should_not_contain_a_digit` and `should_not_be_empty`, all of which returns reference to `Self` to allow chaining.
 
 Let's implement the trait for a reference to string slice (`&str`). *(I will only implement should_contain_a_digit for the article).*
 
@@ -407,6 +408,121 @@ mod tests {
 It is a decent start to matchers but we still need to answer a few questions:
 - How to connect assertions and matchers?
 - How to invert a matcher?
+
+### Connecting assertions and matchers
+
+We have **assertions** which serve as the cornerstone of the test cases, defining the exact expectations the code must fulfill.
+They act as a contract, ensuring that each data type (/data structure) adheres to its intended behavior.
+
+We also have **matchers** which provide the granular tools for carrying out the assertions. They examine the data and 
+verify that the data conforms to specific criteria.
+
+Let's take a look at the relationship between assertions and matchers.
+
+<div class="align-center-exclude-width-change">
+    <img src="/assertions-matchers.png" alt="relationship between assertions and matchers"/>
+</div>
+
+We will have positive and negative assertions, with only positive matchers. The bridge (*which is yet to be built*) will connect matchers with assertions
+and invert a matcher if a negative assertion like `should_not_contain_a_digit` is invoked.
+
+Let's build the bridge using [blanket trait](#leveraging-blanket-trait-implementation). 
+
+```rust
+pub trait Should<T> {
+    fn should(&self, matcher: &dyn Matcher<T>);
+}
+
+impl<T> Should<T> for T {
+    fn should(&self, matcher: &dyn Matcher<T>) {
+        let matcher_result = matcher.test(self);
+        if !matcher_result.passed {
+            panic!("assertion failed: {}", matcher_result.failure_message);
+        }
+    }
+}
+```
+
+We provide a trait `Should` which is implemented for any `T`. 
+
+> We can also implement the trait `Should` for any `T: Assertion` where `Assertion` can be a base marker trait for all the assertions. 
+
+The method `should` takes a matcher as a parameter, invokes the test method passing `self` as the argument and panics if the matcher fails. 
+
+The method `should` takes a parameter `matcher: &dyn Matcher<T>`which is read as "reference to any object of type Matcher which takes T as a generic parameter".
+The expression `dyn Matcher<T>` refers to any `Matcher` of type `T` and is unsized. Rust compiler needs all the method parameters to have a fixed size,
+hence we use `reference to any Matcher<T> -> matcher: &dyn Matcher<T>`. A reference (or a borrow) is a simple pointer in Rust which can never be null or dangling.
+
+Similarly, we can define a trait that inverts the given matcher.
+
+```rust
+pub trait ShouldNot<T> {
+    fn should_not(&self, matcher: &dyn Matcher<T>);
+}
+
+impl<T> ShouldNot<T> for T {
+    fn should_not(&self, matcher: &dyn Matcher<T>) {
+        let matcher_result = matcher.test(self);
+        let passed = !matcher_result.passed;
+        if !passed {
+            panic!(
+                "assertion failed: {}",
+                matcher_result.inverted_failure_message
+            );
+        }
+    }
+}
+```
+
+We can now refactor the methods `should_contain_a_digit` and `should_not_contain_a_digit` of the `MembershipAssertion` to use the `MembershipMatcher`.
+
+```rust
+impl<T> MembershipAssertion for T
+    where T: AsRef<str> + Debug {
+    fn should_contain_a_digit(&self) -> &Self {
+        self.should(&contain_a_digit());
+        self
+    }
+    
+    fn should_not_contain_a_digit(&self) -> &Self {
+        self.should_not(&contain_a_digit());
+        self
+    }
+}
+```
+
+All the tests pass and we can now commit :). 
+
+There is a question on matchers that needs to be answered. Should our matchers take the ownership of the extra data that they may need or should they hold a reference? 
+
+Let's understand this.
+
+Remember our traits `Should` and `ShouldNot` pass `&self` to the `test` method of the matcher. 
+This means if we invoke the method `should_contain_a_digit` on the `String` type, the test method of our `MembershipMatcher` will receive
+a reference to `String`.  
+
+Let's consider that our string `MembershipMatcher` starts providing support for testing whether a string contains any of the given characters.
+Should the matcher now hold a vector of chars or a reference to a slice of chars?
+
+**Option1**: `MembershipMatcher` provides an enum variant `AnyChars` which holds a vector of chars.
+```rust
+pub enum MembershipMatcher {
+    ADigit,
+    Char(char),
+    AnyChars(Vec<char>),
+}
+```
+
+**Option2**: `MembershipMatcher` provides an enum variant `AnyChars` which holds a reference to a slice of char.
+```rust
+pub enum MembershipMatcher<'a> {
+    ADigit,
+    Char(char),
+    AnyChars(&'a [char])
+}
+```
+
+Time to discuss lifetimes.
 
 ### Matchers and lifetimes
 
