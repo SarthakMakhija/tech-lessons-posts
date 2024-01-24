@@ -613,7 +613,9 @@ Time to discuss lifetimes.
 ### Matchers and lifetimes
 
 Every reference in Rust has a lifetime, which is the stretch of the program for which the reference is valid. A **reference** can be treated as a **pointer managed by Rust**.
-We have already seen a reference in the form of `&str`. Rust does not have nil or dangling references.
+We have already seen a reference in the form of `&str`.
+
+> Rust does not have nil or dangling references.
 
 Consider the below code:
 
@@ -628,21 +630,26 @@ fn main() {
 }
 ```
 
-The code above creates a variable `reference` that refers to an `i32`. We use the lifetime annotations `'a` and `'b` to denotes the lifetimes of
+The code above creates a variable `reference` that refers to an `i32`. We use the lifetime annotations `'a` and `'b` to denote the lifetimes of
 `reference` and `value`. Rust does not allow dangling references that means the variable `reference` can not outlive `value`. This can also be stated
-as: "the lifetime of the variable `reference` must be at less than or equal to the lifetime of the variable `value`".
+as: "the lifetime of the variable `reference` must be less than or equal to the lifetime of the variable `value`".
 
 The above code fails with the the following error:
 
 ```rust
     reference = &value;
                 ^^^^^^ borrowed value does not live long enough
+    
+    Here, `value` is dropped as soon as the inner block ends, but `reference` lives 
+    through the scope of the function. If this were permitted, Rust would end up with 
+    dangling references.  
 ```
 
 > Lifetimes in Rust ensure that all the references and the container objects holding the references are always valid.   
 
-Let's make an attempt to design our matcher which will hold reference to extra data (**Option2**), which means our matcher will now have lifetime annotation.
-`MembershipMatcher` will now provide an enum variant `AnyChars`.
+Let's get back to our question: Should our matchers hold a reference to the extra data or take the ownership?
+
+We will an attempt to design matcher using references (**Option2**), which means our matcher will now have lifetime annotation.
 
 ```rust
 pub enum MembershipMatcher<'a> {
@@ -692,7 +699,7 @@ This lifetime annotation tells the compiler that `MembershipMatcher` lives for t
 of the character slice. 
 
 > The lifetime defined in the last method `contain_any_characters` can be removed. Historically, all the rust methods with reference(s) as 
-> parameter(s) required the developers to specify lifetime annotation(s). With time, rust developers realized some common patterns and created
+> parameter(s) required the developers to specify lifetime annotation(s). With time, rust developers saw some some common patterns and created
 > a set of lifetime elision rules. One of those rules states: if a function accepts a single reference parameter, then the
 > lifetime of that reference will be assigned as the lifetime of the return value.
 
@@ -710,7 +717,9 @@ mod matcher_tests {
 }
 ```
 
-This works fine. Let's play with Rust lifetimes for a bit by adding a few tests.
+This works fine. 
+
+Let's play with matchers and lifetimes for a bit by adding a few tests.
 
 ```rust
 #[cfg(test)]
@@ -727,8 +736,8 @@ mod tests {
 }
 ```
 
-We declare a `matcher` variable in the outer block which is initialized in the inner block. We would like the character slice to live at least as long as the matcher, 
-otherwise matcher would pointer to an already dropped character slice. 
+We declare a `matcher` variable in the outer block, which is initialized in the inner block. We would like the character slice to live at least as long as the matcher, 
+otherwise `matcher` would point to a dropped character slice. 
 
 It might appear that `chars` will be dropped as soon as the inner block ends, and the above code will not compile. 
 However, Rust extends the lifetime of `chars` to match the lifetime of the variable `matcher` which is till the end of the function. 
@@ -755,23 +764,23 @@ mod tests {
 Here, we declare `chars` as an array, and its reference is passed to the function `contain_any_characters`. Rust will drop `chars` at the end 
 of the inner block, however matcher outlives the reference. Rust does not allow dangling references and thus it results in a compilation error. 
 
-How do we decide if matchers should have a reference of the extra data or own the data?
+Question, how do we decide if matchers should have a reference of the extra data or own the data?
 
 We need to answer a few questions to take this decision:
 1. This crate will be used in testing (unit/integration/functional/any other). Is it ok if a matcher takes the ownership of extra data?
-2. Do you care about the consistency of ownership vs borrow concept? Do you want all the matchers to have a reference to extra data or take ownership? 
+2. Do you care about the consistency of ownership vs borrow concept? Do you want all the matchers to refer to extra data or take ownership? 
 3. Are you going to build a concept that [combines various matchers](#matcher-composition) and can the different lifetimes of various matchers
 cause any problems?
 
-I recently finished an assertions crate called [clearcheck](https://github.com/SarthakMakhija/clearcheck) and I decided to to have matchers
-own their data.
+I recently finished an assertions crate called [clearcheck](https://github.com/SarthakMakhija/clearcheck) and I decided to have matchers own their data. My decision was primarily
+based on point 1.  
 
 ### Matcher composition : using trait objects
 
-We now have matcher as a citizen in the code. I think it is worth building a concept that allows us to combine various matchers using operators: 
+We now have matcher as a citizen in the code. I think it is worth building a concept that allows us to combine various matchers using operators like: 
 **and**, **or**. 
 
-We can build a `Matchers` concept that contains a collection of `Matcher<T>` trait.
+We can introduce an abstraction `Matchers` that contains a collection of objects which implement `Matcher<T>` trait.
 
 ```rust
 enum Kind {
@@ -788,9 +797,9 @@ pub struct Matchers<T, M: Matcher<T>> {
 
 Our first attempt is to create a `Matchers` abstraction that holds a vector of `M`, where `M` is a `Matcher` that operates on a `T`.
 
-In Rust, generics undergo [monomorphization](https://rustc-dev-guide.rust-lang.org/backend/monomorph.html) which means the compiler 
+To understand the issue with this design, we need to understand the processing of generics in Rust. In Rust, generics undergo [monomorphization](https://rustc-dev-guide.rust-lang.org/backend/monomorph.html) which means the compiler 
 produces a different copy of the generic code for each concrete type needed. This means if the generic type `Option<T>` is used with `f64` and `i32`, 
-the compiler will produce two copies of `Option`, which would be like `Option_f64` and `Option_i32`.
+the compiler will produce two copies of `Option`, which would be similar to `Option_f64` and `Option_i32`.
 
 Given our definition of `Matchers`, Rust will emit different copies of `Matchers` for each concrete type of `Matcher`. This also means that Rust
 will not allow us to combine different types of matcher objects, even if all of them implement the `Matcher<T>` trait for the same `T`.
@@ -812,8 +821,7 @@ pub struct Matchers<T> {
 Let's now implement a builder to create a `Matchers` object.
 
 (*I am only going to describe the **and** operator, and **positive assertions***. 
-You can refer to the code [here](https://github.com/SarthakMakhija/clearcheck/blob/main/src/matchers/compose/mod.rs) for composition with 
-inverted assertions.)
+You can refer the code [here](https://github.com/SarthakMakhija/clearcheck/blob/main/src/matchers/compose/mod.rs) for composition with inverted assertions.)
 
 ```rust
 pub struct MatchersBuilder<T> {
@@ -838,7 +846,7 @@ impl<T: Debug> MatchersBuilder<T> {
 }
 ```
 
-`MatchersBuilder` allows composing multiple matchers and it can be used as the following:
+`MatchersBuilder` allows composing multiple matchers and it can be used as following:
 
 ```rust
 MatchersBuilder::start_building(Box::new(contain_a_digit()))
@@ -892,6 +900,8 @@ fn messages<P, M>(results: &[MatcherResult], predicate: P, mapper: M) -> String
 }
 ```
 
+The `test` method runs all the matchers and collects all `MatcherResult`s. It then produces an instance of `MatcherResult` based on the `Kind`.
+
 Let's see the concept of custom matchers in action.
 
 ```rust
@@ -918,7 +928,7 @@ mod custom_string_matchers_tests {
             self
         }
     }
-
+    
     #[test]
     fn should_be_a_valid_password() {
         let password = "P@@sw0rd9082";
@@ -926,6 +936,12 @@ mod custom_string_matchers_tests {
     }
 }
 ```
+
+This involves the following:
+- Creating of a custom password matcher.
+- Creating of a custom password assertion.
+- Implementing of password assertion for `&str`.
+- Leveraging the custom matcher in the assertion using the built-in trait `Should`.
 
 ### Conclusion
 
@@ -937,4 +953,4 @@ I have an assertions crate called [clearcheck](https://github.com/SarthakMakhija
 
 - [The Rust Programming Language](https://doc.rust-lang.org/book/)
 - [Programming Rust](https://www.oreilly.com/library/view/programming-rust-2nd/9781492052586/)
-- [String vs &str vs str](https://stackoverflow.com/questions/24158114/what-are-the-differences-between-rusts-string-and-str)
+- [String types](https://stackoverflow.com/questions/24158114/what-are-the-differences-between-rusts-string-and-str)
