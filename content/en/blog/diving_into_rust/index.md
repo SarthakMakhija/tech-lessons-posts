@@ -8,7 +8,7 @@ Traditional methods like panics and asserts, while useful, can be limited and cu
 Let's build an assertions crate that offers elegant and powerful assertions, while simultaneously diving into the diverse landscape of Rust features. 
 "
 tags: ["Rust", "Assertions", "Elegant-assertions", "Clearcheck"]
-thumbnail: /diving-into-rust.jpg
+thumbnail: /diving-into-rust.webp
 caption: "Background by Dana Tentis on Pexels"
 ---
 
@@ -57,8 +57,8 @@ let literal: &str = "TRUST";
 ```
 
 <div class="align-center-exclude-width-change">
-    <img src="/string-vs-str.png" alt="String vs &str"/>
-    <figcaption class="figcaption">Visual from the book Programming Rust</figcaption>
+    <img src="/string-vs-str.webp" alt="String vs &str"/>
+    <figcaption class="figcaption">Visual from the book: Programming Rust</figcaption>
 </div>
 
 > In Rust, the string literals are of type &str and the actual literals are allocated on pre-allocated read-only
@@ -500,7 +500,7 @@ verify that the data conforms to specific criteria.
 Let's take a look at the relationship between assertions and matchers.
 
 <div class="align-center-exclude-width-change">
-    <img src="/assertions-matchers.png" alt="relationship between assertions and matchers"/>
+    <img src="/assertions-matchers.webp" alt="relationship between assertions and matchers"/>
 </div>
 
 We will have positive and negative assertions both of which use positive matchers. The bridge (*which is yet to be built*) will connect matchers with assertions
