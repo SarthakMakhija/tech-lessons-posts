@@ -38,9 +38,9 @@ pass_phrase.should_not_be_empty()
     .should_not_contain_ignoring_case("word");
 ```
 
-### Getting started - String, &str and str types
+### Understanding String, &str and str types
 
-It is important to understand various string types that Rust provides because we will provide methods which operate on these types.
+It is important to understand various string types in Rust before we get started.
 
 - **String**: is a mutable and resizable buffer holding UTF-8 text. The buffer is allocated on heap. It can be treated as a collection of u8 `vec<u8>`.
 - **&str**: is an immutable reference to a run of UTF-8 text owned by someone else. `&str` is a fat pointer, it contains both
