@@ -237,7 +237,45 @@ now remove our original implementation of `MembershipAssertion` for `String` and
 
 ### Leveraging blanket trait implementation
 
-This crate will also offer assertions related to ordered comparison (greater than, less than, greater than equal to, less than equal to) for various types. Let's
+Rust allows implementing a trait for any generic type `T`. Consider a trait `BoxWrap` as shown below:
+
+```rust
+pub trait BoxWrap {
+    fn boxed(self) -> Box<Self>;
+}
+```
+
+This trait provides `boxed` method to create a [Box](https://doc.rust-lang.org/std/boxed/struct.Box.html) representation of self. *Please note
+the boxed method takes the ownership of `self`*.
+
+> In Rust, [Box](https://doc.rust-lang.org/std/boxed/struct.Box.html) is a pointer type that uniquely owns a heap allocation of type T.
+> `Box::new(x: T)` allocates memory on heap and then places `x` into it.
+
+We can use blanket trait implementation to implement the method `boxed` over any generic type `T`.
+
+```rust
+impl<T> BoxWrap for T {
+    fn boxed(self) -> Box<Self> {
+        Box::new(self)
+    }
+}
+```
+
+That's it, the method `boxed` is now available on all the types `T`.
+
+```rust
+fn main() {
+    let value: &str = "clearcheck";
+    println!("{:?}", value.boxed());
+
+    let id: i32 = 120;
+    println!("{:?}", id.boxed());
+}
+```
+
+This concept can be used in our crate. Let's see how. 
+
+Our crate will also offer assertions related to ordered comparisons (greater than, less than, greater than equal to, less than equal to) for various types. Let's
 provide such a trait.
 
 ```rust
@@ -247,12 +285,12 @@ pub trait OrderedAssertion<T: PartialOrd> {
     // other methods
 }
 ```
-The trait `OrderedAssertion` is generic over `T: PartialOrd`. [PartialOrd](https://doc.rust-lang.org/std/cmp/trait.PartialOrd.html) trait allows ordered comparison (>, <. >=, <=) between types.
+The trait `OrderedAssertion` is generic over `T: PartialOrd`. [PartialOrd](https://doc.rust-lang.org/std/cmp/trait.PartialOrd.html) trait allows ordered comparisons (>, <, >=, <=) between types.
 
 We have an option of implementing `OrderedAssertion` for various types like `i8`, `i16`, `i32`, `&str` etc. or we can implement `OrderedAssertion`
 for a constrained `T`.
 
-Let's attempt implementing `OrderedAssertion` for any type `T` that implements `PartialOrd`.
+Let's make an attempt to implement `OrderedAssertion` for any type `T` that implements `PartialOrd`.
 
 ```rust
 impl<T> OrderedAssertion<T> for T
@@ -295,7 +333,7 @@ mod ordering_tests {
 }
 ```
 
-The advantage of implementing a trait for any `T` (with or without constraint() is obvious. It removes duplication!!! 
+The advantage of implementing a trait for any `T` (with or without constraint) is obvious. It removes duplication!!! 
 
 ### Introducing Matchers
 
@@ -744,9 +782,6 @@ So, we need a different way to combine matchers. We have already seen [trait obj
 which point to both an instance of a type implementing a trait and a table that is used to look up trait methods on that type at runtime.
 We create a trait object by specifying either `&` reference or a `Box<T>` smart pointer, then the `dyn` keyword, and then specifying the relevant trait.
 Trait objects enable storing objects (inside a struct) regardless of their specific types, as long as they fulfill the required behavior specified by a trait.
-
-> In Rust, [Box](https://doc.rust-lang.org/std/boxed/struct.Box.html) is a pointer type that uniquely owns a heap allocation of type T.
-> `Box::new(x: T)` allocates memory on heap and then places `x` into it.
 
 We can now represent `Matchers` using a vector of trait objects, which implement the `Matcher<T>` trait.
 
