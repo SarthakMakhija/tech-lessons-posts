@@ -42,7 +42,7 @@ pass_phrase.should_not_be_empty()
 
 It is important to understand various string types in Rust before we get started.
 
-- **String**: is a mutable and resizable buffer holding UTF-8 text. The buffer is allocated on heap. It can be treated as a collection of u8 `vec<u8>`.
+- **String**: is a mutable and resizable buffer holding UTF-8 text. The buffer is allocated on heap. It can be treated as a collection of u8, `vec<u8>`.
 - **&str**: is an immutable reference to a run of UTF-8 text owned by someone else. `&str` is a fat pointer, it contains both
   the address of the actual string and its length.
 - **str**: is an immutable sequence of UTF-8 bytes of dynamic length somewhere in memory. It's size in unknown, which means `str` almost always 
@@ -273,7 +273,7 @@ fn main() {
 }
 ```
 
-This concept can be used in our crate. Let's see how. 
+This concept is very useful for our crate. Let's see how. 
 
 Our crate will also offer assertions related to ordered comparisons (greater than, less than, greater than equal to, less than equal to) for various types. Let's
 provide such a trait.
@@ -310,6 +310,8 @@ impl<T> OrderedAssertion<T> for T
     }
 }
 ```
+
+The methods `should_be_greater_than` and `should_not_be_greater_than` are now available on any `T` which implements `PartialOrd` trait.
 
 Note, the operators (>=, <) translate to a method call [partial_cmp](https://doc.rust-lang.org/std/cmp/trait.PartialOrd.html#tymethod.partial_cmp) inside the `PartialOrd` trait. 
 The method `partial_cmp` takes parameters by reference for comparison. Hence, we are doing the comparisons using references `(self <= &other)`.
@@ -378,13 +380,13 @@ The same form of duplication will be observed between method pairs like:
 
 This duplication is caused because of the change in the condition for examining the data: *self must be **less than** other*, *self must be **greater than** other*.
 
-#### The lack of ability to compose assertions using operators like *and*, *or*
+#### The lack of ability to compose assertions
 
 Assertions are defining the contract, ensuring that each data type (/data structure) adheres to its intended behavior. They don't provide us
-with an ability to compose them.
+with an ability to compose them using operators like **and**, **or**.
 
 We can deal with both these issues by introducing an abstraction that:
-- **Examine the data** and **verify** that the data conforms to **specific criteria**.
+- **Examines the data** and **verifies** that the data conforms to **specific criteria**.
 - **Inverts** its behavior so that we **won't** be required to write any **additional code** for implementing **negative assertions**.
 - Allows **composition**
 
@@ -392,7 +394,7 @@ The question is what would be the name of such an abstraction? In the world of a
 
 > Matchers provide the granular tools for carrying out the assertions. They examine the data and verify that the data conforms to specific criteria.
 
-Let's introduce matchers in the code. We can introduce a set of diverse matchers, each implementing the `Matcher` trait to work with specific data types, ensuring flexibility and precision in our checks.
+Let's introduce matchers in the code. We can introduce a set of diverse matchers, each implementing the `Matcher` trait to work with specific data types.
 The important part is that we will only be implementing matchers to deal with positive assertions.
 
 ```rust
@@ -413,7 +415,7 @@ pub struct MatcherResult {
 
 `MatcherResult` which will play a crucial role in inverting a matcher.
 
-Let's implement `MembershipMatcher` for string. It should be capable of asserting:
+Let's implement `MembershipMatcher` for the `String` type. It should be capable of asserting:
 
 - if the given string contains a digit.
 - if the given string contains the specified character.
@@ -645,11 +647,11 @@ The above code fails with the the following error:
     dangling references.  
 ```
 
-> Lifetimes in Rust ensure that all the references and the container objects holding the references are always valid.   
+> Lifetimes in Rust ensure that all the references and the container objects holding references are always valid.   
 
 Let's get back to our question: Should our matchers hold a reference to the extra data or take the ownership?
 
-We will an attempt to design matcher using references (**Option2**), which means our matcher will now have lifetime annotation.
+We will an attempt to design matcher using references (**Option1**), which means our matcher will now have lifetime annotation.
 
 ```rust
 pub enum MembershipMatcher<'a> {
@@ -675,7 +677,7 @@ impl<'a, T> Matcher<T> for MembershipMatcher<'a>
             MembershipMatcher::AnyChars(chars) => MatcherResult::formatted(
                 chars.iter().any(|ch| value.as_ref().contains(*ch)),
                 format!("{:?} should contain any of the characters {:?}", value.as_ref(), chars),
-                format!("{:?} should not any of contain the characters {:?}", value.as_ref(), chars),
+                format!("{:?} should not contain any of the characters {:?}", value.as_ref(), chars),
             )
         }
     }
@@ -761,16 +763,15 @@ mod tests {
 }
 ```
 
-Here, we declare `chars` as an array, and its reference is passed to the function `contain_any_characters`. Rust will drop `chars` at the end 
-of the inner block, however matcher outlives the reference. Rust does not allow dangling references and thus it results in a compilation error. 
+Here, we declare `chars` as an array, and its reference is passed to the function `contain_any_characters`. Rust will drop `chars` array at the end 
+of the inner block, however `matcher` outlives the reference. Rust does not allow dangling references and thus it results in a compilation error. 
 
 Question, how do we decide if matchers should have a reference of the extra data or own the data?
 
 We need to answer a few questions to take this decision:
 1. This crate will be used in testing (unit/integration/functional/any other). Is it ok if a matcher takes the ownership of extra data?
 2. Do you care about the consistency of ownership vs borrow concept? Do you want all the matchers to refer to extra data or take ownership? 
-3. Are you going to build a concept that [combines various matchers](#matcher-composition) and can the different lifetimes of various matchers
-cause any problems?
+3. Are you going to build a concept that [combines various matchers](#matcher-composition) and can the lifetimes of various matchers cause any problems?
 
 I recently finished an assertions crate called [clearcheck](https://github.com/SarthakMakhija/clearcheck) and I decided to have matchers own their data. My decision was primarily
 based on point 1.  
@@ -797,12 +798,12 @@ pub struct Matchers<T, M: Matcher<T>> {
 
 Our first attempt is to create a `Matchers` abstraction that holds a vector of `M`, where `M` is a `Matcher` that operates on a `T`.
 
-To understand the issue with this design, we need to understand the processing of generics in Rust. In Rust, generics undergo [monomorphization](https://rustc-dev-guide.rust-lang.org/backend/monomorph.html) which means the compiler 
+To understand the issue with this design, we need to understand how generics are processed in Rust. In Rust, generics undergo [monomorphization](https://rustc-dev-guide.rust-lang.org/backend/monomorph.html) which means the compiler 
 produces a different copy of the generic code for each concrete type needed. This means if the generic type `Option<T>` is used with `f64` and `i32`, 
 the compiler will produce two copies of `Option`, which would be similar to `Option_f64` and `Option_i32`.
 
 Given our definition of `Matchers`, Rust will emit different copies of `Matchers` for each concrete type of `Matcher`. This also means that Rust
-will not allow us to combine different types of matcher objects, even if all of them implement the `Matcher<T>` trait for the same `T`.
+will not allow us to combine different types of matcher objects using generics, even if all of them implement the `Matcher<T>` trait for the same `T`.
 
 So, we need a different way to combine matchers. We have already seen [trait objects](#connecting-assertions-and-matchers---using-blanket-trait-and-trait-object),
 which point to both an instance of a type implementing a trait and a table that is used to look up trait methods on that type at runtime.
@@ -900,7 +901,7 @@ fn messages<P, M>(results: &[MatcherResult], predicate: P, mapper: M) -> String
 }
 ```
 
-The `test` method runs all the matchers and collects all `MatcherResult`s. It then produces an instance of `MatcherResult` based on the `Kind`.
+The `test` method runs all the matchers and collects `MatcherResult`s. It then produces an instance of `MatcherResult` based on the `Kind`.
 
 Let's see the concept of custom matchers in action.
 
@@ -938,14 +939,12 @@ mod custom_string_matchers_tests {
 ```
 
 This involves the following:
-- Creating of a custom password matcher.
-- Creating of a custom password assertion.
-- Implementing of password assertion for `&str`.
+- Creating a custom password matcher.
+- Creating a custom password assertion.
+- Implementing the password assertion for `&str`.
 - Leveraging the custom matcher in the assertion using the built-in trait `Should`.
 
-### Conclusion
-
-That's it for this article. I hope it was worth your time. 
+We have arrived at the end of the article. I hope it was worth your time. 
 
 I have an assertions crate called [clearcheck](https://github.com/SarthakMakhija/clearcheck). Do take a look if it excites you.
 
