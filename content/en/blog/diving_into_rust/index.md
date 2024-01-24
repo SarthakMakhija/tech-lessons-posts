@@ -196,6 +196,7 @@ pub trait MembershipAssertion {
 The idea is to provide an implementation of `MembershipAssertion` for all the types which can be represented as string. 
 
 It will be great to implement `MembershipAssertion` for any generic type `T`, where `T` that it can be represented as `String` (or `&str`).
+The article explains how generics are processed in Rust [here](#matcher-composition--using-trait-objects).
 
 Let's give this concept a try.
 
@@ -312,7 +313,7 @@ impl<T> OrderedAssertion<T> for T
 }
 ```
 
-The methods `should_be_greater_than` and `should_not_be_greater_than` are now available on any `T` which implements `PartialOrd` trait.
+The methods `should_be_greater_than` and `should_not_be_greater_than` are now available on any `T` that implements `PartialOrd` trait.
 
 Note, the operators (>=, <) translate to a method call [partial_cmp](https://doc.rust-lang.org/std/cmp/trait.PartialOrd.html#tymethod.partial_cmp) inside the `PartialOrd` trait. 
 The method `partial_cmp` takes parameters by reference for comparison. Hence, we are doing the comparisons using references `(self <= &other)`.
@@ -384,7 +385,7 @@ This duplication is caused because of the change in the condition for examining 
 #### The lack of ability to compose assertions
 
 Assertions are defining the contract, ensuring that each data type (/data structure) adheres to its intended behavior. They don't provide us
-with an ability to compose them using operators like **and**, **or**.
+with an ability to [compose them](#matcher-composition--using-trait-objects) using operators like **and**, **or**.
 
 We can deal with both these issues by introducing an abstraction that:
 - **Examines the data** and **verifies** that the data conforms to **specific criteria**.
@@ -504,7 +505,7 @@ Let's take a look at the relationship between assertions and matchers.
 </div>
 
 We will have positive and negative assertions both of which use positive matchers. The bridge (*which is yet to be built*) will connect matchers with assertions
-and invert a matcher if a negative assertion like `should_not_contain_a_digit` is invoked.
+and invert the matcher if a negative assertion like `should_not_contain_a_digit` is invoked.
 
 Let's build the bridge using [blanket trait](#leveraging-blanket-trait-implementation). 
 
@@ -565,14 +566,14 @@ We can now refactor the methods `should_contain_a_digit` and `should_not_contain
 impl<T> MembershipAssertion for T
     where T: AsRef<str> + Debug {
     fn should_contain_a_digit(&self) -> &Self {
-        //the method should passes self (which in this case is &str) 
+        //the method `should` passes self (which in this case is &str) 
         //to the test method of the matcher.
         self.should(&contain_a_digit()); 
         self
     }
     
     fn should_not_contain_a_digit(&self) -> &Self {
-        //the method should_not passes self (which in this case is &str) 
+        //the method `should_not` passes self (which in this case is &str) 
         //to the test method of the matcher.
         self.should_not(&contain_a_digit()); 
         self
@@ -652,7 +653,7 @@ The above code fails with the the following error:
 
 Let's get back to our question: Should our matchers hold a reference to the extra data or take the ownership?
 
-We will an attempt to design matcher using references (**Option1**), which means our matcher will now have lifetime annotation.
+We will an attempt to design matchers using references (**Option1**), which means our `MembershipMatcher` will now have lifetime annotation.
 
 ```rust
 pub enum MembershipMatcher<'a> {
@@ -779,7 +780,7 @@ based on point 1.
 
 ### Matcher composition : using trait objects
 
-We now have matcher as a citizen in the code. I think it is worth building a concept that allows us to combine various matchers using operators like: 
+We now have matcher as a citizen in the code. I think it is worth building a concept that allows composition of various matchers using operators like: 
 **and**, **or**. 
 
 We can introduce an abstraction `Matchers` that contains a collection of objects which implement `Matcher<T>` trait.
@@ -799,12 +800,12 @@ pub struct Matchers<T, M: Matcher<T>> {
 
 Our first attempt is to create a `Matchers` abstraction that holds a vector of `M`, where `M` is a `Matcher` that operates on a `T`.
 
-To understand the issue with this design, we need to understand how generics are processed in Rust. In Rust, generics undergo [monomorphization](https://rustc-dev-guide.rust-lang.org/backend/monomorph.html) which means the compiler 
+We need to understand how generics are processed in Rust to understand an issue with this design. In Rust, generics undergo [monomorphization](https://rustc-dev-guide.rust-lang.org/backend/monomorph.html) which means the compiler 
 produces a different copy of the generic code for each concrete type needed. This means if the generic type `Option<T>` is used with `f64` and `i32`, 
 the compiler will produce two copies of `Option`, which would be similar to `Option_f64` and `Option_i32`.
 
 Given our definition of `Matchers`, Rust will emit different copies of `Matchers` for each concrete type of `Matcher`. This also means that Rust
-will not allow us to combine different types of matcher objects using generics, even if all of them implement the `Matcher<T>` trait for the same `T`.
+will not allow us to combine different types of matcher objects like `MembershipMatcher` and `SubstringMatcher` using generics, even if all of them implement the `Matcher<T>` trait for the same `T`.
 
 So, we need a different way to combine matchers. We have already seen [trait objects](#connecting-assertions-and-matchers---using-blanket-trait-and-trait-object),
 which point to both an instance of a type implementing a trait and a table that is used to look up trait methods on that type at runtime.
@@ -858,7 +859,7 @@ MatchersBuilder::start_building(Box::new(contain_a_digit()))
 ```
 
 Finally, `Matchers` is going to implement the `Matcher<T>` trait. This is what makes the crate really powerful. 
-Anyone can create their custom matchers and use them in the assertion(s) of their choice.
+Anyone can create their custom matcher using composition and use it in the assertion(s) of their choice.
 
 ```rust
 impl<T: Debug> Matcher<T> for Matchers<T> {
@@ -945,9 +946,9 @@ This involves the following:
 - Implementing the password assertion for `&str`.
 - Leveraging the custom matcher in the assertion using the built-in trait `Should`.
 
-We have arrived at the end of the article. I hope it was worth your time. 
+That's it folks. We have arrived at the end of the article. I hope it was worth your time. 
 
-I have an assertions crate called [clearcheck](https://github.com/SarthakMakhija/clearcheck). Do take a look if it excites you.
+I have an assertions crate called [clearcheck](https://github.com/SarthakMakhija/clearcheck). Do take a look if the concepts that were discussed in the article excite you.
 
 ### References
 
