@@ -335,6 +335,8 @@ mod ordering_tests {
 
 The advantage of implementing a trait for any `T` (with or without constraint) is obvious. It removes duplication!!! 
 
+Time to revisit the implementation of our assertion.
+
 ### Introducing Matchers
 
 Let's take a look at the implementation of `OrderedAssertion` again.
@@ -358,6 +360,10 @@ impl<T> OrderedAssertion<T> for T
 }
 ```
 
+There are two issues with this implementation.
+
+#### Subtle duplication
+
 There is still subtle duplication between the implementations of `should_be_greater_than` and `should_not_be_greater_than`. 
 
 Let's take a closer look to understand the duplication:
@@ -365,16 +371,22 @@ Let's take a closer look to understand the duplication:
 - In the panic message: `panic!("{:?} should be greater than {:?}", self, other)` and `panic!("{:?} should not be greater than {:?}", self, other)`,
 both the methods are causing panic with messages which are inverted.
 
-The same form of duplication will be observed between different method pairs: 
+The same form of duplication will be observed between method pairs like: 
 - `should_be_empty`, `should_not_be_empty` 
 - `should_be_greater_than`, `should_not_be_greater_than`
 - etc
 
 This duplication is caused because of the change in the condition for examining the data: *self must be **less than** other*, *self must be **greater than** other*.
 
-We can deal with the duplication by introducing an abstraction that:
-- Can **examine the data** and **verify** that the data conforms to **specific criteria**.
-- Can invert its behavior so that we **won't** be required to write any **conditional code** for implementing **negative assertions**. 
+#### The lack of ability to compose assertions using operators like *and*, *or*
+
+Assertions are defining the contract, ensuring that each data type (/data structure) adheres to its intended behavior. They don't provide us
+with an ability to compose them.
+
+We can deal with both these issues by introducing an abstraction that:
+- **Examine the data** and **verify** that the data conforms to **specific criteria**.
+- **Inverts** its behavior so that we **won't** be required to write any **additional code** for implementing **negative assertions**.
+- Allows **composition**
 
 The question is what would be the name of such an abstraction? In the world of assertions, such an object is called matcher. I asked [bard](https://bard.google.com/chat) to define *Matcher*? It gave me the following definition:  
 
@@ -401,7 +413,7 @@ pub struct MatcherResult {
 
 `MatcherResult` which will play a crucial role in inverting a matcher.
 
-Let's implement `MembershipMatcher` for string. It should be capable of testing:
+Let's implement `MembershipMatcher` for string. It should be capable of asserting:
 
 - if the given string contains a digit.
 - if the given string contains the specified character.
@@ -441,11 +453,11 @@ pub fn contain_a_character(ch: char) -> MembershipMatcher {
 ```
 
 A few things to observe:
-- `MembershipMatcher` implements `Matcher<T>` for any `T` which can be represented as string.
+- `MembershipMatcher` implements the trait `Matcher<T>` for any `T` which can be represented as string.
 - We use enum to represent `MembershipMatcher` because it allows logical grouping of matchers and each enum variant can hold its own data.
 - Each arm of the `match` expression returns an appropriate instance of `MatcherResult`.
-- We also provide public functions to return appropriate instances of `MembershipMatcher`.
-- `MembershipMatcher` only implements positive assertions, thus taking the duplication out. *However, we still need to invert matchers.*
+- We also provide public functions to get appropriate instances of `MembershipMatcher`.
+- `MembershipMatcher` only implements positive assertions.
 - `MembershipMatcher` also knows about the error messages that should be returned if the assertion(s) using this matcher fails.
 
 Time to add a few tests.
@@ -472,6 +484,7 @@ mod tests {
 It is a decent start to matchers but we still need to answer a few questions:
 - How to connect assertions and matchers?
 - How to invert a matcher?
+- How to compose matchers?
 
 ### Connecting assertions and matchers - using blanket trait and trait object
 
@@ -487,7 +500,7 @@ Let's take a look at the relationship between assertions and matchers.
     <img src="/assertions-matchers.png" alt="relationship between assertions and matchers"/>
 </div>
 
-We will have positive and negative assertions, with only positive matchers. The bridge (*which is yet to be built*) will connect matchers with assertions
+We will have positive and negative assertions both of which use positive matchers. The bridge (*which is yet to be built*) will connect matchers with assertions
 and invert a matcher if a negative assertion like `should_not_contain_a_digit` is invoked.
 
 Let's build the bridge using [blanket trait](#leveraging-blanket-trait-implementation). 
@@ -549,12 +562,16 @@ We can now refactor the methods `should_contain_a_digit` and `should_not_contain
 impl<T> MembershipAssertion for T
     where T: AsRef<str> + Debug {
     fn should_contain_a_digit(&self) -> &Self {
-        self.should(&contain_a_digit());
+        //the method should passes self (which in this case is &str) 
+        //to the test method of the matcher.
+        self.should(&contain_a_digit()); 
         self
     }
     
     fn should_not_contain_a_digit(&self) -> &Self {
-        self.should_not(&contain_a_digit());
+        //the method should_not passes self (which in this case is &str) 
+        //to the test method of the matcher.
+        self.should_not(&contain_a_digit()); 
         self
     }
 }
