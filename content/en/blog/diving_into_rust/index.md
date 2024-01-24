@@ -58,6 +58,7 @@ let literal: &str = "TRUST";
 
 <div class="align-center-exclude-width-change">
     <img src="/string-vs-str.png" alt="String vs &str"/>
+    <figcaption class="figcaption">Visual from the book Programming Rust</figcaption>
 </div>
 
 > In Rust, the string literals are of type &str and the actual literals are allocated on pre-allocated read-only
