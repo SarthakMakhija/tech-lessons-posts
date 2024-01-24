@@ -38,10 +38,36 @@ pass_phrase.should_not_be_empty()
     .should_not_contain_ignoring_case("word");
 ```
 
-### Getting started - beginning with extension methods
+### Getting started - String, &str and str types
 
-The first thing that we need is provide custom methods on the built-in types. In the password validation example, we have methods like
-`should_contain_all_characters` and `should_contain_a_digit` over `string` (or `&str`).
+It is important to understand various string types that Rust provides because we will provide methods which operate on these types.
+
+- **String**: is a mutable and resizable buffer holding UTF-8 text. The buffer is allocated on heap. It can be treated as a collection of u8 `vec<u8>`.
+- **&str**: is an immutable reference to a run of UTF-8 text owned by someone else. `&str` is a fat pointer, it contains both
+  the address of the actual string and its length.
+- **str**: is an immutable sequence of UTF-8 bytes of dynamic length somewhere in memory. It's size in unknown, which means `str` almost always 
+appears as `&str` in the code.
+
+The below code and the visual highlights the types: `String`, and `&str`.
+
+```rust
+let value: String = String::from("RUST");
+let value_ref: &str = &value[1..];
+let literal: &str = "TRUST";
+```
+
+<div class="align-center-exclude-width-change">
+    <img src="/string-vs-str.png" alt="String vs &str"/>
+</div>
+
+> In Rust, the string literals are of type &str and the actual literals are allocated on pre-allocated read-only
+> memory.
+
+### Beginning with extension methods
+
+The first thing that we need is the ability to invoke custom methods like `should_contain_all_characters` and `should_be_empty` on the built-in
+types. In the password validation example, we have methods like `should_contain_all_characters` and `should_contain_a_digit` 
+over `string` (or `&str`) types.
 
 Such methods are called "extension" methods and [Wikipedia](https://en.wikipedia.org/wiki/Extension_method#:~:text=Extension%20methods%20are%20features%20of,an%20equally%20safe%20manner%2C%20however.) defines extension method as
 "a method added to an object after the original object was compiled". **In Rust, extension methods are added using traits.**
@@ -58,7 +84,7 @@ pub trait MembershipAssertion {
 
 `MembershipAssertion` defines methods: `should_contain_a_digit`, `should_not_contain_a_digit` and `should_not_be_empty`, all of which returns reference to `Self` to allow chaining.
 
-Let's implement the trait for a string slice (`&str`). *(I will only implement should_contain_a_digit for the article).*
+Let's implement the trait for a string slice (`&str`). *(I will only implement should_contain_a_digit at this stage).*
 
 ```rust
 impl MembershipAssertion for &str {
@@ -72,7 +98,7 @@ impl MembershipAssertion for &str {
 }
 ```
 
-Time to add a few tests. *(I will only show a couple of tests for the article).*
+Time to add a few tests. *(I will only show a couple of tests.).*
 
 ```rust
 #[cfg(test)]
@@ -96,7 +122,7 @@ mod tests {
 
 It is a decent start, and we can make our first commit.
 
-We have implemented the `MembershipAssertion` trait for `&str` type. We also need the methods of the `MembershipAssertion` trait for the `String` type.
+We have implemented the `MembershipAssertion` trait for the `&str` type. We also need the methods of the `MembershipAssertion` trait for the `String` type.
 
 Let's implement the trait for the `String` type. 
 
@@ -129,11 +155,11 @@ mod string_tests {
 }
 ```
 
-We have simply duplicated the method `should_contain_a_digit` for `&str` and `String` and verified that it works for both the types. 
+We have simply duplicated the method `should_contain_a_digit` for `&str` and `String` types and verified that duplicated code works for both the types. 
 
 Let's make an attempt to remove the duplication.
 
-We can convert the `String` type to a `string slice` and invoke the respective methods on `&str`. With this approach, the implementation
+We can convert the `String` type to a `string slice -> &str` and invoke the respective methods on `&str` type. With this approach, the implementation
 of `MembershipAssertion` on `String` looks like the following:
 
 ```rust
@@ -156,36 +182,19 @@ trait, the delegation will become obvious. So the question is, can we do better?
 
 ### Understanding AsRef
 
-Let's revisit our `MembershipAssertion`.
+Let's revisit our `MembershipAssertion` trait.
 
 ```rust
 pub trait MembershipAssertion {
     fn should_contain_a_digit(&self) -> &Self;
+    fn should_not_contain_a_digit(&self) -> &Self;
     fn should_not_be_empty(&self) -> &Self;
 }
 ```
 
-The idea is to provide an implementation of `MembershipAssertion` for all the types which can be represented as string. Rust provides various such types:
+The idea is to provide an implementation of `MembershipAssertion` for all the types which can be represented as string. 
 
-- **String**: is a mutable and resizable buffer holding UTF-8 text. The buffer is allocated on heap.  
-- **&str**: is a reference to a run of UTF-8 text owned by someone else. `&str` is a fat pointer, it contains both
-the address of the actual string and its length.
-
-The below code and the visual highlights the types: `String`, and `&str`.
-
-```rust
-let value: String = String::from("RUST");
-let value_ref: &str = &value[1..];
-```
-
-<div class="align-center">
-    <img src="/string-vs-str.png" alt="String vs &str"/>
-</div>
-
-> In Rust, the string literals are of type &str and the actual literals are allocated on pre-allocated read-only
-> memory.
-
-It will be great to implement `MembershipAssertion` for any `T`, where `T` that it can be represented as `String` (or `&str`).
+It will be great to implement `MembershipAssertion` for any generic type `T`, where `T` that it can be represented as `String` (or `&str`).
 
 Let's give this concept a try.
 
@@ -204,8 +213,8 @@ impl<T> MembershipAssertion for T
 
 We are implementing `MembershipAssertion` for any `T` where T implements [AsRef<str>](https://doc.rust-lang.org/std/convert/trait.AsRef.html) and [Debug](https://doc.rust-lang.org/std/fmt/trait.Debug.html) trait.
 
-Jim Blandy, Jason Orendorff and Leonora F.S Tindall in the book [Programming Rust](https://www.oreilly.com/library/view/programming-rust-2nd/9781492052586/) says: when a type implements `AsRef<U>`, that means you can borrow a `reference of U` from the type.
-This means, if a type implements `AsRef<str>` we should be able to borrow a `reference of str` from that type.
+Jim Blandy, Jason Orendorff and Leonora F.S Tindall in the book [Programming Rust](https://www.oreilly.com/library/view/programming-rust-2nd/9781492052586/) says: when a type implements `AsRef<U>`, it means we can borrow a `reference of U` from the type.
+This means, if a type implements `AsRef<str>` we can borrow a `reference of str` from that type.
 
 In Rust, both `String` and `&str` type implements `AsRef<str>` which means all the methods of `MembershipAssertion` are now available on `String`
 and `&str`. Please find the reference [here](https://doc.rust-lang.org/std/convert/trait.AsRef.html#:~:text=Since%20both%20String%20and%20%26str,accept%20both%20as%20input%20argument). 
@@ -216,14 +225,14 @@ Quick revisit:
 - Rust allows implementing a trait for any `T`. This is called *blanket trait implementation*. In our case, we are implementing `MembershipAssertion`
 for a constrained `T`.
 - The trait `AsRef` provides a lot of flexibility in the function signature. The method [open](https://doc.rust-lang.org/std/fs/struct.File.html#method.open) in
-Rust [File](https://doc.rust-lang.org/std/fs/struct.File.html) type takes `AsRef<Path>`, which means any `P` which can be represented as a [Path](https://doc.rust-lang.org/std/path/struct.Path.html)
+Rust [File](https://doc.rust-lang.org/std/fs/struct.File.html) type takes a parameter `P` of type `AsRef<Path>`, which means any `P` that can be represented as a [Path](https://doc.rust-lang.org/std/path/struct.Path.html)
 can be passed as an argument.
 ```rust
-// open method from Rust' file type.
+// open method from Rust's file type.
 pub fn open<P: AsRef<Path>>(path: P) -> Result<File> {..}
 ```
 
-With the introduction of `AsRef<str>` change, we have taken care of the duplication between implementations of `MembershipAssertion`, and we can
+With the introduction of `AsRef<str>` change, we have taken care of the duplication in the implementation of `MembershipAssertion`, and we can
 now remove our original implementation of `MembershipAssertion` for `String` and `&str` types.
 
 ### Leveraging blanket trait implementation
@@ -876,3 +885,4 @@ I have an assertions crate called [clearcheck](https://github.com/SarthakMakhija
 
 - [The Rust Programming Language](https://doc.rust-lang.org/book/)
 - [Programming Rust](https://www.oreilly.com/library/view/programming-rust-2nd/9781492052586/)
+- [String vs &str vs str](https://stackoverflow.com/questions/24158114/what-are-the-differences-between-rusts-string-and-str)
