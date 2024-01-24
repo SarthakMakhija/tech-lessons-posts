@@ -1,7 +1,7 @@
 ---
 author: "Sarthak Makhija"
 title: "Diving into Rust by building an assertions crate"
-date: 2024-01-21
+date: 2024-01-24
 description: "
 As Rust projects grow in size and complexity, the need for sophisticated error handling tools becomes ever more pressing. 
 Traditional methods like panics and asserts, while useful, can be limited and cumbersome.
