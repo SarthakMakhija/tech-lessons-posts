@@ -145,8 +145,8 @@ transactionExecutor.Apply(txn)
 ```
 
 The pseudo-code checks for:
-- spatial overlap and,
-- only the first part of temporal overlap condition. If a newer commit exists for any key that the transaction is going to write: `(lastCommit(key) > txn.beginTimestamp())`, 
+- spatial overlap, and
+- only the first part of temporal overlap condition. If a newer commit exists for any key that the transaction is going to write: `lastCommit(key) > txn.beginTimestamp()`, 
 the transaction is aborted. This ensures that the transaction only operates on data that reflects the state at the start of the transaction, 
 preventing inconsistencies caused by concurrent modifications.
 
