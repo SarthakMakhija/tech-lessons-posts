@@ -5,8 +5,8 @@ date: 2024-03-15
 description: "
 "
 tags: ["Golang", "Transaction", "Isolation", "Serialized Snapshot Isolation"]
-thumbnail: /diving-into-rust.webp
-caption: ""
+thumbnail: /serialized-snapshot-isolation.png
+caption: "Background by Pixabay on Pexels"
 ---
 
 Hello ..
