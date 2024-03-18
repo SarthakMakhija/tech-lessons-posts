@@ -154,3 +154,6 @@ uses the algorithm described earlier. The code is available [here](https://githu
 #### Implementing Put
 
 ### References
+- [BadgerDB](https://github.com/dgraph-io/badger)
+- [SkipList](https://kt.academy/article/pmem-design-choices-and-use-cases#selective-persistence)
+- [A critique of snapshot isolation](https://dl.acm.org/doi/10.1145/2168836.2168853)
