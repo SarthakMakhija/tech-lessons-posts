@@ -101,7 +101,7 @@ Similarly, if we are creating a SkipList to store string keys, then the sentinel
 
 The above image is the representation of our `SkipList` struct. 
 
-> `10, 100`, `20, 200` represents key,value pair.
+> `(10, 100)`, `(20, 200)` represent key,value pair.
 
 Let's say we want to search the key 25. The following would be the approach:
 
@@ -116,8 +116,8 @@ same node. Keep moving down until the right node contains a key that is less tha
 8. Right of level 0 on the node containing key 20 is still 30. There are no more levels to go down to. 
 9. So, we can conclude that the key 25 is not present in the list.
 
-SkipList is a good data structure to store multiple versions of each key in a Key/Value storage engine. Each key is given a version, which is
-usually the `commitTimestamp` in Snapshot and Serialized Snapshot isolation. 
+SkipList is a good data structure that allows us to store multiple versions of each key (in a Key/Value storage engine). 
+Each key is given a version, which is usually the `commitTimestamp` in Snapshot and Serialized Snapshot isolation. 
 Each node of SkipList now stores an instance of `VersionedKey` that can be represented as:
 
 ```go

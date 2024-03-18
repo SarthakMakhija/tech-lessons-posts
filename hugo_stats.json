@@ -414,7 +414,6 @@
       "understanding-localstack",
       "understanding-mvcc",
       "understanding-serialized-snapshot-isolation",
-      "understanding-skip-list",
       "understanding-skiplist",
       "understanding-snapshot-isolation",
       "understanding-string-str-and-str-types",
