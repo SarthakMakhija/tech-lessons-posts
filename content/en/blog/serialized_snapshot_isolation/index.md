@@ -20,7 +20,7 @@ multiple writes to multiple tables. Consider a Key/Value storage engine instead 
 ```go
 transaction := NewReadWriteTransaction().Begin()
 transaction.Put([]byte("KeyValueStore"), []byte("BadgerDb"))
-transaction.Put([]byte("Isolation"), []byte("Serialized Snapshot Isolation"))
+transaction.Put([]byte("StoreType"), []byte("LSM"))
 transaction.Delete([]byte("DiskType"))
 transaction.Commit()
 ```
@@ -34,18 +34,18 @@ of questions that you will ask while implementing transaction isolation would in
   - What happens when a transaction attempts to read the value of a key, which is being written to by another transaction?
   - Can a readonly transaction abort?
 
-- **Snapshot Isolation**: the snapshot from which a transaction reads is not affected by concurrently running transactions. To provide snapshot isolation,
+- **Snapshot isolation**: the snapshot from which a transaction reads is not affected by concurrently running transactions. To support snapshot isolation,
 databases and Key/Value storage engines maintain multiple versions of the data. Anytime a transaction begins, it  is given a `beginTimestamp` and 
 if a transaction commits without any conflict, it is given a `commitTimestamp`. A transaction **txn<sub>(i)</sub>** with a begin timestamp of 
 **T<sub>b</sub>(txn<sub>(i)</sub>)** reads the latest version of data (/key) with the commit timestamp **C** **<** **T<sub>b</sub>(txn<sub>(i)</sub>)**.
 Two concurrent transactions can still conflict if there is a **write-write** conflict, meaning, two transactions writing to the same key (in a Key/Value storage engine).
 
-- **Serialized Snapshot Isolation**: the snapshot from which a transaction reads is not affected by concurrently running transactions. The core
+- **Serialized Snapshot isolation**: the snapshot from which a transaction reads is not affected by concurrently running transactions. The core
 idea of maintaining multiple versions of the data remains the same. Two concurrent transactions can still conflict if 
 there is a **read-write** conflict, 
 
 - **MVCC**: stands for multi-version concurrency control. It is the backbone for implementing transactions with Snapshot or 
-Serialized Snapshot Isolation. In a multi-versioned Key/Value storage engine, each key is given a version which is incremented every time a write 
+Serialized Snapshot isolation. In a multi-versioned Key/Value storage engine, each key is given a version which is incremented every time a write 
 happens in the storage engine. The following visual should help in building a light mind-map of a read/write transaction flow in a Key/Value storage
 engine that supports MVCC with either Snapshot or Serialized Snapshot isolation.
 
@@ -56,19 +56,107 @@ engine that supports MVCC with either Snapshot or Serialized Snapshot isolation.
 The flow can be summarized as:
 - Create an instance of `ReadWriteTransaction` and use the instance to perform relevant operations.
 - `Commit` the transaction.
-- When the transaction is committed, generate `CommitTimestamp`. `CommitTimestamp` serves as the version for all the keys in the MVCC store.
+- When the transaction is committed, generate `CommitTimestamp`. (`CommitTimestamp` serves as the version for all the keys in the MVCC store).
 - Update all the keys in the transaction with the generated `CommitTimestamp`.
 - Serially apply all the transactions to the state machine of the Key/Value storage engine.
 
-### Understanding Snapshot Isolation
+### Understanding Snapshot isolation
 
-### Understanding Serialized Snapshot Isolation
+In **Snapshot isolation**, the snapshot from which a transaction reads is not affected by concurrently running transactions. To support snapshot isolation,
+databases and Key/Value storage engines maintain [multiple versions of the data](#skiplist-and-mvcc). 
+
+The high-level implementation of `Get` in **Snapshot isolation**, in a Key/Value storage engine can be summarized as:
+- Each transaction is given a `beginTimestamp`. It is an increasing number.
+- Timestamps are assigned by a centralized authority called `Oracle` (or `Timestamp Oracle`).
+- A transaction **txn<sub>(i)</sub>** with a begin timestamp of **T<sub>b</sub>(txn<sub>(i)</sub>)** reads the latest version of keys 
+with the commit timestamp **C** **<** **T<sub>b</sub>(txn<sub>(i)</sub>)**.
+- Simply put, a transaction **txn<sub>(i)</sub>** observes all the changes that have been committed before the start of **txn<sub>(i)</sub>**.
+
+Before we explore the intricacies of `Oracle` implementation, let's briefly examine the `beginTimestamp` method.
+
+```go
+type Oracle struct {
+    lock            sync.Mutex
+    nextTimestamp   uint64
+	//other fields omitted
+}
+
+func NewOracle(transactionExecutor *TransactionExecutor) *Oracle {
+  oracle := &Oracle{
+    nextTimestamp: 1,
+  }
+  return oracle
+}
+
+func (oracle *Oracle) beginTimestamp() uint64 {
+    oracle.lock.Lock()
+    beginTimestamp := oracle.nextTimestamp - 1
+    oracle.lock.Unlock()
+    
+	//code omitted
+	return beginTimestamp
+}
+```
+
+Every transaction gets a `beginTimestamp` which is represented as `uint64` (64 bits).
+The `nextTimestamp` field of `Oracle` denotes the `commitTimestamp` that shall be given to the next transaction that is ready to commit. Based on the field `nextTimestamp`, we can derive the `beginTimestamp`.
+
+- If the `nextTimestamp` is 10, the next transaction that is ready to commit will be given 10 as its `commitTimestamp`.
+- This means that 9 is the latest timestamp that is given to some transaction **txn<sub>(some)</sub>** as its `commitTimestamp`.
+- This means that the current transaction **txn<sub>(current)</sub>** can be awarded 9 as its `beginTimestamp`. 
+- So, `beginTimestamp = nextTimestamp - 1`.
+- Simply put, **txn<sub>(current)</sub>** can read keys with `commitTimestamp` < 9, where 9 is the `beginTimestamp` of **txn<sub>(current)</sub>**.    
+
+> If the `nextTimestamp` is 10, it means that 9 is the latest timestamp that is given to some transaction **txn<sub>(some)</sub>** as its `commitTimestamp`.
+> Does this mean that the commits with timestamp 9 have been applied to the storage?
+> 
+> No, committing a transaction and actually applying its changes to the storage are two distinct events. 
+> Committing essentially marks a transaction as ready to be applied, but it doesn't instantly reflect in the storage. Committed transactions with assigned commitTimestamps form a queue, 
+> awaiting their turn to be applied to the storage in a serial manner. This means transactions are processed and reflected in the storage one after another, ensuring orderly updates.
+> 
+> Implementations like [BadgerDb](https://github.com/dgraph-io/badger/blob/6acc8e801739f6702b8d95f462b8d450b9a0455b/txn.go#L104) wait 
+> till all the transactions upto the assigned `beginTimestamp` are applied. 
+
+A `ReadWriteTransaction` is assigned a `commitTimestamp` when it is ready to commit. Before assigning the `commitTimestamp`, it is necessary to 
+check that there are no *write-write* conflicts. Two concurrent transactions can conflict in Snapshot isolation if:
+1. Both the transactions **txn<sub>(i)</sub>** and **txn<sub>(j)</sub>** write to the same key called *Spatial overlap*, and
+2. **T<sub>b</sub>(txn<sub>(i)</sub>)** `<` **T<sub>c</sub>(txn<sub>(j)</sub>)** and **T<sub>b</sub>(txn<sub>(j)</sub>)** `<` **T<sub>c</sub>(txn<sub>(i)</sub>)**, 
+where **T<sub>b</sub>(txn<sub>(i)</sub>)** represents the `beginTimestamp` of **txn<sub>(i)</sub>** and **T<sub>c</sub>(txn<sub>(j)</sub>)** represents
+the `commitTimestamp` of **txn<sub>(j)</sub>**. This is called *Temporal overlap*.
+
+Let's write the pseudo-code for committing a transaction **txn<sub>(i)</sub>** with `beginTimestamp` as **T<sub>b</sub>**.
+
+```shell
+## detect conflict
+for each key in keysToCommit:
+    if lastCommit(key) > txn.beginTimestamp()
+	    abort;
+    end if;
+end for;
+
+## prepare for commit
+commitTimestamp <- oracle.commitTimestamp();
+for each key in keysToCommit:
+   lastCommit(key) <- commitTimestamp
+end for;
+
+## apply commits
+transactionExecutor.Apply(txn)
+```
+
+The pseudo-code checks for:
+- spatial overlap and,
+- only the first part of temporal overlap condition. If a newer commit exists for any key that the transaction is going to write: `(lastCommit(key) > txn.beginTimestamp())`, 
+the transaction is aborted. This ensures that the transaction only operates on data that reflects the state at the start of the transaction, 
+preventing inconsistencies caused by concurrent modifications.
+
+### Understanding Serialized Snapshot isolation
 
 ### Goodbye Anomalies
 
-### Understanding SkipList
+### SkipList and MVCC
 
-A skiplist is a layered data structure where the lowest layer is an ordinary **ordered** linked list. Each higher layer acts as an 
+A SkipList is a layered data structure where the lowest layer is an ordinary **ordered** linked list. Each higher layer acts as an 
 "express lane" for the lists below. Searching proceeds downwards from the top until consecutive elements bracketing the search element are found.
 
 SkipList can be represented with the following structure:
@@ -142,10 +230,10 @@ func (versionedKey VersionedKey) compare(other VersionedKey) int {
 }
 ```
 
-The `Get` method in `SkiplistNode` takes a `VersionedKey` which is the actual key along with the `beginTimestamp` of the transaction. The `Get`
+The `Get` method in `SkiplistNode` takes a `VersionedKey`, that combines the target key the user wants to search along with the `beginTimestamp` of the transaction. The method `Get`
 uses the algorithm described earlier. The code is available [here](https://github.com/SarthakMakhija/serialized-snapshot-isolation/blob/main/mvcc/SkiplistNode.go). 
 
-### Implementing Serialized Snapshot Isolation in a Key/Value store
+### Implementing Serialized Snapshot isolation in a Key/Value store
 
 #### Understanding MVCC
 
