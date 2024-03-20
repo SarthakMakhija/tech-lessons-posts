@@ -61,6 +61,7 @@
       "thead",
       "title",
       "tr",
+      "u",
       "ul"
     ],
     "classes": [
@@ -324,7 +325,11 @@
       "how-much-to-refactor",
       "implementing-get",
       "implementing-put",
+      "implementing-readonlytransaction",
+      "implementing-readonlytransaction-1",
+      "implementing-readwritetransaction",
       "implementing-serializable-snapshot-isolation-in-a-keyvalue-store",
+      "implementing-watermarks",
       "import-flip-context-configuration",
       "improve-lambdas",
       "increases-your-confidence",
@@ -334,6 +339,7 @@
       "introducing-bytecode-opcodes",
       "introducing-matchers",
       "introduction",
+      "introduction-1",
       "keydir",
       "kotlin-dsl",
       "lambda-with-receiver",

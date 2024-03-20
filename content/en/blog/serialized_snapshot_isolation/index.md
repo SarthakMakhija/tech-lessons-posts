@@ -253,9 +253,9 @@ Similarly, if we are creating a SkipList to store string keys, then the sentinel
 
 The above image is the representation of our `SkipList` struct. 
 
-> `(10, 100)`, `(20, 200)` represent key,value pair.
+> `(10, 100)`, `(20, 200)` represent key,value pairs.
 
-Let's say we want to search the key 25. The following would be the approach:
+Let's say we want to search the key 25. The following will be the approach:
 
 1. Start with the header node and keep moving towards the right until the right key is greater than the search key.
 2. Right of the header node, at the highest level is 10 which is less than 25, so move right.
@@ -297,9 +297,75 @@ func (versionedKey VersionedKey) compare(other VersionedKey) int {
 The `Get` method in `SkiplistNode` takes a `VersionedKey`, that combines the target key the user wants to search along with the `beginTimestamp` of the transaction. The method `Get`
 uses the algorithm described earlier. The code is available [here](https://github.com/SarthakMakhija/serialized-snapshot-isolation/blob/main/mvcc/SkiplistNode.go). 
 
+We have covered all the building blocks of Serialized Snapshot isolation. It is time to implement it.
+
 ### Implementing Serializable Snapshot isolation in a Key/Value store
 
-#### Implementing Get
+This article describes an [implementation](https://github.com/SarthakMakhija/serialized-snapshot-isolation) of Serialized Snapshot isolation 
+that was implemented with [BadgerDb](https://github.com/dgraph-io/badger/) as reference. This implementation focuses specifically on the *isolation* property of transactions.
+
+#### Introduction
+
+Let me start by introducing core concepts in the code.
+
+1. **ReadonlyTransaction**: provides support for `Get` method. A `ReadonlyTransaction` never aborts.
+2. **ReadWriteTransaction**: provides support for `PutOrUpdate` and `Get` methods. A `ReadWriteTransaction` can abort if there is a Read-Write conflict with another transaction.
+3. **Oracle**: awards `beginTimestamp` and `commitTimestamp` to transactions. It also checks for conflicts between `ReadWriteTransaction`(s).
+4. **TransactionExecutor**: applies transactions serially, one after the other.
+5. **TransactionTimestampMark**: keeps track of the timestamps that are processed. These could be `beginTimestamp` or `commitTimestamp`.
+6. **MemTable**: an in-memory data structure that uses [SkipList](#skiplist-and-mvcc) for storing versioned keys. It acts as the state machine.
+
+Let's start by implementing `ReadonlyTransaction`.
+
+#### Implementing ReadonlyTransaction
+
+`ReadonlyTransaction` provides `Get` method that fetches the value for the given key from the state machine.
+
+Let's take a look at the definition or `ReadonlyTransaction`.
+
+```go
+type ReadonlyTransaction struct {
+	beginTimestamp uint64
+	memtable       *mvcc.MemTable
+	oracle         *Oracle
+}
+```
+A `ReadonlyTransaction` has a `beginTimestamp` which is obtained from `Oracle` and an instance of `MemTable` to fetch the value for a key.
+
+Anytime a new instance of `ReadonlyTransaction` is created, we get the `beginTimestamp` from `Oracle`. 
+
+```go
+func NewReadonlyTransaction(oracle *Oracle) *ReadonlyTransaction {
+  return &ReadonlyTransaction{
+    beginTimestamp: oracle.beginTimestamp(),
+    oracle:         oracle,
+    memtable:       oracle.transactionExecutor.memtable,
+  }
+}
+```
+
+We have already see the implementation of `beginTimetamp` method of `Oracle` earlier, but we can take a quick look again.
+
+```go
+func (oracle *Oracle) beginTimestamp() uint64 {
+	oracle.lock.Lock()
+	beginTimestamp := oracle.nextTimestamp - 1
+	oracle.beginTimestampMark.Begin(beginTimestamp)
+	oracle.lock.Unlock()
+
+	_ = oracle.commitTimestampMark.WaitForMark(context.Background(), beginTimestamp)
+	return beginTimestamp
+}
+```
+
+The `nextTimestamp` field of `Oracle` denotes the `commitTimestamp` that shall be given to the next transaction that is ready to commit. 
+Based on the field `nextTimestamp`, we can derive the `beginTimestamp`.
+
+- If the `nextTimestamp` is 10, the next transaction that is ready to commit will be given 10 as its `commitTimestamp`.
+- This means that 9 is the latest timestamp that is given to some transaction **txn<sub>(some)</sub>** as its `commitTimestamp`.
+- This means that the current transaction **txn<sub>(current)</sub>** can be awarded 9 as its `beginTimestamp`.
+- So, `beginTimestamp = nextTimestamp - 1`.
+- Simply put, **txn<sub>(current)</sub>** can read keys with `commitTimestamp` < 9, where 9 is the `beginTimestamp` of **txn<sub>(current)</sub>**.
 
 > If the `nextTimestamp` is 10, it means that 9 is the latest timestamp that is given to some transaction **txn<sub>(some)</sub>** as its `commitTimestamp`.
 > Does this mean that the commits with timestamp 9 have been applied to the storage?
@@ -311,7 +377,36 @@ uses the algorithm described earlier. The code is available [here](https://githu
 > Implementations like [BadgerDb](https://github.com/dgraph-io/badger/blob/6acc8e801739f6702b8d95f462b8d450b9a0455b/txn.go#L104) wait
 > till all the transactions upto the assigned `beginTimestamp` are applied.
 
-#### Implementing Put
+We will look at the `WaitForMark(...)` later, but it waits for all the commits till `beginTimetamp` to be applied to the state machine.
+
+> Is waiting really necessary in getting `beginTimestamp`?
+> There are two options:
+> 
+> 1. Wait for a fixed timeout and allow all the commits till `beginTimestamp` to be applied to the state machine. This may increase the response time
+> for read operations.
+> 
+> 2. Do not wait for the commits till `beginTimestamp` to be applied to the state machine. This may result result in an old value for a key. Example,
+> if the `nextTimestamp` is 10, the current transaction will be awarded 9 as its `beginTimestamp`. However, there might be transactions in the queue
+> waiting to be applied to state machine. This means, reading the value for a key from the state machine will get the value with latest version (/timestamp)
+> which may be less than 9. 
+
+The `Get` method is simple:
+
+```go
+func (transaction *ReadonlyTransaction) Get(key []byte) (mvcc.Value, bool) {
+	versionedKey := mvcc.NewVersionedKey(key, transaction.beginTimestamp)
+	return transaction.memtable.Get(versionedKey)
+}
+```
+
+It involves the following:
+1. Creating a new instance of `VersionedKey` that consists of the actual key and the `beginTimestamp` of the transaction.
+2. Reading the value from the `MemTable`. This implementation uses `SkipList` as the in-memory data structure for storing versioned keys, so the `Get`
+follows the algorithm described [earlier](#skiplist-and-mvcc).
+
+#### Implementing ReadWriteTransaction
+
+#### Implementing WaterMarks
 
 ### References
 
