@@ -6,7 +6,7 @@ description: "
 Ensuring data consistency in the face of concurrent transactions is a critical challenge in database management. 
 This article explores Serializable Snapshot Isolation (SSI), a rising star in the field that promises the best of both worlds: 
 strong data consistency without sacrificing performance. 
-We'll delve into the inner workings of SSI and explore its implementation for a Key/Value storage engine.
+The article delves into the inner workings of SSI and explore its implementation for a Key/Value storage engine.
 "
 tags: ["Golang", "Transaction", "Isolation", "Serializable Snapshot Isolation"]
 thumbnail: /serializable-snapshot-isolation.png
@@ -17,7 +17,7 @@ Ensuring data consistency in the face of concurrent transactions is a critical c
 Traditional serializable isolation, while guaranteeing data integrity, often suffers from performance bottlenecks due to extensive locking. 
 This article explores Serializable Snapshot Isolation (SSI), a rising star in the field that promises the best of both worlds: 
 strong data consistency without sacrificing performance. 
-We'll delve into the inner workings of SSI and explore its implementation for a Key/Value storage engine. We will refer to the research
+The article delves into the inner workings of SSI and explore its implementation for a Key/Value storage engine. We will refer to the research
 paper titled [A critique of snapshot isolation](https://dl.acm.org/doi/10.1145/2168836.2168853).
 
 ### Introduction
@@ -114,17 +114,7 @@ The `nextTimestamp` field of `Oracle` denotes the `commitTimestamp` that shall b
 - This means that 9 is the latest timestamp that is given to some transaction **txn<sub>(some)</sub>** as its `commitTimestamp`.
 - This means that the current transaction **txn<sub>(current)</sub>** can be awarded 9 as its `beginTimestamp`. 
 - So, `beginTimestamp = nextTimestamp - 1`.
-- Simply put, **txn<sub>(current)</sub>** can read keys with `commitTimestamp` < 9, where 9 is the `beginTimestamp` of **txn<sub>(current)</sub>**.    
-
-> If the `nextTimestamp` is 10, it means that 9 is the latest timestamp that is given to some transaction **txn<sub>(some)</sub>** as its `commitTimestamp`.
-> Does this mean that the commits with timestamp 9 have been applied to the storage?
-> 
-> No, committing a transaction and actually applying its changes to the storage are two distinct events. 
-> Committing essentially marks a transaction as ready to be applied, but it doesn't instantly reflect in the storage. Committed transactions with assigned commitTimestamps form a queue, 
-> awaiting their turn to be applied to the storage in a serial manner. This means transactions are processed and reflected in the storage one after another, ensuring orderly updates.
-> 
-> Implementations like [BadgerDb](https://github.com/dgraph-io/badger/blob/6acc8e801739f6702b8d95f462b8d450b9a0455b/txn.go#L104) wait 
-> till all the transactions upto the assigned `beginTimestamp` are applied. 
+- Simply put, **txn<sub>(current)</sub>** can read keys with `commitTimestamp` < 9, where 9 is the `beginTimestamp` of **txn<sub>(current)</sub>**.
 
 A `ReadWriteTransaction` is assigned a `commitTimestamp` when it is ready to commit. Before assigning the `commitTimestamp`, it is necessary to 
 check that there are no *write-write* conflicts. Two concurrent transactions can conflict in Snapshot isolation if:
@@ -150,7 +140,6 @@ for each key in keysToCommit:
 end for;
 
 ## apply commits
-transactionExecutor.Apply(txn)
 ```
 
 The pseudo-code checks for:
@@ -193,7 +182,41 @@ The constraint `x + y > 0` is broken. Snapshot isolation does not prevent write 
 
 ### Understanding Serializable Snapshot isolation
 
+Serializable Snapshot isolation derives the ideas of `beginTimestamp`, `commitTimestamp` and `Oracle` from Snapshot isolation. The difference is the 
+way conflict is detected between two concurrently running transactions.
+
+A transaction **txn<sub>(j)</sub>** conflicts with another transaction **txn<sub>(i)</sub>**, if:
+1. **txn<sub>(j)</sub>** writes to the keys read by **txn<sub>(i)</sub>**, and
+2. **txn<sub>(j)</sub>** commits during the lifetime of **txn<sub>(i)</sub>**, **T<sub>b</sub>(txn<sub>(i)</sub>)** `<` **T<sub>c</sub>(txn<sub>(j)</sub>)** < **T<sub>c</sub>(txn<sub>(i)</sub>)**.
+
+Here, **T<sub>b</sub>(txn<sub>(i)</sub>)** represents the `beginTimestamp` of the transaction **txn<sub>(i)</sub>** and 
+**T<sub>c</sub>(txn<sub>(i)</sub>)** represents the `commitTimestamp` of the transaction **txn<sub>(i)</sub>**.
+
+Let's write the pseudo-code for committing a transaction **txn<sub>(i)</sub>** with `beginTimestamp` as **T<sub>b</sub>**.
+
+```shell
+## detect conflict
+for each key in keysRead:
+    if lastCommit(key) > txn.beginTimestamp()
+	    abort;
+    end if;
+end for;
+
+## prepare for commit
+commitTimestamp <- oracle.commitTimestamp();
+for each key in keysToCommit:
+   lastCommit(key) <- commitTimestamp
+end for;
+
+## apply commits
+```
+
+The pseudo-code checks to see that none of the keys read by the transaction **txn<sub>(i)</sub>** have been committed after it began.
+The implementation of Serializable Snapshot isolation will require each read-write transaction to keep track of the read keys. 
+
 > [BadgerDb](https://github.com/dgraph-io/badger) implements Serializable Snapshot isolation. 
+
+Before diving into the implementation of Serializable Snapshot isolation, let's quickly take a look at SkipList and MVCC.
 
 ### SkipList and MVCC
 
@@ -277,6 +300,16 @@ uses the algorithm described earlier. The code is available [here](https://githu
 ### Implementing Serializable Snapshot isolation in a Key/Value store
 
 #### Implementing Get
+
+> If the `nextTimestamp` is 10, it means that 9 is the latest timestamp that is given to some transaction **txn<sub>(some)</sub>** as its `commitTimestamp`.
+> Does this mean that the commits with timestamp 9 have been applied to the storage?
+>
+> No, committing a transaction and actually applying its changes to the storage are two distinct events.
+> Committing essentially marks a transaction as ready to be applied, but it doesn't instantly reflect in the storage. Committed transactions with assigned commitTimestamps form a queue,
+> awaiting their turn to be applied to the storage in a serial manner. This means transactions are processed and reflected in the storage one after another, ensuring orderly updates.
+>
+> Implementations like [BadgerDb](https://github.com/dgraph-io/badger/blob/6acc8e801739f6702b8d95f462b8d450b9a0455b/txn.go#L104) wait
+> till all the transactions upto the assigned `beginTimestamp` are applied.
 
 #### Implementing Put
 
