@@ -1,15 +1,24 @@
 ---
 author: "Sarthak Makhija"
-title: "Under the Hood: Serialized Snapshot transaction isolation in Golang"
+title: "A guide to Serializable Snapshot Isolation in Key/Value storage engine"
 date: 2024-03-15
 description: "
+Ensuring data consistency in the face of concurrent transactions is a critical challenge in database management. 
+This article explores Serializable Snapshot Isolation (SSI), a rising star in the field that promises the best of both worlds: 
+strong data consistency without sacrificing performance. 
+We'll delve into the inner workings of SSI and explore its implementation for a Key/Value storage engine.
 "
-tags: ["Golang", "Transaction", "Isolation", "Serialized Snapshot Isolation"]
-thumbnail: /serialized-snapshot-isolation.png
+tags: ["Golang", "Transaction", "Isolation", "Serializable Snapshot Isolation"]
+thumbnail: /serializable-snapshot-isolation.png
 caption: "Background by Lum3n on Pexels"
 ---
 
-Hello ..
+Ensuring data consistency in the face of concurrent transactions is a critical challenge in database management. 
+Traditional serializable isolation, while guaranteeing data integrity, often suffers from performance bottlenecks due to extensive locking. 
+This article explores Serializable Snapshot Isolation (SSI), a rising star in the field that promises the best of both worlds: 
+strong data consistency without sacrificing performance. 
+We'll delve into the inner workings of SSI and explore its implementation for a Key/Value storage engine. We will refer to the research
+paper titled [A critique of snapshot isolation](https://dl.acm.org/doi/10.1145/2168836.2168853).
 
 ### Introduction
 
@@ -40,14 +49,14 @@ if a transaction commits without any conflict, it is given a `commitTimestamp`. 
 **T<sub>b</sub>(txn<sub>(i)</sub>)** reads the latest version of data (/key) with the commit timestamp **C** **<** **T<sub>b</sub>(txn<sub>(i)</sub>)**.
 Two concurrent transactions can still conflict if there is a **write-write** conflict, meaning, two transactions writing to the same key (in a Key/Value storage engine).
 
-- **Serialized Snapshot isolation**: the snapshot from which a transaction reads is not affected by concurrently running transactions. The core
+- **Serializable Snapshot isolation**: the snapshot from which a transaction reads is not affected by concurrently running transactions. The core
 idea of maintaining multiple versions of the data remains the same. Two concurrent transactions can still conflict if 
 there is a **read-write** conflict, 
 
 - **MVCC**: stands for multi-version concurrency control. It is the backbone for implementing transactions with Snapshot or 
-Serialized Snapshot isolation. In a multi-versioned Key/Value storage engine, each key is given a version which is incremented every time a write 
+Serializable Snapshot isolation. In a multi-versioned Key/Value storage engine, each key is given a version which is incremented every time a write 
 happens in the storage engine. The following visual should help in building a light mind-map of a read/write transaction flow in a Key/Value storage
-engine that supports MVCC with either Snapshot or Serialized Snapshot isolation.
+engine that supports MVCC with either Snapshot or Serializable Snapshot isolation.
 
 <div class="align-center-exclude-width-change">
     <img src="/transaction_flow_mvcc.png" alt="Transaction Flow with MVCC"/>
@@ -182,9 +191,9 @@ The constraint `x + y > 0` is broken. Snapshot isolation does not prevent write 
 
 > Storage systems like Percolator, [Dgraph](https://github.com/dgraph-io/dgraph) implement Snapshot isolation.
 
-### Understanding Serialized Snapshot isolation
+### Understanding Serializable Snapshot isolation
 
-> [BadgerDb](https://github.com/dgraph-io/badger) implements Serialized Snapshot isolation. 
+> [BadgerDb](https://github.com/dgraph-io/badger) implements Serializable Snapshot isolation. 
 
 ### SkipList and MVCC
 
@@ -237,7 +246,7 @@ same node. Keep moving down until the right node contains a key that is less tha
 9. So, we can conclude that the key 25 is not present in the list.
 
 SkipList is a good data structure in a sense that it allows us to store multiple versions of each key (in a Key/Value storage engine). 
-Each key is given a version, which is usually the `commitTimestamp` in Snapshot and Serialized Snapshot isolation. 
+Each key is given a version, which is usually the `commitTimestamp` in Snapshot and Serializable Snapshot isolation. 
 Each node of SkipList now stores an instance of `VersionedKey` that can be represented as:
 
 ```go
@@ -265,13 +274,14 @@ func (versionedKey VersionedKey) compare(other VersionedKey) int {
 The `Get` method in `SkiplistNode` takes a `VersionedKey`, that combines the target key the user wants to search along with the `beginTimestamp` of the transaction. The method `Get`
 uses the algorithm described earlier. The code is available [here](https://github.com/SarthakMakhija/serialized-snapshot-isolation/blob/main/mvcc/SkiplistNode.go). 
 
-### Implementing Serialized Snapshot isolation in a Key/Value store
+### Implementing Serializable Snapshot isolation in a Key/Value store
 
 #### Implementing Get
 
 #### Implementing Put
 
 ### References
+
 - [BadgerDB](https://github.com/dgraph-io/badger)
 - [SkipList](https://kt.academy/article/pmem-design-choices-and-use-cases#selective-persistence)
 - [A critique of snapshot isolation](https://dl.acm.org/doi/10.1145/2168836.2168853)
