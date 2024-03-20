@@ -413,7 +413,6 @@
       "understanding-bloom-filter",
       "understanding-count-min-sketch",
       "understanding-localstack",
-      "understanding-mvcc",
       "understanding-serialized-snapshot-isolation",
       "understanding-snapshot-isolation",
       "understanding-string-str-and-str-types",

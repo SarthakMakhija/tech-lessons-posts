@@ -146,7 +146,7 @@ transactionExecutor.Apply(txn)
 
 The pseudo-code checks for:
 - spatial overlap, and
-- only the first part of temporal overlap condition. If a newer commit exists for any key that the transaction is going to write: `lastCommit(key) > txn.beginTimestamp()`, 
+- only the first part of temporal overlap condition. If a newer commit exists for any key that the transaction is going to write such that, `lastCommit(key) > txn.beginTimestamp()`, 
 the transaction is aborted. This ensures that the transaction only operates on data that reflects the state at the start of the transaction, 
 preventing inconsistencies caused by concurrent modifications.
 
@@ -159,15 +159,16 @@ preventing inconsistencies caused by concurrent modifications.
 
 #### Write skew
 
-Snapshot isolation checks for Spatial overlap, two concurrent transactions writing to the same key. But, what if two transactions write to different
-keys which are related by some constraint. Consider two keys `x` and `y` which are related by a constraint `x + y > 0`. The initial values of both
-these keys is 1.
+Two concurrent transactions can conflict in Snapshot isolation if they write to the same key and there is a temporal overlap. 
+But, what if two transactions write to different keys which are related by some constraint. 
 
-Consider two concurrent transactions, **txn<sub>(x)</sub>** and **txn<sub>(y)</sub>**, both of which get a `beginTimestamp` of 1, read the
-values of `x` and `y` and get 1 as the value for each key. **txn<sub>(x)</sub>** reduces the value of `x` by 1 and **txn<sub>(y)</sub>**
-reduces the value of `y` by 1.
+Consider the following:
+- two keys `x` and `y` with initial values as 1 and related by the constraint `x + y > 0`.
+- two concurrent transactions, **txn<sub>(x)</sub>** and **txn<sub>(y)</sub>**, both of which get a `beginTimestamp` of 1, read the
+values of `x` and `y` and get 1 as the value for each key. 
+- **txn<sub>(x)</sub>** reduces the value of `x` by 1 and **txn<sub>(y)</sub>** reduces the value of `y` by 1.
 
-The following event highlight an anomaly called *write skew*.
+The following events highlight an anomaly called *write skew*.
 
 - The transaction **txn<sub>(x)</sub>** gets a `commitTimestamp` of 2, checks that `x + y > 0`, reduces the value of `x` by 1 and 
 writes the versioned value of `x` back to the store. At version 2, `x` becomes 0.
@@ -179,8 +180,11 @@ reduces the value of `y` by 1 and writes the versioned value of `y` back to the 
 
 The constraint `x + y > 0` is broken.
 
+> Storage systems like Percolator, [Dgraph](https://github.com/dgraph-io/dgraph) implement Snapshot isolation.
+
 ### Understanding Serialized Snapshot isolation
 
+> [BadgerDb](https://github.com/dgraph-io/badger) implements Serialized Snapshot isolation. 
 
 ### SkipList and MVCC
 
@@ -262,8 +266,6 @@ The `Get` method in `SkiplistNode` takes a `VersionedKey`, that combines the tar
 uses the algorithm described earlier. The code is available [here](https://github.com/SarthakMakhija/serialized-snapshot-isolation/blob/main/mvcc/SkiplistNode.go). 
 
 ### Implementing Serialized Snapshot isolation in a Key/Value store
-
-#### Understanding MVCC
 
 #### Implementing Get
 
