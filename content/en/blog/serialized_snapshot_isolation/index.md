@@ -404,6 +404,11 @@ It involves the following:
 2. Reading the value from the `MemTable`. This implementation uses `SkipList` as the in-memory data structure for storing versioned keys, so the `Get`
 follows the algorithm described [earlier](#skiplist-and-mvcc).
 
+This implementation shows reading the value for a key from an in-memory SkipList. The concept would remain the same even for implementing a `Get` 
+in a persistent [LSM-tree](https://en.wikipedia.org/wiki/Log-structured_merge-tree) based Key/Value storage engine. 
+Each `ReadonlyTransaction` will get a `beginTimestamp` and instead of just reading from an in-memory MemTable, we will read 
+from active memtable, inactive memtable(s) and the increasing levels of SSTable.
+
 #### Implementing ReadWriteTransaction
 
 #### Implementing WaterMarks

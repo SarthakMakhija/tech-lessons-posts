@@ -61,7 +61,6 @@
       "thead",
       "title",
       "tr",
-      "u",
       "ul"
     ],
     "classes": [
@@ -323,10 +322,7 @@
       "how-does-a-lambda-function-execute",
       "how-does-kotlin-support-dsl",
       "how-much-to-refactor",
-      "implementing-get",
-      "implementing-put",
       "implementing-readonlytransaction",
-      "implementing-readonlytransaction-1",
       "implementing-readwritetransaction",
       "implementing-serializable-snapshot-isolation-in-a-keyvalue-store",
       "implementing-watermarks",
