@@ -3,7 +3,7 @@ author: "Sarthak Makhija"
 title: "WiscKey: Separating Keys from Values in SSD-Conscious Storage"
 date: 2023-03-10
 description: "LSM-tree (Log structured merge tree) is a data structure typically used when dealing with write-heavy workloads. LSM-tree optimizes the write-path by performing sequential writes to disk. WiscKey is a persistent LSM-tree-based key-value store that separates keys from values to minimize read and write amplification. The design of WiscKey is highly SSD optimized, leveraging both the sequential and random performance characteristics of the device."
-tags: ["Storage engine", "LSM-tree", "WiscKey", "SSD-conscious"]
+tags: ["Storage engine", "LSM-tree", "WiscKey", "SSD-conscious", "BadgerDb"]
 thumbnail: /wisckey.webp
 caption: "Background by Alex Conchillos on Pexels"
 ---

@@ -8,7 +8,7 @@ This article explores Serializable Snapshot Isolation (SSI), a rising star in th
 strong data consistency without sacrificing performance. 
 The article delves into the inner workings of SSI and explore its implementation for a Key/Value storage engine.
 "
-tags: ["Golang", "Transaction", "Isolation", "Serializable Snapshot Isolation"]
+tags: ["Golang", "Transaction", "Isolation", "Serializable Snapshot Isolation", "BadgerDb"]
 thumbnail: /serializable-snapshot-isolation.png
 caption: "Background by Lum3n on Pexels"
 ---
