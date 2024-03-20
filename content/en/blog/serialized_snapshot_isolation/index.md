@@ -152,10 +152,10 @@ preventing inconsistencies caused by concurrent modifications.
 
 #### Anomalies
 
-- dirty reads
-- phantom reads
-- fuzzy reads
-- lost update
+<div class="align-center-exclude-width-change">
+    <img src="/snapshot-isolation-anomalies.png" alt="Anomalies prevented by Snapshot isolation"/>
+    <figcaption class="figcaption text-sm">Snapshot Isolation prevents many anomalies but not write skew. Question mark image from <a href="https://pixabay.com/vectors/question-mark-thinking-question-5656992/">Pixabay</a></figcaption>
+</div>
 
 #### Write skew
 
@@ -178,7 +178,7 @@ reduces the value of `y` by 1 and writes the versioned value of `y` back to the 
   - reads the latest value of `x` such that the `commitTimestamp` of `x` `<` 6. It gets `x = 0`. [`x` became 0 at version 2]  
   - reads the latest value of `y` such that the `commitTimestamp` of `y` `<` 6. It gets `y = 0`. [`y` became 0 at version 3]
 
-The constraint `x + y > 0` is broken.
+The constraint `x + y > 0` is broken. Snapshot isolation does not prevent write skew.
 
 > Storage systems like Percolator, [Dgraph](https://github.com/dgraph-io/dgraph) implement Snapshot isolation.
 
