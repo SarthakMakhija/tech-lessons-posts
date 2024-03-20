@@ -6,7 +6,7 @@ description: "
 "
 tags: ["Golang", "Transaction", "Isolation", "Serialized Snapshot Isolation"]
 thumbnail: /serialized-snapshot-isolation.png
-caption: "Background by Pixabay on Pexels"
+caption: "Background by Lum3n on Pexels"
 ---
 
 Hello ..
@@ -150,9 +150,37 @@ The pseudo-code checks for:
 the transaction is aborted. This ensures that the transaction only operates on data that reflects the state at the start of the transaction, 
 preventing inconsistencies caused by concurrent modifications.
 
+#### Anomalies
+
+- dirty reads
+- phantom reads
+- fuzzy reads
+- lost update
+
+#### Write skew
+
+Snapshot isolation checks for Spatial overlap, two concurrent transactions writing to the same key. But, what if two transactions write to different
+keys which are related by some constraint. Consider two keys `x` and `y` which are related by a constraint `x + y > 0`. The initial values of both
+these keys is 1.
+
+Consider two concurrent transactions, **txn<sub>(x)</sub>** and **txn<sub>(y)</sub>**, both of which get a `beginTimestamp` of 1, read the
+values of `x` and `y` and get 1 as the value for each key. **txn<sub>(x)</sub>** reduces the value of `x` by 1 and **txn<sub>(y)</sub>**
+reduces the value of `y` by 1.
+
+The following event highlight an anomaly called *write skew*.
+
+- The transaction **txn<sub>(x)</sub>** gets a `commitTimestamp` of 2, checks that `x + y > 0`, reduces the value of `x` by 1 and 
+writes the versioned value of `x` back to the store. At version 2, `x` becomes 0.
+- The transaction **txn<sub>(y)</sub>** gets a `commitTimestamp` of 3, checks that `x + y > 0`, [[it will read the values of x and y using its `beginTimestamp`]] 
+reduces the value of `y` by 1 and writes the versioned value of `y` back to the store. At version 3, `y` becomes 0.
+- Another readonly transaction **txn<sub>(another)</sub>** starts at a later point in time, gets a `beginTimestamp` of 6 and reads the values of `x` and `y`:
+  - reads the latest value of `x` such that the `commitTimestamp` of `x` `<` 6. It gets `x = 0`. [`x` became 0 at version 2]  
+  - reads the latest value of `y` such that the `commitTimestamp` of `y` `<` 6. It gets `y = 0`. [`y` became 0 at version 3]
+
+The constraint `x + y > 0` is broken.
+
 ### Understanding Serialized Snapshot isolation
 
-### Goodbye Anomalies
 
 ### SkipList and MVCC
 
@@ -204,7 +232,7 @@ same node. Keep moving down until the right node contains a key that is less tha
 8. Right of level 0 on the node containing key 20 is still 30. There are no more levels to go down to. 
 9. So, we can conclude that the key 25 is not present in the list.
 
-SkipList is a good data structure that allows us to store multiple versions of each key (in a Key/Value storage engine). 
+SkipList is a good data structure in a sense that it allows us to store multiple versions of each key (in a Key/Value storage engine). 
 Each key is given a version, which is usually the `commitTimestamp` in Snapshot and Serialized Snapshot isolation. 
 Each node of SkipList now stores an instance of `VersionedKey` that can be represented as:
 

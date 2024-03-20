@@ -264,6 +264,7 @@
       "adding-tests-for-put-and-has",
       "admission-and-eviction-policy",
       "analysis-of-read-write-amplification-in-leveldb",
+      "anomalies",
       "another-attempt-at-dsl",
       "append-only-data-files",
       "applications-built-using-aws-lambda",
@@ -314,7 +315,6 @@
       "get-feedback-from-community",
       "get-getkey",
       "getting-started",
-      "goodbye-anomalies",
       "handle-null-at-compile-time",
       "help-people-learn-from-your-learning-journey",
       "help-people-learn-from-your-mistakes",
@@ -434,6 +434,7 @@
       "working-with-legacy-code",
       "would-you-buy-a-car-without-brakes",
       "wrap-up",
+      "write-skew",
       "writing-characterization-test",
       "writing-repository-test"
     ]
