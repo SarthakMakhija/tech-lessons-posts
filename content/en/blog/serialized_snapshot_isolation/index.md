@@ -430,6 +430,12 @@ in one `ReadWriteTransaction`.
 Every `ReadWriteTransaction` batches the changes and when the changes are ready to be committed, a `commitTimestamp` is obtained from `Oracle`
 and the changes are applied serially to the state machine.
 
+```go
+type Batch struct {
+	pairs []KeyValuePair
+}
+```
+
 Serializable Snapshot isolation checks for Read-Write conflict as explained [earlier](#understanding-serializable-snapshot-isolation). In order to
 facilitate conflict detection, each `ReadWriteTransaction` also holds a slice (/array, /arraylist) of read keys. The field `reads` denotes all the
 keys read by a `ReadWriteTransaction`.
@@ -445,7 +451,79 @@ keys read by a `ReadWriteTransaction`.
 > However, there's a potential downside. Since fingerprints are shorter than keys, it's possible for two different keys to have the 
 > same fingerprint (collisions). This can lead to false conflicts between transactions.
 
+Anytime a new instance of `ReadWriteTransaction` is created, we get the `beginTimestamp` from `Oracle` amd we also create a new instance of `Batch`.
+
+```go
+func NewReadWriteTransaction(oracle *Oracle) *ReadWriteTransaction {
+	return &ReadWriteTransaction{
+		beginTimestamp: oracle.beginTimestamp(),
+		batch:          NewBatch(),
+		oracle:         oracle,
+		memtable:       oracle.transactionExecutor.memtable,
+	}
+}
+```
+
+Let's take a look at the `PutOrUpdate` method. 
+
+#### PutOrUpdate
+
+The idea is to batch all the distinct key/value pairs and commit them once the `Commit` method is invoked.
+
+```go
+func (transaction *ReadWriteTransaction) PutOrUpdate(key []byte, value []byte) error {
+	err := transaction.batch.Add(key, value)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (batch *Batch) Add(key, value []byte) error {
+  if batch.Contains(key) {
+      return errors.DuplicateKeyInBatchErr
+  }
+  batch.pairs = append(batch.pairs, newKeyValuePair(key, value))
+  return nil
+}
+```
+
+#### Commit
+
+#### Get
+
+The `Get` method tries to get the value of the key from `Batch`, and if the value is not found, it uses `MemTable` to get the value. 
+Tracking the read key is an important step involved in the `Get`.
+
+```go
+func (transaction *ReadWriteTransaction) Get(key []byte) (mvcc.Value, bool) {
+    if value, ok := transaction.batch.Get(key); ok {
+        return mvcc.NewValue(value), true
+    }
+    transaction.reads = append(transaction.reads, key)
+
+	versionedKey := mvcc.NewVersionedKey(key, transaction.beginTimestamp)
+	return transaction.memtable.Get(versionedKey)
+}
+
+func (batch *Batch) Get(key []byte) ([]byte, bool) {
+    for _, pair := range batch.pairs {
+      if bytes.Compare(pair.key, key) == 0 {
+          return pair.value, true
+      }
+    }
+    return nil, false
+}
+```
+
+#### Implementing TransactionExecutor
+
+
 #### Implementing WaterMarks
+
+### Mentions
+
+- [Google Bard](https://bard.google.com/chat) helped with the article.
 
 ### References
 
