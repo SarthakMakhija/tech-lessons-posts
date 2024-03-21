@@ -606,6 +606,8 @@ func (oracle *Oracle) cleanupCommittedTransactions() {
 
 > Oracle only tracks ReadWriteTransactions. ReadonlyTransactions never abort and never participate in conflict detection.
 
+Let's now take a look the `Get` method of `ReadWriteTransaction`.
+
 #### Get
 
 The `Get` method tries to get the value of the key from `Batch`, and if the value is not found, it uses `MemTable` to get the value. 
@@ -632,8 +634,64 @@ func (batch *Batch) Get(key []byte) ([]byte, bool) {
 }
 ```
 
+Let's now understand how transactions are applied to the state machine.
+
 #### Implementing TransactionExecutor
 
+`TransactionExecutor` is implemented as single goroutine that accepts `TimestampedBatch`es and applies them serially. It can be considered an 
+implementation of [singular update queue](https://martinfowler.com/articles/patterns-of-distributed-systems/singular-update-queue.html).
+
+It contains a pointer to `Memtable` to which the changes the applied and a couple of channels. 
+
+```go
+type TransactionExecutor struct {
+	batchChannel chan TimestampedBatch
+	stopChannel  chan struct{}
+	memtable     *mvcc.MemTable
+}
+
+func NewTransactionExecutor(memtable *mvcc.MemTable) *TransactionExecutor {
+	transactionExecutor := &TransactionExecutor{
+		batchChannel: make(chan TimestampedBatch),
+		stopChannel:  make(chan struct{}),
+		memtable:     memtable,
+	}
+	go transactionExecutor.spin()
+	return transactionExecutor
+}
+```
+
+Anytime a transaction is ready to commit, its `Batch` is converted to `TimestampedBatch` and submitted to `TransactionExecutor`, which reads
+batches from `batchChannel` and applies all the key/value pairs present in each batch to the `Memtable`.
+
+```go
+func (executor *TransactionExecutor) Submit(batch TimestampedBatch) <-chan struct{} {
+	executor.batchChannel <- batch
+	return batch.doneChannel
+}
+
+func (executor *TransactionExecutor) spin() {
+	for {
+		select {
+		case timestampedBatch := <-executor.batchChannel:
+			executor.apply(timestampedBatch)
+			executor.markApplied(timestampedBatch)
+		case <-executor.stopChannel:
+			close(executor.batchChannel)
+			return
+		}
+	}
+}
+```
+
+> Why are transactions applied applied using a singular goroutine?
+> 
+> In the real world, applying a transaction would mean writing it to WAL (write-ahead log) and the state machine.
+> If the transactions are not applied by a single goroutine, the system would need locks to prevent concurrent modifications. These locks
+> would block other goroutines because tasks like writing to [WAL](https://martinfowler.com/articles/patterns-of-distributed-systems/write-ahead-log.html) 
+> are time-consuming.
+> 
+> Using an approach like singular update queue also allows transactions to be applied in order.
 
 #### Implementing WaterMarks
 
