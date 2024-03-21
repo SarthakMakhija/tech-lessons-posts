@@ -490,6 +490,122 @@ func (batch *Batch) Add(key, value []byte) error {
 
 #### Commit
 
+Committing a transaction is a bit involved. Let's understand the steps involved:
+
+1. Attempt to generate the `commitTimestamp` for the transaction. 
+   1. Detect conflict with other transactions.
+   2. If there is no conflict, generate the timestamp.
+   3. To detect conflict with other transactions, `Oracle` must keep a track of all the ready-to-commit transactions and clean it up in time.
+2. Convert the transaction's `Batch` to `TimestampedBatch`
+   1. `TimestampedBatch` contains all the keys of the `Batch` with the `commitTimestamp` as the version
+3. Apply `TimestampedBatch` serially to the state machine.
+
+Let's look the `Commit` method provided by `ReadWriteTransaction`.
+
+```go
+func (transaction *ReadWriteTransaction) Commit() (<-chan struct{}, error) {
+	if transaction.batch.IsEmpty() {
+		return nil, errors.EmptyTransactionErr
+	}
+
+	//get the commitTimestamp, if there is no conflict.
+	commitTimestamp, err := transaction.oracle.mayBeCommitTimestampFor(transaction)
+	if err != nil {
+		return nil, err
+	}
+	commitCallback := func() {
+		transaction.oracle.commitTimestampMark.Finish(commitTimestamp)
+	}
+
+	//convert the batch to a timestampedBatch: use commitTimestamp in all the keys of the Batch.
+	timestampedBatch := transaction.batch.ToTimestampedBatch(commitTimestamp, commitCallback)
+	
+	//apply timestampedBatch serially.
+	return transaction.oracle.transactionExecutor.Submit(timestampedBatch), nil
+}
+```
+
+The `Commit` method attempts to generate the `commitTimestamp` buy invoking the method `mayBeCommitTimestampFor`. Let's take a look.
+
+```go
+func (oracle *Oracle) mayBeCommitTimestampFor(transaction *ReadWriteTransaction) (uint64, error) {
+	oracle.lock.Lock()
+	defer oracle.lock.Unlock()
+
+	//check for conflict.
+	if oracle.hasConflictFor(transaction) {
+		return 0, txnErrors.ConflictErr
+	}
+
+	oracle.finishBeginTimestampForReadWriteTransaction(transaction)
+    //clean up the committedTransactions.
+	oracle.cleanupCommittedTransactions()
+
+	//generate next commitTimestamp.
+	commitTimestamp := oracle.nextTimestamp
+	oracle.nextTimestamp = oracle.nextTimestamp + 1
+
+	//mark the current transaction as ready to commit and track it in the committedTransactions.
+	oracle.trackReadyToCommitTransaction(transaction, commitTimestamp)
+	oracle.commitTimestampMark.Begin(commitTimestamp)
+	return commitTimestamp, nil
+}
+```
+
+The idea behind `mayBeCommitTimestampFor` can be summarized as:
+
+1. Detect conflict with other transactions and return an error if there is a conflict.
+2. Clean up the read-to-commit state of transactions.
+3. Generate the `commitTimestamp`.
+4. Track the current transaction as ready-to-commit.
+5. Return the `commitTimestamp`.
+
+The code for determining conflicts checks to see if there is a read-write conflict between the current transaction and any other
+ready-to-commit transaction.
+
+```go
+func (oracle *Oracle) hasConflictFor(transaction *ReadWriteTransaction) bool {
+	//the current transaction is ready to commit, let's call it Tx.
+	for _, committedTransaction := range oracle.committedTransactions {
+		//ignore the committedTransaction if its commitTimestamp <= Tx's beginTimestamp. 
+		if committedTransaction.commitTimestamp <= transaction.beginTimestamp {
+			continue
+		}
+
+		//if the commitTimestamp of any transaction Ty > Tx's beginTimestamp, and 
+		//the transaction Ty contains any of the keys read by the Tx, then abort Tx.
+		for _, key := range transaction.reads {
+			if committedTransaction.transaction.batch.Contains(key) {
+				return true
+			}
+		}
+	}
+	return false
+}
+```
+
+`Oracle` can not store infinite number of ready-to-commit transactions in RAM, so the state needs to be cleared. It is safe to clean up all the
+ready-to-commit transactions which have a `commitTimestamp` that is less than or equal to the maximum `beginTimestamp` of any transaction.
+
+```go
+func (oracle *Oracle) cleanupCommittedTransactions() {
+	updatedCommittedTransactions := oracle.committedTransactions[:0]
+	maxBeginTransactionTimestamp := oracle.beginTimestampMark.DoneTill()
+
+	//clean up the committedTransactions:
+	//remove all the committedTransactions with commitTimestamp <= maxBeginTransactionTimestamp.
+	for _, transaction := range oracle.committedTransactions {
+		if transaction.commitTimestamp <= maxBeginTransactionTimestamp {
+			continue
+		}
+		updatedCommittedTransactions = append(updatedCommittedTransactions, transaction)
+	}
+	oracle.committedTransactions = updatedCommittedTransactions
+}
+```
+
+> Oracle only tracks ReadWriteTransactions. ReadonlyTransactions never abort and never participate in conflict detection.
+
 #### Get
 
 The `Get` method tries to get the value of the key from `Batch`, and if the value is not found, it uses `MemTable` to get the value. 
