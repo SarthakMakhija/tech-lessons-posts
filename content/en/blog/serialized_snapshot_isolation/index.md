@@ -108,7 +108,7 @@ func (oracle *Oracle) beginTimestamp() uint64 {
 ```
 
 Every transaction gets a `beginTimestamp` which is represented as `uint64` (64 bits).
-The `nextTimestamp` field of `Oracle` denotes the `commitTimestamp` that shall be given to the next transaction that is ready to commit. Based on the field `nextTimestamp`, we can derive the `beginTimestamp`.
+The `nextTimestamp` field of `Oracle` denotes the `commitTimestamp` that shall be given to the next ready-to-commit transaction. Based on the field `nextTimestamp`, we can derive the `beginTimestamp`.
 
 - If the `nextTimestamp` is 10, the next transaction that is ready to commit will be given 10 as its `commitTimestamp`.
 - This means that 9 is the latest timestamp that is given to some transaction **txn<sub>(some)</sub>** as its `commitTimestamp`.
@@ -344,7 +344,7 @@ func NewReadonlyTransaction(oracle *Oracle) *ReadonlyTransaction {
 }
 ```
 
-We have already see the implementation of `beginTimetamp` method of `Oracle` earlier, but we can take a quick look again.
+We have already seen the implementation of `beginTimetamp` method of `Oracle` earlier, but we can take a quick look again.
 
 ```go
 func (oracle *Oracle) beginTimestamp() uint64 {
@@ -358,7 +358,7 @@ func (oracle *Oracle) beginTimestamp() uint64 {
 }
 ```
 
-The `nextTimestamp` field of `Oracle` denotes the `commitTimestamp` that shall be given to the next transaction that is ready to commit. 
+The `nextTimestamp` field of `Oracle` denotes the `commitTimestamp` that shall be given to the next ready-to-commit transaction. 
 Based on the field `nextTimestamp`, we can derive the `beginTimestamp`.
 
 - If the `nextTimestamp` is 10, the next transaction that is ready to commit will be given 10 as its `commitTimestamp`.
@@ -390,7 +390,7 @@ We will look at the `WaitForMark(...)` later, but it waits for all the commits t
 > waiting to be applied to state machine. This means, reading the value for a key from the state machine will get the value with latest version (/timestamp)
 > which may be less than 9. 
 
-The `Get` method is simple:
+The `Get` method is fairly simple:
 
 ```go
 func (transaction *ReadonlyTransaction) Get(key []byte) (mvcc.Value, bool) {
@@ -401,13 +401,13 @@ func (transaction *ReadonlyTransaction) Get(key []byte) (mvcc.Value, bool) {
 
 It involves the following:
 1. Creating a new instance of `VersionedKey` that consists of the actual key and the `beginTimestamp` of the transaction.
-2. Reading the value from the `MemTable`. This implementation uses `SkipList` as the in-memory data structure for storing versioned keys, so the `Get`
-follows the algorithm described [earlier](#skiplist-and-mvcc).
+2. Reading the value from the `MemTable`. This implementation uses `SkipList` as the in-memory data structure for storing versioned keys, 
+so the `Get` from `MemTable` follows the algorithm described [earlier](#skiplist-and-mvcc).
 
-This implementation shows reading the value for a key from an in-memory SkipList. The concept would remain the same even for implementing a `Get` 
-in a persistent [LSM-tree](https://en.wikipedia.org/wiki/Log-structured_merge-tree) based Key/Value storage engine. 
-Each `ReadonlyTransaction` will get a `beginTimestamp` and instead of just reading from an in-memory MemTable, we will read 
-from active memtable, inactive memtable(s) and the increasing levels of SSTable.
+This implementation shows reading the value for a versioned key from an in-memory SkipList. The concept would remain the same even for implementing 
+a `Get` in a persistent [LSM-tree](https://en.wikipedia.org/wiki/Log-structured_merge-tree) based Key/Value storage engine. 
+Each `ReadonlyTransaction` will get a `beginTimestamp` and instead of just reading from an in-memory MemTable, a read will be executed 
+from an active memtable, inactive memtable(s) and the increasing levels of SSTable.
 
 #### Implementing ReadWriteTransaction
 
