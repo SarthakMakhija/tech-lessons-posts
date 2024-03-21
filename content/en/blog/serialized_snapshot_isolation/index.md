@@ -411,6 +411,40 @@ from an active memtable, inactive memtable(s) and the increasing levels of SSTab
 
 #### Implementing ReadWriteTransaction
 
+Let's look at the definition of `ReadWriteTransaction`.
+
+```go
+type ReadWriteTransaction struct {
+	beginTimestamp uint64
+	batch          *Batch
+	reads          [][]byte
+	memtable       *mvcc.MemTable
+	oracle         *Oracle
+}
+```
+
+A `ReadWriteTransaction` has a `beginTimestamp` which is obtained from `Oracle` and an instance of `MemTable` to perform read/write from/to.
+
+It also contains a pointer to an instance of `Batch` which maintains all the key/value pairs that are going to be updated 
+in one `ReadWriteTransaction`.
+Every `ReadWriteTransaction` batches the changes and when the changes are ready to be committed, a `commitTimestamp` is obtained from `Oracle`
+and the changes are applied serially to the state machine.
+
+Serializable Snapshot isolation checks for Read-Write conflict as explained [earlier](#understanding-serializable-snapshot-isolation). In order to
+facilitate conflict detection, each `ReadWriteTransaction` also holds a slice (/array, /arraylist) of read keys. The field `reads` denotes all the
+keys read by a `ReadWriteTransaction`.
+
+> BadgerDB uses Serializable Snapshot Isolation for transactions. During a transaction, BadgerDB stores a [fingerprint (like a hash)](https://github.com/dgraph-io/badger/blob/6acc8e801739f6702b8d95f462b8d450b9a0455b/txn.go#L257) 
+> for each key it reads. 
+> These fingerprints are 64-bit unsigned integers (uint64). There are two main reasons for using fingerprints instead of the actual keys:
+>
+> 1. Reduced memory usage: Fingerprints are smaller than the original keys, saving memory within each transaction.
+>
+> 2. Faster comparisons: Comparing fingerprints (8 bytes) is quicker than comparing entire keys (which can vary in size).
+> 
+> However, there's a potential downside. Since fingerprints are shorter than keys, it's possible for two different keys to have the 
+> same fingerprint (collisions). This can lead to false conflicts between transactions.
+
 #### Implementing WaterMarks
 
 ### References
