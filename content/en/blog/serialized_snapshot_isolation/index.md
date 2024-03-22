@@ -641,7 +641,7 @@ Let's now understand how transactions are applied to the state machine.
 `TransactionExecutor` is implemented as single goroutine that accepts `TimestampedBatch`es and applies them serially. It can be considered an 
 implementation of [singular update queue](https://martinfowler.com/articles/patterns-of-distributed-systems/singular-update-queue.html).
 
-It contains a pointer to `Memtable` to which the changes the applied and a couple of channels. 
+It contains a pointer to `MemTable` to which the changes the applied and a couple of channels. 
 
 ```go
 type TransactionExecutor struct {
@@ -684,16 +684,81 @@ func (executor *TransactionExecutor) spin() {
 }
 ```
 
-> Why are transactions applied applied using a singular goroutine?
+> Why are transactions applied applied using a single goroutine?
 > 
-> In the real world, applying a transaction would mean writing it to WAL (write-ahead log) and the state machine.
+> In the real world, applying a transaction would mean writing it to [WAL](https://martinfowler.com/articles/patterns-of-distributed-systems/write-ahead-log.html) and the state machine.
 > If the transactions are not applied by a single goroutine, the system would need locks to prevent concurrent modifications. These locks
-> would block other goroutines because tasks like writing to [WAL](https://martinfowler.com/articles/patterns-of-distributed-systems/write-ahead-log.html) 
+> would block other goroutines because tasks like writing to WAL
 > are time-consuming.
 > 
 > Using an approach like singular update queue also allows transactions to be applied in order.
 
-#### Implementing WaterMarks
+#### Implementing TransactionTimestampMark
+
+In order to manage transactions effectively, we need a mechanism to  track two indices:
+
+- **Latest commit index**: This index indicates the point up to which transactions have been successfully applied. 
+It is useful for functions like [Oracle.beginTimestamp](https://github.com/SarthakMakhija/serialized-snapshot-isolation/blob/main/txn/Oracle.go#L70).
+- **Latest begin index**: This index signifies the begin index of the most recent transaction. 
+It is helpful for functions like [Oracle.cleanupCommittedTransactions](https://github.com/SarthakMakhija/serialized-snapshot-isolation/blob/main/txn/Oracle.go#L145).
+
+Such an abstraction is called [TransactionTimestampMark](https://github.com/SarthakMakhija/serialized-snapshot-isolation/blob/main/txn/TransactionTimestampMark.go).
+Each instance of `TransactionTimestampMark` runs a goroutine. `Oracle` maintains two marks:
+
+1. `beginTimestampMark` is used to indicate till what timestamp transactions have begun.
+2. `commitTimestampMark` is used to indicate till what timestamp transactions have been successfully applied.
+
+```go
+type Oracle struct {
+	beginTimestampMark    *TransactionTimestampMark
+	commitTimestampMark   *TransactionTimestampMark
+	//other fields removed
+}
+```
+
+Let's take an example of tracking the `beginIndex`.
+
+<div class="align-center-exclude-width-change">
+    <img src="/transaction_timestamp_mark.png" alt="Transaction marks"/>
+</div>
+
+1. Consider `ReadonlyTransaction`(s) **Tx**, **Ty** and **Tz**. **Tx** and **Ty** begin at timestamp 20 and **Tz** begins at timestamp 21.
+Anytime a transaction begins, `beginTimestampMark` is notified. The `TransactionTimestampMark` keeps a track of all the pending transaction requests
+by timestamp. After the transactions have begun, the state of `TransactionTimestampMark` looks like the following:
+
+```shell
+pendingTransactionRequestsByTimestamp => [
+    20 : 2,
+    21: 1
+]
+```
+2. The transactions **Tx** and **Tx** finish. Despite being readonly transactions, every time they complete, `beginTimestampMark` is notified.
+The state of `TransactionTimestampMark` looks like the following:
+
+```shell
+pendingTransactionRequestsByTimestamp => [
+    20 : 1,
+    21: 0
+]
+```
+Even though there is no transaction at the `beginIndex` of 21, we can not return 21 as the **Latest begin index** because there is a transaction
+which is yet to finish at the index 20. Effectively, [TransactionTimestampMark](https://github.com/SarthakMakhija/serialized-snapshot-isolation/blob/main/txn/TransactionTimestampMark.go) 
+maintains a [binary heap](https://en.wikipedia.org/wiki/Binary_heap) to keep track of the indices.
+
+3. The readonly transaction **Ty** finishes at last. The state of `TransactionTimestampMark` looks like the following:
+
+```shell
+pendingTransactionRequestsByTimestamp => [
+    20 : 0,
+    21: 0
+]
+```
+
+At this stage, `TransactionTimestampMark` can return 21 as the **Latest begin index** and `Oracle` can then clean up the committed transactions 
+based on this information. 
+
+That's it, we can combine all the pieces to have fully functional implementation of Serializable Snapshot isolation. The code is available 
+[here](https://github.com/SarthakMakhija/serialized-snapshot-isolation).
 
 ### Mentions
 
