@@ -328,7 +328,6 @@
       "implementing-serializable-snapshot-isolation-in-a-keyvalue-store",
       "implementing-transactionexecutor",
       "implementing-transactiontimestampmark",
-      "implementing-water-mark",
       "import-flip-context-configuration",
       "improve-lambdas",
       "increases-your-confidence",

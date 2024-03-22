@@ -1,10 +1,10 @@
 ---
 author: "Sarthak Makhija"
 title: "A guide to Serializable Snapshot Isolation in Key/Value storage engine"
-date: 2024-03-15
+date: 2024-03-22
 description: "
 Ensuring data consistency in the face of concurrent transactions is a critical challenge in database management. 
-This article explores Serializable Snapshot Isolation (SSI), a rising star in the field that promises the best of both worlds: 
+This article explores Serializable Snapshot Isolation (SSI) that promises the best of both worlds: 
 strong data consistency without sacrificing performance. 
 The article delves into the inner workings of SSI and explore its implementation for a Key/Value storage engine.
 "
@@ -15,9 +15,9 @@ caption: "Background by Lum3n on Pexels"
 
 Ensuring data consistency in the face of concurrent transactions is a critical challenge in database management. 
 Traditional serializable isolation, while guaranteeing data integrity, often suffers from performance bottlenecks due to extensive locking. 
-This article explores Serializable Snapshot Isolation (SSI), a rising star in the field that promises the best of both worlds: 
+This article explores Serializable Snapshot Isolation (SSI) that promises the best of both worlds: 
 strong data consistency without sacrificing performance. 
-The article delves into the inner workings of SSI and explore its implementation for a Key/Value storage engine. We will refer to the research
+The article delves into the inner workings of SSI and explore its implementation for a Key/Value storage engine. I will refer to the research
 paper titled [A critique of snapshot isolation](https://dl.acm.org/doi/10.1145/2168836.2168853).
 
 ### Introduction
@@ -25,7 +25,7 @@ paper titled [A critique of snapshot isolation](https://dl.acm.org/doi/10.1145/2
 We will start by defining a few terms.
 
 - **Transaction**: is an atomic unit of work. A database transaction may involve writes to multiple tables, or multiple writes to a single table or maybe
-multiple writes to multiple tables. Consider a Key/Value storage engine instead of database. We can write the pseudo-code for the transaction as:
+multiple writes to multiple tables. In a Key/Value storage engine the transaction pseudo-code would look like:
 ```go
 transaction := NewReadWriteTransaction().Begin()
 transaction.Put([]byte("KeyValueStore"), []byte("BadgerDb"))
@@ -33,8 +33,8 @@ transaction.Put([]byte("StoreType"), []byte("LSM"))
 transaction.Delete([]byte("DiskType"))
 transaction.Commit()
 ```
-The code snippet creates an instance of a pseudo `ReadWriteTransaction`, `puts` a couple of key/value pairs, `deletes` a key and the `commits` the transaction.
-By definition, a transaction is atomic which means, all these actions will take place as a unit or none of them will take place.
+The code snippet creates an instance of a pseudo `ReadWriteTransaction`, `puts` a couple of key/value pairs, `deletes` a key and then `commits` the transaction.
+By definition, a transaction is atomic, which means all these actions will take place as a unit or none of them will take place.
 
 - **Isolation**: defines the behavior of the system in presence of other concurrent transactions. A system that provides *Serial* transaction isolation
 ensures that all the transactions run serially - one after the other. Imagine that you are building a transactional Key/Value storage engine. The kind 
@@ -50,24 +50,27 @@ if a transaction commits without any conflict, it is given a `commitTimestamp`. 
 Two concurrent transactions can still conflict if there is a **write-write** conflict, meaning, two transactions writing to the same key (in a Key/Value storage engine).
 
 - **Serializable Snapshot isolation**: the snapshot from which a transaction reads is not affected by concurrently running transactions. The core
-idea of maintaining multiple versions of the data remains the same. Two concurrent transactions can still conflict if 
+idea of maintaining multiple versions of data remains the same. Two concurrent transactions can still conflict if 
 there is a **read-write** conflict, 
 
 - **MVCC**: stands for multi-version concurrency control. It is the backbone for implementing transactions with Snapshot or 
 Serializable Snapshot isolation. In a multi-versioned Key/Value storage engine, each key is given a version which is incremented every time a write 
 happens in the storage engine. The following visual should help in building a light mind-map of a read/write transaction flow in a Key/Value storage
-engine that supports MVCC with either Snapshot or Serializable Snapshot isolation.
+engine that supports MVCC with Serializable Snapshot isolation.
 
 <div class="align-center-exclude-width-change">
     <img src="/transaction_flow_mvcc.png" alt="Transaction Flow with MVCC"/>
 </div>
 
 The flow can be summarized as:
-- Create an instance of `ReadWriteTransaction` and use the instance to perform relevant operations.
+- Create an instance of `ReadWriteTransaction` and use it to perform relevant operations.
 - `Commit` the transaction.
 - When the transaction is committed, generate `CommitTimestamp`. (`CommitTimestamp` serves as the version for all the keys in the MVCC store).
+If there is no **read-write** conflict, the timestamp will be generated for the transaction.
 - Update all the keys in the transaction with the generated `CommitTimestamp`.
 - Serially apply all the transactions to the state machine of the Key/Value storage engine.
+
+Let's go a little deeper into Snapshot isolation.
 
 ### Understanding Snapshot isolation
 
@@ -90,7 +93,7 @@ type Oracle struct {
 	//other fields omitted
 }
 
-func NewOracle(transactionExecutor *TransactionExecutor) *Oracle {
+func NewOracle() *Oracle {
   oracle := &Oracle{
     nextTimestamp: 1,
   }
@@ -111,7 +114,7 @@ Every transaction gets a `beginTimestamp` which is represented as `uint64` (64 b
 The `nextTimestamp` field of `Oracle` denotes the `commitTimestamp` that shall be given to the next ready-to-commit transaction. Based on the field `nextTimestamp`, we can derive the `beginTimestamp`.
 
 - If the `nextTimestamp` is 10, the next transaction that is ready to commit will be given 10 as its `commitTimestamp`.
-- This means that 9 is the latest timestamp that is given to some transaction **txn<sub>(some)</sub>** as its `commitTimestamp`.
+- This means 9 is the latest `commitTimestamp` that is given to some transaction **txn<sub>(some)</sub>**.
 - This means that the current transaction **txn<sub>(current)</sub>** can be awarded 9 as its `beginTimestamp`. 
 - So, `beginTimestamp = nextTimestamp - 1`.
 - Simply put, **txn<sub>(current)</sub>** can read keys with `commitTimestamp` < 9, where 9 is the `beginTimestamp` of **txn<sub>(current)</sub>**.
@@ -119,9 +122,9 @@ The `nextTimestamp` field of `Oracle` denotes the `commitTimestamp` that shall b
 A `ReadWriteTransaction` is assigned a `commitTimestamp` when it is ready to commit. Before assigning the `commitTimestamp`, it is necessary to 
 check that there are no *write-write* conflicts. Two concurrent transactions can conflict in Snapshot isolation if:
 1. Both the transactions **txn<sub>(i)</sub>** and **txn<sub>(j)</sub>** write to the same key called *Spatial overlap*, and
-2. **T<sub>b</sub>(txn<sub>(i)</sub>)** `<` **T<sub>c</sub>(txn<sub>(j)</sub>)** and **T<sub>b</sub>(txn<sub>(j)</sub>)** `<` **T<sub>c</sub>(txn<sub>(i)</sub>)**, 
+2. Both the transaction have a *Temporal Overlap*. **T<sub>b</sub>(txn<sub>(i)</sub>)** `<` **T<sub>c</sub>(txn<sub>(j)</sub>)** and **T<sub>b</sub>(txn<sub>(j)</sub>)** `<` **T<sub>c</sub>(txn<sub>(i)</sub>)**, 
 where **T<sub>b</sub>(txn<sub>(i)</sub>)** represents the `beginTimestamp` of **txn<sub>(i)</sub>** and **T<sub>c</sub>(txn<sub>(j)</sub>)** represents
-the `commitTimestamp` of **txn<sub>(j)</sub>**. This is called *Temporal overlap*.
+the `commitTimestamp` of **txn<sub>(j)</sub>**.
 
 Let's write the pseudo-code for committing a transaction **txn<sub>(i)</sub>** with `beginTimestamp` as **T<sub>b</sub>**.
 
@@ -148,6 +151,8 @@ The pseudo-code checks for:
 the transaction is aborted. This ensures that the transaction only operates on data that reflects the state at the start of the transaction, 
 preventing inconsistencies caused by concurrent modifications.
 
+Snapshot isolation prevents a lot of anomalies.
+
 #### Anomalies
 
 <div class="align-center-exclude-width-change">
@@ -160,7 +165,7 @@ preventing inconsistencies caused by concurrent modifications.
 Two concurrent transactions can conflict in Snapshot isolation if they write to the same key and there is a temporal overlap. 
 But, what if two transactions write to different keys which are related by some constraint. 
 
-Consider the following:
+Consider the following state in a Key/Value storage engine:
 - two keys `x` and `y` with initial values as 1 and related by the constraint `x + y > 0`.
 - two concurrent transactions, **txn<sub>(x)</sub>** and **txn<sub>(y)</sub>**, both of which get a `beginTimestamp` of 1, read the
 values of `x` and `y` and get 1 as the value for each key. 
@@ -180,6 +185,8 @@ The constraint `x + y > 0` is broken. Snapshot isolation does not prevent write 
 
 > Storage systems like Percolator, [Dgraph](https://github.com/dgraph-io/dgraph) implement Snapshot isolation.
 
+Let's now move onto Serializable Snapshot isolation.
+
 ### Understanding Serializable Snapshot isolation
 
 Serializable Snapshot isolation derives the ideas of `beginTimestamp`, `commitTimestamp` and `Oracle` from Snapshot isolation. The difference is the 
@@ -189,8 +196,10 @@ A transaction **txn<sub>(j)</sub>** conflicts with another transaction **txn<sub
 1. **txn<sub>(j)</sub>** writes to the keys read by **txn<sub>(i)</sub>**, and
 2. **txn<sub>(j)</sub>** commits during the lifetime of **txn<sub>(i)</sub>**, **T<sub>b</sub>(txn<sub>(i)</sub>)** `<` **T<sub>c</sub>(txn<sub>(j)</sub>)** < **T<sub>c</sub>(txn<sub>(i)</sub>)**.
 
-Here, **T<sub>b</sub>(txn<sub>(i)</sub>)** represents the `beginTimestamp` of the transaction **txn<sub>(i)</sub>** and 
-**T<sub>c</sub>(txn<sub>(i)</sub>)** represents the `commitTimestamp` of the transaction **txn<sub>(i)</sub>**.
+Here, **T<sub>b</sub>(txn<sub>(i)</sub>)** represents the `beginTimestamp` of the transaction **txn<sub>(i)</sub>**, 
+**T<sub>c</sub>(txn<sub>(i)</sub>)** represents the `commitTimestamp` of the transaction **txn<sub>(i)</sub>** and
+**T<sub>c</sub>(txn<sub>(j)</sub>)** represents the `commitTimestamp` of the transaction **txn<sub>(j)</sub>**.
+
 
 Let's write the pseudo-code for committing a transaction **txn<sub>(i)</sub>** with `beginTimestamp` as **T<sub>b</sub>**.
 
@@ -211,7 +220,7 @@ end for;
 ## apply commits
 ```
 
-The pseudo-code checks to see that none of the keys read by the transaction **txn<sub>(i)</sub>** have been committed after it began.
+The pseudo-code checks to see that none of the **keys read by the transaction** **txn<sub>(i)</sub>** have been committed after it began.
 The implementation of Serializable Snapshot isolation will require each read-write transaction to keep track of the read keys. 
 
 > [BadgerDb](https://github.com/dgraph-io/badger) implements Serializable Snapshot isolation. 
@@ -257,7 +266,7 @@ The above image is the representation of our `SkipList` struct.
 
 Let's say we want to search the key 25. The following will be the approach:
 
-1. Start with the header node and keep moving towards the right until the right key is greater than the search key.
+1. Start with the header node at the highest level and keep moving towards the right until the right key is greater than the search key.
 2. Right of the header node, at the highest level is 10 which is less than 25, so move right.
 3. Now we are on the node containing the key 10. 
 4. Right of the node containing key 10 is 60 (at the highest level), which is greater than 25. So move to the lower level on the 
@@ -309,7 +318,7 @@ that was implemented with [BadgerDb](https://github.com/dgraph-io/badger/) as re
 Let me start by introducing core concepts in the code.
 
 1. **ReadonlyTransaction**: provides support for `Get` method. A `ReadonlyTransaction` never aborts.
-2. **ReadWriteTransaction**: provides support for `PutOrUpdate` and `Get` methods. A `ReadWriteTransaction` can abort if there is a Read-Write conflict with another transaction.
+2. **ReadWriteTransaction**: provides support for `PutOrUpdate`, `Get` and `Commit` methods. A `ReadWriteTransaction` can abort if there is a Read-Write conflict with another transaction.
 3. **Oracle**: awards `beginTimestamp` and `commitTimestamp` to transactions. It also checks for conflicts between `ReadWriteTransaction`(s).
 4. **TransactionExecutor**: applies transactions serially, one after the other.
 5. **TransactionTimestampMark**: keeps track of the timestamps that are processed. These could be `beginTimestamp` or `commitTimestamp`.
@@ -344,7 +353,7 @@ func NewReadonlyTransaction(oracle *Oracle) *ReadonlyTransaction {
 }
 ```
 
-We have already seen the implementation of `beginTimetamp` method of `Oracle` earlier, but we can take a quick look again.
+Let's take a look the complete implementation of the `beginTimetamp` method of `Oracle`.
 
 ```go
 func (oracle *Oracle) beginTimestamp() uint64 {
@@ -377,7 +386,7 @@ Based on the field `nextTimestamp`, we can derive the `beginTimestamp`.
 > Implementations like [BadgerDb](https://github.com/dgraph-io/badger/blob/6acc8e801739f6702b8d95f462b8d450b9a0455b/txn.go#L104) wait
 > till all the transactions upto the assigned `beginTimestamp` are applied.
 
-We will look at the `WaitForMark(...)` later, but it waits for all the commits till `beginTimetamp` to be applied to the state machine.
+We will look at the `TransactionTimestampMark` later, but `oracle.commitTimestampMark.WaitForMark(...)` waits for all the commits till `beginTimetamp` to be applied to the state machine.
 
 > Is waiting really necessary in getting `beginTimestamp`?
 > There are two options:
@@ -385,10 +394,10 @@ We will look at the `WaitForMark(...)` later, but it waits for all the commits t
 > 1. Wait for a fixed timeout and allow all the commits till `beginTimestamp` to be applied to the state machine. This may increase the response time
 > for read operations.
 > 
-> 2. Do not wait for the commits till `beginTimestamp` to be applied to the state machine. This may result result in an old value for a key. Example,
+> 2. Do not wait. This may result result in getting an old value for a key. Example,
 > if the `nextTimestamp` is 10, the current transaction will be awarded 9 as its `beginTimestamp`. However, there might be transactions in the queue
 > waiting to be applied to state machine. This means, reading the value for a key from the state machine will get the value with latest version (/timestamp)
-> which may be less than 9. 
+> which may be less than 9, it could be 6 or could be 5 or anything. 
 
 The `Get` method is fairly simple:
 
@@ -555,7 +564,7 @@ func (oracle *Oracle) mayBeCommitTimestampFor(transaction *ReadWriteTransaction)
 The idea behind `mayBeCommitTimestampFor` can be summarized as:
 
 1. Detect conflict with other transactions and return an error if there is a conflict.
-2. Clean up the read-to-commit state of transactions.
+2. Clean up the ready-to-commit state.
 3. Generate the `commitTimestamp`.
 4. Track the current transaction as ready-to-commit.
 5. Return the `commitTimestamp`.
@@ -585,7 +594,8 @@ func (oracle *Oracle) hasConflictFor(transaction *ReadWriteTransaction) bool {
 ```
 
 `Oracle` can not store infinite number of ready-to-commit transactions in RAM, so the state needs to be cleared. It is safe to clean up all the
-ready-to-commit transactions which have a `commitTimestamp` that is less than or equal to the maximum `beginTimestamp` of any transaction.
+ready-to-commit transactions which have a `commitTimestamp` that is less than or equal to the maximum `beginTimestamp` of any transaction. 
+[TransactionTimestampMark](#implementing-transactiontimestampmark) helps in identifying the `maxBeginTransactionTimestamp`.
 
 ```go
 func (oracle *Oracle) cleanupCommittedTransactions() {
@@ -611,7 +621,7 @@ Let's now take a look the `Get` method of `ReadWriteTransaction`.
 #### Get
 
 The `Get` method tries to get the value of the key from `Batch`, and if the value is not found, it uses `MemTable` to get the value. 
-Tracking the read key is an important step involved in the `Get`.
+*Tracking the read keys is an important step involved in the `Get` method*.
 
 ```go
 func (transaction *ReadWriteTransaction) Get(key []byte) (mvcc.Value, bool) {
@@ -662,7 +672,7 @@ func NewTransactionExecutor(memtable *mvcc.MemTable) *TransactionExecutor {
 ```
 
 Anytime a transaction is ready to commit, its `Batch` is converted to `TimestampedBatch` and submitted to `TransactionExecutor`, which reads
-batches from `batchChannel` and applies all the key/value pairs present in each batch to the `Memtable`.
+batches from the `batchChannel` and applies all the key/value pairs present in each batch to the `MemTable`.
 
 ```go
 func (executor *TransactionExecutor) Submit(batch TimestampedBatch) <-chan struct{} {
@@ -699,11 +709,11 @@ In order to manage transactions effectively, we need a mechanism to  track two i
 
 - **Latest commit index**: This index indicates the point up to which transactions have been successfully applied. 
 It is useful for functions like [Oracle.beginTimestamp](https://github.com/SarthakMakhija/serialized-snapshot-isolation/blob/main/txn/Oracle.go#L70).
-- **Latest begin index**: This index signifies the begin index of the most recent transaction. 
+- **Latest begin index**: This index signifies the `beginTimestamp` of the most recent transaction. 
 It is helpful for functions like [Oracle.cleanupCommittedTransactions](https://github.com/SarthakMakhija/serialized-snapshot-isolation/blob/main/txn/Oracle.go#L145).
 
-Such an abstraction is called [TransactionTimestampMark](https://github.com/SarthakMakhija/serialized-snapshot-isolation/blob/main/txn/TransactionTimestampMark.go).
-Each instance of `TransactionTimestampMark` runs a goroutine. `Oracle` maintains two marks:
+Such an mechanism is provided by [TransactionTimestampMark](https://github.com/SarthakMakhija/serialized-snapshot-isolation/blob/main/txn/TransactionTimestampMark.go).
+Each instance of `TransactionTimestampMark` runs as a goroutine. `Oracle` maintains two marks:
 
 1. `beginTimestampMark` is used to indicate till what timestamp transactions have begun.
 2. `commitTimestampMark` is used to indicate till what timestamp transactions have been successfully applied.
@@ -716,7 +726,7 @@ type Oracle struct {
 }
 ```
 
-Let's take an example of tracking the `beginIndex`.
+Let's take an example of tracking the `beginTimestamp`.
 
 <div class="align-center-exclude-width-change">
     <img src="/transaction_timestamp_mark.png" alt="Transaction marks"/>
@@ -732,7 +742,7 @@ pendingTransactionRequestsByTimestamp => [
     21: 1
 ]
 ```
-2. The transactions **Tx** and **Tx** finish. Despite being readonly transactions, every time they complete, `beginTimestampMark` is notified.
+2. The transactions **Tx** and **Tx** finish. Despite being readonly transactions, every time they finish, `beginTimestampMark` is notified.
 The state of `TransactionTimestampMark` looks like the following:
 
 ```shell
@@ -743,9 +753,9 @@ pendingTransactionRequestsByTimestamp => [
 ```
 Even though there is no transaction at the `beginIndex` of 21, we can not return 21 as the **Latest begin index** because there is a transaction
 which is yet to finish at the index 20. Effectively, [TransactionTimestampMark](https://github.com/SarthakMakhija/serialized-snapshot-isolation/blob/main/txn/TransactionTimestampMark.go) 
-maintains a [binary heap](https://en.wikipedia.org/wiki/Binary_heap) to keep track of the indices.
+maintains a [binary heap](https://en.wikipedia.org/wiki/Binary_heap) to keep track of all indices.
 
-3. The readonly transaction **Ty** finishes at last. The state of `TransactionTimestampMark` looks like the following:
+3. The readonly transaction **Ty** finishes. The state of `TransactionTimestampMark` looks like the following:
 
 ```shell
 pendingTransactionRequestsByTimestamp => [
@@ -757,7 +767,8 @@ pendingTransactionRequestsByTimestamp => [
 At this stage, `TransactionTimestampMark` can return 21 as the **Latest begin index** and `Oracle` can then clean up the committed transactions 
 based on this information. 
 
-That's it, we can combine all the pieces to have fully functional implementation of Serializable Snapshot isolation. The code is available 
+In conclusion, Serializable Snapshot isolation combines Snapshot isolation and serial execution of transactions. We have all the
+pieces which can be combined to get a fully functional implementation of Serializable Snapshot isolation. The code is available
 [here](https://github.com/SarthakMakhija/serialized-snapshot-isolation).
 
 ### Mentions
@@ -766,6 +777,6 @@ That's it, we can combine all the pieces to have fully functional implementation
 
 ### References
 
-- [BadgerDB](https://github.com/dgraph-io/badger)
-- [SkipList](https://kt.academy/article/pmem-design-choices-and-use-cases#selective-persistence)
+- [BadgerDb](https://github.com/dgraph-io/badger)
+- [Skip List](https://kt.academy/article/pmem-design-choices-and-use-cases#selective-persistence)
 - [A critique of snapshot isolation](https://dl.acm.org/doi/10.1145/2168836.2168853)
