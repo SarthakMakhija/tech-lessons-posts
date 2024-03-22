@@ -25,7 +25,7 @@ paper titled [A critique of snapshot isolation](https://dl.acm.org/doi/10.1145/2
 We will start by defining a few terms.
 
 - **Transaction**: is an atomic unit of work. A database transaction may involve writes to multiple tables, or multiple writes to a single table or maybe
-multiple writes to multiple tables. In a Key/Value storage engine the transaction pseudo-code would look like:
+multiple writes to multiple tables. In a Key/Value storage engine, the transaction pseudo-code would look like:
 ```go
 transaction := NewReadWriteTransaction().Begin()
 transaction.Put([]byte("KeyValueStore"), []byte("BadgerDb"))
@@ -123,8 +123,9 @@ A `ReadWriteTransaction` is assigned a `commitTimestamp` when it is ready to com
 check that there are no *write-write* conflicts. Two concurrent transactions can conflict in Snapshot isolation if:
 1. Both the transactions **txn<sub>(i)</sub>** and **txn<sub>(j)</sub>** write to the same key called *Spatial overlap*, and
 2. Both the transaction have a *Temporal Overlap*. **T<sub>b</sub>(txn<sub>(i)</sub>)** `<` **T<sub>c</sub>(txn<sub>(j)</sub>)** and **T<sub>b</sub>(txn<sub>(j)</sub>)** `<` **T<sub>c</sub>(txn<sub>(i)</sub>)**, 
-where **T<sub>b</sub>(txn<sub>(i)</sub>)** represents the `beginTimestamp` of **txn<sub>(i)</sub>** and **T<sub>c</sub>(txn<sub>(j)</sub>)** represents
-the `commitTimestamp` of **txn<sub>(j)</sub>**.
+where **T<sub>b</sub>(txn<sub>(i)</sub>)** represents the `beginTimestamp` of **txn<sub>(i)</sub>**, **T<sub>c</sub>(txn<sub>(i)</sub>)** represents
+the `commitTimestamp` of **txn<sub>(i)</sub>**,**T<sub>b</sub>(txn<sub>(j)</sub>)** represents the `beginTimestamp` of **txn<sub>(j)</sub>**, 
+**T<sub>c</sub>(txn<sub>(j)</sub>)** represents the `commitTimestamp` of **txn<sub>(j)</sub>**.
 
 Let's write the pseudo-code for committing a transaction **txn<sub>(i)</sub>** with `beginTimestamp` as **T<sub>b</sub>**.
 
@@ -157,7 +158,13 @@ Snapshot isolation prevents a lot of anomalies.
 
 <div class="align-center-exclude-width-change">
     <img src="/snapshot-isolation-anomalies.png" alt="Anomalies prevented by Snapshot isolation"/>
-    <figcaption class="figcaption text-sm">Snapshot Isolation prevents many anomalies but not write skew. Question mark image from <a href="https://pixabay.com/vectors/question-mark-thinking-question-5656992/">Pixabay</a></figcaption>
+    <figcaption class="figcaption text-sm">
+        Snapshot Isolation prevents many anomalies but not write skew.
+    </figcaption>
+    <figcaption class="text-sm">
+        The definition of these anomalies is from the research paper: <a href="https://dl.acm.org/doi/10.1145/2168836.2168853">A critique of snapshot isolation</a>.
+        Question mark image is from <a href="https://pixabay.com/vectors/question-mark-thinking-question-5656992/">Pixabay</a>
+    </figcaption>
 </div>
 
 #### Write skew
@@ -185,7 +192,7 @@ The constraint `x + y > 0` is broken. Snapshot isolation does not prevent write 
 
 > Storage systems like Percolator, [Dgraph](https://github.com/dgraph-io/dgraph) implement Snapshot isolation.
 
-Let's now move onto Serializable Snapshot isolation.
+Let's now move onto Serializable Snapshot isolation, which prevents write-skew.
 
 ### Understanding Serializable Snapshot isolation
 
