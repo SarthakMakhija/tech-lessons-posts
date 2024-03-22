@@ -9,7 +9,7 @@ strong data consistency without sacrificing performance.
 The article delves into the inner workings of SSI and explore its implementation for a Key/Value storage engine.
 "
 tags: ["Golang", "Transaction", "Isolation", "Serializable Snapshot Isolation", "BadgerDb"]
-thumbnail: /serializable-snapshot-isolation.png
+thumbnail: /serializable-snapshot-isolation.webp
 caption: "Background by Lum3n on Pexels"
 ---
 
@@ -59,7 +59,7 @@ happens in the storage engine. The following visual should help in building a li
 engine that supports MVCC with Serializable Snapshot isolation.
 
 <div class="align-center-exclude-width-change">
-    <img src="/transaction_flow_mvcc.png" alt="Transaction Flow with MVCC"/>
+    <img src="/transaction_flow_mvcc.webp" alt="Transaction Flow with MVCC"/>
 </div>
 
 The flow can be summarized as:
@@ -157,7 +157,7 @@ Snapshot isolation prevents a lot of anomalies.
 #### Anomalies
 
 <div class="align-center-exclude-width-change">
-    <img src="/snapshot-isolation-anomalies.png" alt="Anomalies prevented by Snapshot isolation"/>
+    <img src="/snapshot-isolation-anomalies.webp" alt="Anomalies prevented by Snapshot isolation"/>
     <figcaption class="figcaption text-sm">
         Snapshot Isolation prevents many anomalies but not write skew.
     </figcaption>
@@ -736,7 +736,7 @@ type Oracle struct {
 Let's take an example of tracking the `beginTimestamp`.
 
 <div class="align-center-exclude-width-change">
-    <img src="/transaction_timestamp_mark.png" alt="Transaction marks"/>
+    <img src="/transaction_timestamp_mark.webp" alt="Transaction marks"/>
 </div>
 
 1. Consider `ReadonlyTransaction`(s) **Tx**, **Ty** and **Tz**. **Tx** and **Ty** begin at timestamp 20 and **Tz** begins at timestamp 21.
