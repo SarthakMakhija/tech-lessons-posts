@@ -159,100 +159,140 @@ func (m *MapOf[K, V]) Store(key K, value V) {
 }
 ```
 
-This method calls `doCompute`, so we will take a look at that method. However, `doCompute` does multiple things, we will take a look at it in parts.
+This method calls `doCompute`, so we will take a look at that method. However, `doCompute` does multiple things. So, we will take a look at it in parts.
+
+#### Identifying the bucket
 
 ```go
-func (m *MapOf[K, V]) doCompute(
-	key K,
-	valueFn func(oldValue V, loaded bool) (V, bool),
-	loadIfExists, computeOnly bool,
-) (V, bool) {
-	// Write path.
-	for {
-	compute_attempt:
-		var (
-			emptyb       *bucketOfPadded
-			emptyidx     int
-			hintNonEmpty int
-		)
-		table := (*mapOfTable[K, V])(atomic.LoadPointer(&m.table))
-		tableLen := len(table.buckets)
-		hash := shiftHash(m.hasher(key, table.seed))
-		bucketIndex := uint64(len(table.buckets)-1) & hash
-		
-		rootBucket := &table.buckets[bucketIndex]
-		rootBucket.mu.Lock()
-		
-		currentBucket := rootBucket
-		for {
-			for i := 0; i < entriesPerMapBucket; i++ {
-				hashValue := atomic.LoadUint64(&currentBucket.hashes[i])
-				if hashValue == uint64(0) {
-					if emptyb == nil {
-						emptyb = currentBucket
-						emptyidx = i
-					}
-					continue
-				}
-				if hashValue != hash {
-					hintNonEmpty++
-					continue
-				}
-				entry := (*entryOf[K, V])(currentBucket.entries[i])
-				hintNonEmpty++
-			}
-			if currentBucket.next == nil {
-				if emptyb != nil {
-					// Insertion into an existing bucket.
-					var zeroedV V
-					newValue, del := valueFn(zeroedV, false)
-					
-					newe := new(entryOf[K, V])
-					newe.key = key
-					newe.value = newValue
-					
-					// First we update the hash, then the entry.
-					atomic.StoreUint64(&emptyb.hashes[emptyidx], hash)
-					atomic.StorePointer(&emptyb.entries[emptyidx], unsafe.Pointer(newe))
-					rootBucket.mu.Unlock()
-					table.addSize(bucketIndex, 1)
-					
-					return newValue, computeOnly
-				}
-				
-				// Insertion into a new bucket.
-				var zeroedV V
-				newValue, del := valueFn(zeroedV, false)
-				
-				// Create and append the bucket.
-				newb := new(bucketOfPadded)
-				newb.hashes[0] = hash
-				newe := new(entryOf[K, V])
-				newe.key = key
-				newe.value = newValue
-				newb.entries[0] = unsafe.Pointer(newe)
-				atomic.StorePointer(&currentBucket.next, unsafe.Pointer(newb))
-				rootBucket.mu.Unlock()
-				table.addSize(bucketIndex, 1)
-				return newValue, computeOnly
-			}
-			currentBucket = (*bucketOfPadded)(currentBucket.next)
-		}
-	}
-}
-
+table := (*mapOfTable[K, V])(atomic.LoadPointer(&m.table))
+tableLen := len(table.buckets)
+hash := shiftHash(m.hasher(key, table.seed))
+bucketIndex := uint64(len(table.buckets)-1) & hash
 ```
 
-We will consider the case where the key to be inserted does not exist. The idea can be summarized as:
+The idea can be summarized as:
 
-- Identify the `bucketIndex` where the target key may be present. The operation `uint64(len(table.buckets)-1) & hash` is same as `hash % number of buckets`.
-- Acquire a lock on the identified bucket.
+- Load the `table` atomically using `atomic.LoadPointer(&m.table)`. The field `table` is an unsafe pointer that refers to an instance of `mapOfTable`.
+- Identify the `bucketIndex` where the target key has to be stored. The operation `uint64(len(table.buckets)-1) & hash` is same as `hash % number of buckets`.
+
+> The field table is refers to an instance of `mapOfTable`. The abstraction `mapOfTable` contains a collection of buckets.
+> 
+> ```go
+> type mapOfTable[K comparable, V any] struct {
+>   //other fields omitted.
+>   buckets []bucketOfPadded
+> }
+> ```
+> 
+> This field is loaded atomically in the method `doCompute` because `resize` operation might have changed the structure of the map, it might have added more buckets
+> or removed buckets.
+
+#### Acquire a lock on the identified bucket
+
+```go
+rootBucket := &table.buckets[bucketIndex]
+rootBucket.mu.Lock()
+```
+
+Each bucket maintains a lock of type `sync.Mutex`. Bucket level lock is acquired in the `doCompute` method to ensure that only one goroutine performs write operations
+in one bucket at one point.
+
+#### Identify an empty entry slot
+
+This involves finding an empty entry slot in an existing bucket. 
+
+```go
+for i := 0; i < entriesPerMapBucket; i++ {
+    hashValue := atomic.LoadUint64(&currentBucket.hashes[i])
+    if hashValue == uint64(0) {
+        if emptyb == nil {
+            emptyb = currentBucket
+            emptyidx = i
+        }
+        continue
+    }
+    if hashValue != hash {
+        hintNonEmpty++
+        continue
+    }
+    entry := (*entryOf[K, V])(currentBucket.entries[i])
+    hintNonEmpty++
+}
+```
+
+The idea can be summarized as:
+
 - Iterate through all entries present in the bucket. There are only three entries in each bucket.
 - Check if the hashValue at index `i` is zero. Zero hash value signifies an empty entry slot.
 - If the hashValue at index `i` is zero, capture the current bucket and the index. This is where the new entry will be stored, if there is no next bucket.
-- Check if there is a next bucket. If there is none and an empty entry slot has been identified, write the new entry at the identified index in the bucket.
-- Create a new bucket if there is no next bucket and no empty entry slot.
-- Else, move on to the next bucket and go through its entries.
+
+#### Store the key/value pair in an empty entry slot
+
+This involves storing the key/value pair in the existing bucket at an empty entry slot. 
+
+```go
+if currentBucket.next == nil {
+    if emptyb != nil {
+        // Insertion into an existing bucket.
+        var zeroedV V
+        newValue, del := valueFn(zeroedV, false)
+        
+        newe := new(entryOf[K, V])
+        newe.key = key
+        newe.value = newValue
+        
+        // First we update the hash, then the entry.
+        atomic.StoreUint64(&emptyb.hashes[emptyidx], hash)
+        atomic.StorePointer(&emptyb.entries[emptyidx], unsafe.Pointer(newe))
+        rootBucket.mu.Unlock()
+        table.addSize(bucketIndex, 1)
+        
+        return newValue, computeOnly
+    }
+}	
+```
+
+The idea can be summarized as:
+
+- Check if there is a next bucket. If there is none and an empty entry slot has been identified, write the new entry at the identified index in the existing bucket.
+- Create a new instance of `entryOf` and set the key and value.
+- Atomically store the hash of the key in the identified entry index using `atomic.StoreUint64(&emptyb.hashes[emptyidx], hash)`.
+- Atomically store the entry pointer in the identified entry index using `atomic.StorePointer(&emptyb.entries[emptyidx], unsafe.Pointer(newe))`.
+- Release the lock
+
+#### Store in a new bucket, if all the linearly linked buckets at the idenified bucket index are full
+
+Store the key/value pair in a new bucket and atomically link the new bucket. 
+
+```go
+if currentBucket.next == nil {
+    // Insertion into a new bucket.
+    var zeroedV V
+    newValue, del := valueFn(zeroedV, false)
+    
+    // Create and append the bucket.
+    newb := new(bucketOfPadded)
+    newb.hashes[0] = hash
+    newe := new(entryOf[K, V])
+    newe.key = key
+    newe.value = newValue
+    newb.entries[0] = unsafe.Pointer(newe)
+    atomic.StorePointer(&currentBucket.next, unsafe.Pointer(newb))
+    rootBucket.mu.Unlock()
+    table.addSize(bucketIndex, 1)
+    return newValue, computeOnly
+}
+```
+
+The idea can be summarized as:
+
+- Check if there is a next bucket. If there is none and no empty slot has been identified, create a new bucket.
+- Create a new instance of `entryOf` and set the key and value.
+- Store the new entry in the 0th index of the newly created bucket.
+- Atomically link the new bucket using `atomic.StorePointer(&currentBucket.next, unsafe.Pointer(newb))`
+- Release the lock
+
+The complete method is available [here](https://github.com/puzpuzpuz/xsync/blob/main/mapof.go#L258).
 
 The `Store` operation also checks if a `resize` operation is in progress.
 
