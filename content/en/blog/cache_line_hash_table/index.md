@@ -4,7 +4,7 @@ title: "Cache-Line Hash Table"
 date: 2024-04-18
 description: "
 "
-tags: ["CPU Cache-Line", "Hash Table", "CLHT", "Cache-Line Hash Table", "Xsync"]
+tags: ["CPU Cache-Line", "Hash Table", "CLHT", "Cache-Line Hash Table", "xsync"]
 thumbnail: 
 caption: ""
 ---
@@ -26,21 +26,7 @@ RAM. The core ideas behind CLHT include:
 I will be taking the example of the [MapOf](https://github.com/puzpuzpuz/xsync/blob/main/mapof.go) implementation from [xsync](https://github.com/puzpuzpuz/xsync/) which is a CLHT-inspired 
 concurrent hash map.
 
-`MapOf` contains an [unsafe pointer](https://pkg.go.dev/unsafe#Pointer) to the `mapOfTable` struct. 
-
-> An unsafe pointer represents a pointer an arbitrary type. 
-> Let's take a quick example of converting a byte slice to string using unsafe.
-> ```go
-> func toString(buffer []byte) string {
->    unsafePointer := unsafe.Pointer(&buffer)
->    stringPointer := (*string)(unsafePointer)
->    
->	return *stringPointer
->}
-> ```
->
-> This snippet creates an unsafe pointer using the address of the byte slice, casts it to a string pointer and then dereferences it to get string. This works because 
-> both the byte slice and the string share an equivalent memory layout and resulting string is not larger the inout byte slice. 
+The core abstraction `MapOf` contains an [unsafe pointer](https://pkg.go.dev/unsafe#Pointer) to the `mapOfTable` struct. 
 
 ```go
 type MapOf[K comparable, V any] struct {
@@ -88,6 +74,19 @@ The design of xsync `MapOf` is presented in the below image.
     <img src="/xsync.png" alt="Design of xsync MapOf"/>
 </div>
 
+> An unsafe pointer represents a pointer an arbitrary type.
+> Let's take a quick example of converting a byte slice to string using unsafe.
+> ```go
+> func toString(buffer []byte) string {
+>    unsafePointer := unsafe.Pointer(&buffer)
+>    stringPointer := (*string)(unsafePointer)
+>    
+>	return *stringPointer
+>}
+> ```
+>
+> This snippet creates an unsafe pointer using the address of the byte slice, casts it to a string pointer and then dereferences it to get string. This works because
+> both the byte slice and the string share an equivalent memory layout and the resulting string is not larger than the input byte slice.
 
 ### Understanding the Load Operation
 
