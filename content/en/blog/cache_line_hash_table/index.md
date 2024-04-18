@@ -144,6 +144,155 @@ entire bucket is loaded in CPU cache(s), any further comparison on entries in th
 
 ### Understanding the Store Operation
 
+The method `Store` stores the key/value pair in the map.
+
+```go
+func (m *MapOf[K, V]) Store(key K, value V) {
+	m.doCompute(
+		key,
+		func(V, bool) (V, bool) {
+			return value, false
+		},
+		false,
+		false,
+	)
+}
+```
+
+This method calls `doCompute`, so we will take a look at that method. However, `doCompute` does multiple things, we will take a look at it in parts.
+
+```go
+func (m *MapOf[K, V]) doCompute(
+	key K,
+	valueFn func(oldValue V, loaded bool) (V, bool),
+	loadIfExists, computeOnly bool,
+) (V, bool) {
+	// Write path.
+	for {
+	compute_attempt:
+		var (
+			emptyb       *bucketOfPadded
+			emptyidx     int
+			hintNonEmpty int
+		)
+		table := (*mapOfTable[K, V])(atomic.LoadPointer(&m.table))
+		tableLen := len(table.buckets)
+		hash := shiftHash(m.hasher(key, table.seed))
+		bucketIndex := uint64(len(table.buckets)-1) & hash
+		
+		rootBucket := &table.buckets[bucketIndex]
+		rootBucket.mu.Lock()
+		
+		currentBucket := rootBucket
+		for {
+			for i := 0; i < entriesPerMapBucket; i++ {
+				hashValue := atomic.LoadUint64(&currentBucket.hashes[i])
+				if hashValue == uint64(0) {
+					if emptyb == nil {
+						emptyb = currentBucket
+						emptyidx = i
+					}
+					continue
+				}
+				if hashValue != hash {
+					hintNonEmpty++
+					continue
+				}
+				entry := (*entryOf[K, V])(currentBucket.entries[i])
+				hintNonEmpty++
+			}
+			if currentBucket.next == nil {
+				if emptyb != nil {
+					// Insertion into an existing bucket.
+					var zeroedV V
+					newValue, del := valueFn(zeroedV, false)
+					
+					newe := new(entryOf[K, V])
+					newe.key = key
+					newe.value = newValue
+					
+					// First we update the hash, then the entry.
+					atomic.StoreUint64(&emptyb.hashes[emptyidx], hash)
+					atomic.StorePointer(&emptyb.entries[emptyidx], unsafe.Pointer(newe))
+					rootBucket.mu.Unlock()
+					table.addSize(bucketIndex, 1)
+					
+					return newValue, computeOnly
+				}
+				
+				// Insertion into a new bucket.
+				var zeroedV V
+				newValue, del := valueFn(zeroedV, false)
+				
+				// Create and append the bucket.
+				newb := new(bucketOfPadded)
+				newb.hashes[0] = hash
+				newe := new(entryOf[K, V])
+				newe.key = key
+				newe.value = newValue
+				newb.entries[0] = unsafe.Pointer(newe)
+				atomic.StorePointer(&currentBucket.next, unsafe.Pointer(newb))
+				rootBucket.mu.Unlock()
+				table.addSize(bucketIndex, 1)
+				return newValue, computeOnly
+			}
+			currentBucket = (*bucketOfPadded)(currentBucket.next)
+		}
+	}
+}
+
+```
+
+We will consider the case where the key to be inserted does not exist. The idea can be summarized as:
+
+- Identify the `bucketIndex` where the target key may be present. The operation `uint64(len(table.buckets)-1) & hash` is same as `hash % number of buckets`.
+- Acquire a lock on the identified bucket.
+- Iterate through all entries present in the bucket. There are only three entries in each bucket.
+- Check if the hashValue at index `i` is zero. Zero hash value signifies an empty entry slot.
+- If the hashValue at index `i` is zero, capture the current bucket and the index. This is where the new entry will be stored, if there is no next bucket.
+- Check if there is a next bucket. If there is none and an empty entry slot has been identified, write the new entry at the identified index in the bucket.
+- Create a new bucket if there is no next bucket and no empty entry slot.
+- Else, move on to the next bucket and go through its entries.
+
+The `Store` operation also checks if a `resize` operation is in progress.
+
+```go
+if m.resizeInProgress() {
+    // Resize is in progress. Wait, then go for another attempt.
+    rootBucket.mu.Unlock()
+    m.waitForResize()
+    goto compute_attempt
+}
+
+if m.newerTableExists(table) {
+    // Someone resized the table. Go for another attempt.
+    rootBucket.mu.Unlock()
+    goto compute_attempt
+}
+```
+
+It considers the following:
+- If a resize operation is in progress, the `Store` operation waits for `resize` to finish and starts over. 
+- If `resize` is not in progress but someone resized the map after the `Store` operation was invoked, then release the lock and start again.
+
+There are a few points to look at:
+
+1. Each bucket maintains a lock `sync.Mutex`. Bucket level lock is acquired in the `doCompute` method. This means a single goroutine case perform write operations
+in one bucket.
+2. If the number of goroutines that perform the write operations on `MapOf` are too many (say 9000), then larger number of buckets should help because goroutine
+contention will be reduced. The number of buckets should be determined based on the benchmarks.
+3. The method `Store` performs atomic operation on `next` pointer, `entries` and `hashes` of a bucket. Since, these are atomic operations, none of the goroutines
+will see an inconsistent value for any of these individual fields.
+
+> Consider two goroutines, one is doing the `Store` operation and the other is doing the `Load` operation on the same key that the store goroutine is trying to put. 
+>
+> The goroutine performing the `Store` operation finds an empty
+> slot and updates the hash and then the entry by executing `atomic.StoreUint64(&emptyb.hashes[emptyidx], hash)` and `atomic.StorePointer(&emptyb.entries[emptyidx], unsafe.Pointer(newe))`.
+>
+> It is possible for the goroutine performing the `Load` operation to see the updated hash because the hash is atomically written by the store goroutine at an index `i`, but the value is not yet 
+> written. So, the load goroutine will return an empty value which will still be the expected result.
+
+> Cache line update ....
 
 ### Understanding the Resize Operation
 
