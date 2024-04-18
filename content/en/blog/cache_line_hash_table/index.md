@@ -127,7 +127,7 @@ The idea behind the `Load` operation can be summarized as:
 
 - Identify the `bucketIndex` where the target key may be present. The operation `uint64(len(table.buckets)-1) & hash` is same as `hash % number of buckets`.
 - Iterate through all entries present in the bucket. There are only three entries in each bucket.
-- Skip if the hash of the target key does not match the hash of the entry at the index `i` in the bucket.
+- Skip if the hash of the target key does not match the hash at the index `i` in the bucket.
 - Atomically load the entry at the index `i` if the hash at that index matches the hash of the target key.
 - Compare the target key and the key present in the loaded entry.
 - Return if the keys match, else continue.
@@ -139,8 +139,8 @@ There are a few points to look at:
 This is an optimization where the keys are only compared after the hash of the target key matches with the hash at an index `i`. There could be false positives (two keys may have the same hash), hence key comparison is eventually needed.
 2. **No locks**: The method `Load` does not use locks, it loads the entries and the next pointer atomically. This means, the `Load` method will always see their
 values either before or after the write operation by the `Store` method.
-3. **Cache aligned buckets**: CLHT puts one bucket per CPU cache line. The `Load` oepration loads the entire bucket (cache line) from RAM to the CPU cache(s). Since, the
-entire bucket is loaded in CPU cache(s), futher comparison on entries in the bucket will not need to access RAM.
+3. **Cache aligned buckets**: CLHT puts one bucket per CPU cache line. The `Load` operation loads the entire bucket (cache line) from RAM to the CPU cache(s). Since, the
+entire bucket is loaded in CPU cache(s), any further comparison on entries in the bucket will not need to access RAM.
 
 ### Understanding the Store Operation
 
