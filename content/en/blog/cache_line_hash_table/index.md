@@ -27,8 +27,9 @@ This article dives into a clever solution: the Cache-Line Hash Table (CLHT).  CL
 
 CLHT stands for cache-line hash table as it tries to put one bucket per CPU cache line. The core idea behind the design of CLHT is to minimize the amount cache coherence traffic. In concurrent data structures, cache coherence traffic is generated when a thread running on a core updates a cache line while the other remote cores hold the same cache line. In this scenario, cache coherence protocol would kick in, thus requiring the other cores to invalidate the cache line and fetch it from RAM. 
 
-The core ideas behind CLHT include:
-- Minimize the cache coherence traffic by reducing the number of cache lines that are written in an update/put operation
+CLHT has the following ideas:
+
+- Minimize the cache coherence traffic by reducing the number of cache lines that are written in a store operation
 - Perform in-place update of key/value pairs
 - Take no locks during read (/get) operations
 
@@ -43,9 +44,7 @@ type MapOf[K comparable, V any] struct {
 }
 ```
 
-The abstraction `mapOfTable` contains a slice of buckets. The buckets are linearly linked using the `next` field at each index. CLHT puts one bucket per CPU cache line, this simply means that the size of each bucket should be equal to the [CPU cache line size](https://docs.rs/crossbeam-utils/latest/crossbeam_utils/struct.CachePadded.html).
-With `entriesPerMapBucket` as 3, the size of a single instance of `bucketOf` is 64 bytes, which is the size of CPU cache line on most of the processors.
-Each instance of `bucketOf` contains three hashes and three entries. Each entry is an unsafe pointer to the `entryOf` struct which contains a key/value pair.
+The abstraction `mapOfTable` contains a slice of buckets. 
 
 ```go
 const entriesPerMapBucket = 3
@@ -73,13 +72,15 @@ type entryOf[K comparable, V any] struct {
 }
 ```
 
+The buckets are linearly linked using the `next` field at each index. CLHT puts one bucket per CPU cache line, this simply means that the size of each bucket should be equal to the [CPU cache line size](https://docs.rs/crossbeam-utils/latest/crossbeam_utils/struct.CachePadded.html).
+
+With `entriesPerMapBucket` as 3, the size of a single instance of `bucketOf` is 64 bytes, which is the size of CPU cache line on most of the processors.
+Each instance of `bucketOf` contains three hashes and three entries. 
+
+Each entry is an unsafe pointer to the `entryOf` struct which contains a key/value pair.
+
+
 > The abstraction `MapOf` uses unsafe pointers which are later used in atomic pointer operations, like `atomic.StorePointer(&b.entries[i], unsafe.Pointer(newEntry))`.
-
-The design of xsync `MapOf` is presented in the below image.
-
-<div class="align-center-exclude-width-change">
-    <img src="/xsync.png" alt="Design of xsync MapOf"/>
-</div>
 
 > An unsafe pointer represents a pointer an arbitrary type.
 > Let's take a quick example of converting a byte slice to string using unsafe.
@@ -92,8 +93,13 @@ The design of xsync `MapOf` is presented in the below image.
 >}
 > ```
 >
-> This snippet creates an unsafe pointer using the address of the byte slice, casts it to a string pointer and then dereferences it to get string. This works because
-> both the byte slice and the string share an equivalent memory layout and the resulting string is not larger than the input byte slice.
+> This snippet creates an unsafe pointer using the address of the byte slice, casts it to a string pointer and then dereferences it to get string. This works because both the byte slice and the string share an equivalent memory layout and the resulting string is not larger than the input byte slice.
+
+The design of xsync `MapOf` is presented in the below image.
+
+<div class="align-center-exclude-width-change">
+    <img src="/xsync.png" alt="Design of xsync MapOf"/>
+</div>
 
 ### Understanding the Load Operation
 
@@ -149,7 +155,7 @@ This is an optimization where the keys are only compared after the hash of the t
 
 2. **No locks**
 
-The method `Load` does not use locks, it loads the three fields (entries, next pointer and hashes) atomically. This means, the `Load` method will always see their values either before or after the write operation by the `Store` method.
+The method `Load` does not use locks, it loads the three fields (entries, next pointer and hashes) atomically. This means, the `Load` method will always see their values either before or after the write operation.
 
 3. **Cache aligned buckets**
 
@@ -199,8 +205,8 @@ The idea can be summarized as:
 > ```
 >
 > To ensure that there is always the latest information of the `table` field, it is loaded atomically.
-> This means the access happens all at once, preventing us from seeing a partially updated version if the resize operation is happening concurrently.
-> The resize operation might add or remove buckets from the map.
+> This atomic access becomes crucial because a previous resize operation might have already changed the internal structure of the map (adding or removing 
+> buckets). By reading atomically, we avoid any inconsistencies that could lead to errors.
 
 #### Acquire a lock on the identified bucket
 
@@ -337,14 +343,14 @@ This code ensures data consistency during writes even when the map is being resi
 
 - **Resize in progress**
 
-If the `doCompute` operation detects a resize happening, it waits for the resize to finish. Then, it starts the entire operation over from scratch to ensure it's working with the latest structure of the map.
+If the `doCompute` operation detects a resize happening, it waits for the resize to finish. Then, it starts the entire operation from scratch to ensure it's working with the latest structure of the map.
 
 - **Resize after invocation**
 
 If a resize happens after the `doCompute` operation has already begun (but wasn't ongoing at the start), the code recognizes this potential inconsistency. It releases the lock it might be holding and starts the entire operation again.
 This guarantees the operation uses the most recent map structure.
 
-Here's a breakdown of the takeaways:
+Here's a breakdown of the takeaways from the `Store` operation:
 
 1. **Concurrent Safety with Bucket Locks**:
 
@@ -354,7 +360,7 @@ This ensures only one goroutine can modify a particular bucket at a time, preven
 2. **Balancing Buckets and Contention**:
 
 If you have a large number of goroutines (like 9000) writing to the map, increasing the number of buckets can improve performance.
-Think of buckets as separate lines at a store checkout. More buckets mean fewer goroutine waiting in line (contention) for the same bucket.
+Think of buckets as separate lines at a store checkout. More buckets mean fewer goroutines waiting in line (contention) for the same bucket.
 The ideal number of buckets should be determined through performance tests (benchmarks) to find the right balance.
 
 3. **Atomic Operations for Consistency**:
@@ -367,7 +373,7 @@ This ensures that no goroutine sees these parts in an inconsistent state.
 > The goroutine performing the `Store` operation finds an empty
 > slot and updates the hash and then the entry by executing `atomic.StoreUint64(&emptyb.hashes[emptyidx], hash)` and `atomic.StorePointer(&emptyb.entries[emptyidx], unsafe.Pointer(newe))`.
 >
-> It is possible for the goroutine performing the `Load` operation to see the updated hash because the hash might have been written by the store goroutine at an index `i`, but the value is not yet written. 
+> It is possible for the goroutine performing the `Load` operation to see the updated hash because the hash might have been written by the store goroutine at an index `i`, but the value might not have been written yet.
 > So, the load goroutine will not see the value despite seeing the updated hash. It will return with the empty value. This is still the expected behavior.
 
 The complete method is available [here](https://github.com/puzpuzpuz/xsync/blob/main/mapof.go#L258).
@@ -415,7 +421,7 @@ The method accesses the `table` field to find the total number of buckets presen
 
 #### Increase the table size locally
 
-The next step is to increase the table size. We already know that the field `table` needs to be operated on atomically. This means unless the new table (/method local table) is ready, the `table` field is not touched.
+The next step is to increase the table size. We already know that the field `table` needs to be operated on atomically. This means unless the new table (/method local table) is ready, this field is not touched.
 
 ```go
 var newTable *mapOfTable[K, V]
@@ -472,7 +478,7 @@ The idea behind `copyBucketOf` can be summarized as:
 
 - Acquire a lock on the current bucket.
 - Iterate through the entire bucket (chained bucket(s)).
-- Calculate the hash of each entry in the linearly linked buckets at index `i`.
+- Calculate the hash of each entry in the linearly linked buckets.
 - Identify the bucket index based on the new table structure: `uint64(len(destTable.buckets)-1) & hash`
 - Add the entry (or entry pointer) to an empty slot in the existing bucket or append a new bucket.
 - Release the lock for the bucket if the `next` pointer of the current bucket is `nil`.
@@ -494,7 +500,7 @@ Finishing the `resize` operation involves the following:
 
 - Atomically store the pointer to the `newTable` in the map.
 - Mark resizing done by atomically storing zero in the `resizing` field.
-- Notify waiters (other goroutines) of the completion of resize operation by invoking `Broadcast` on the `resizeCond`
+- Notify waiters (other goroutines) of the completion of resize operation.
 
 ### Pending
 
