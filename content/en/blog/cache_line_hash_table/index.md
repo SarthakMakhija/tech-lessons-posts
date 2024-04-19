@@ -144,17 +144,16 @@ The idea behind the `Load` operation can be summarized as:
 
 Here's a breakdown of the takeaways:
 
-1. **Faster comparison using hashes**:
+1. **Faster comparison using hashes**
 
 Hash comparison (comparing `uint64` bits -> 8 bytes) is faster than comparing the actual keys, if the keys are bigger than 8 bytes.
 This is an optimization where the keys are only compared after the hash of the target key matches with the hash at an index `i`. There could be false positives (two keys may have the same hash), hence key comparison is eventually needed.
 
-2. **No locks**:
+2. **No locks**
 
-The method `Load` does not use locks, it loads the three fields (entries, next pointer and hashes) atomically. This means, the `Load` method will always see their
-values either before or after the write operation by the `Store` method.
+The method `Load` does not use locks, it loads the three fields (entries, next pointer and hashes) atomically. This means, the `Load` method will always see their values either before or after the write operation by the `Store` method.
 
-3. **Cache aligned buckets**:
+3. **Cache aligned buckets**
 
 CLHT puts one bucket per CPU cache line. The `Load` operation loads the entire bucket (cache line) from RAM to the CPU cache(s). Since, the
 entire bucket is loaded in CPU cache(s), any further comparison on entries in the bucket will not need to access RAM.
@@ -364,8 +363,9 @@ This ensures that no goroutine sees these parts in an inconsistent state.
 > It is possible for the goroutine performing the `Load` operation to see the updated hash because the hash might have been written by the store goroutine at an index `i`, but the value is not yet written. 
 > So, the load goroutine will not see the value despite seeing the updated hash. It will return with the empty value. This is still the expected behavior.
 
-
 The complete method is available [here](https://github.com/puzpuzpuz/xsync/blob/main/mapof.go#L258).
+
+One of the key benefits of CLHT is its minimal impact on CPU cache lines during writes (store operations). This is because each store operation only modifies a single bucket. Regardless of whether it updates an existing bucket or creates a new one, only a single cache line of data is written.
 
 ### Understanding the Resize Operation
 
