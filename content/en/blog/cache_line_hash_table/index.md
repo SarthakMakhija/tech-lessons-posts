@@ -324,6 +324,15 @@ if m.newerTableExists(table) {
     rootBucket.mu.Unlock()
     goto compute_attempt
 }
+
+func (m *MapOf[K, V]) resizeInProgress() bool {
+	return atomic.LoadInt64(&m.resizing) == 1
+}
+
+func (m *MapOf[K, V]) newerTableExists(table *mapOfTable[K, V]) bool {
+	curTablePtr := atomic.LoadPointer(&m.table)
+	return uintptr(curTablePtr) != uintptr(unsafe.Pointer(table))
+}
 ```
 
 This code ensures data consistency during writes even when the map is being resized. Here's how it works:
@@ -368,6 +377,13 @@ The complete method is available [here](https://github.com/puzpuzpuz/xsync/blob/
 One of the key benefits of CLHT is its minimal impact on CPU cache lines during writes (store operations). This is because each store operation only modifies a single bucket. Regardless of whether it updates an existing bucket or creates a new one, only a single cache line of data is written.
 
 ### Understanding the Resize Operation
+
+### Pending
+
+- Resize
+- Change the image (structure of xsync)
+- CPU Cache line section
+- Go through
 
 ### Mentions
 
