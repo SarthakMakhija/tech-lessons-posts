@@ -519,11 +519,6 @@ Finishing the `resize` operation involves the following:
 - Mark resizing done by atomically storing zero in the `resizing` field.
 - Notify waiters (other goroutines) of the completion of resize operation.
 
-### Pending
-
-- CPU Cache line section
-- Go through
-
 ### Conclusion
 
 Imagine a machine with 128 cores, where a thread on core 1 needs to update data. This update involves three cache lines, and unfortunately, all these lines are also cached by every other core.
