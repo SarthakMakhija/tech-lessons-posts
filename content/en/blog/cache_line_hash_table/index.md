@@ -23,7 +23,7 @@ This article dives into a clever solution: the Cache-Line Hash Table (CLHT).  CL
 
 ### Understanding CPU Cache line and Cache Coherency
 
-To execute an instruction, CPUs need to fetch instruction and data (John von Neumann’s design) (from RAM/caches). Accessing RAM (/DRAM) for fetching data and instruction is expensive, usually in the orders of 50-100ns. To minimize the latency cost, CPUs have caches: L1, L2, L3 and in some cases L4 caches. While L1 and L2 caches are private to each core, L3 caches can be shared between cores. The size of these caches increase from L1 to L4, and so does the latency cost.
+To execute an instruction, CPUs need to fetch the instruction and its data (John von Neumann’s design) (from RAM/caches). Accessing RAM (/DRAM) for fetching data and instruction is expensive, usually in the orders of 50-100ns. To minimize the latency cost, CPUs have caches: L1, L2, L3 and in some cases L4. While L1 and L2 caches are private to each core, L3 can be shared between cores. The size of these caches increase from L1 to L4, and so does the latency cost.
 
 Let's focus on data access.
 
@@ -35,13 +35,13 @@ On multi-core processors it is possible for multiple cores to cache the same chu
 
 Continuing with our previous example of the arrray, imagine a thread *A* running on CPU 1 and other thread *B* running on CPU 2 have cached the same cache line corresponding to the array indices 0-7. Consider that thread *A* modifies the value at index 5. This means the cached copy of this cache line is stale on CPU 2. 
 
-**Cache coherency** is the problem of ensuring that local caches in a multi-core processor system stay in sync. The problem is solved by a hardware device called "cache controller" which will invalidate the local copy of the cache on CPU 2 which will have to refetch the data from RAM.
+**Cache coherency** is the problem of ensuring that local caches in a multi-core processor system stay in sync. The problem is solved by a hardware device called "cache controller" which will invalidate the local copy of the cache on CPU 2 and the invalidated cache line will be refetched from RAM.
 
 One of the goals behind CLHTs is to minimize this cache coherence traffic.
 
 ### Understanding CLHT (Cache-Line Hash table)
 
-CLHT stands for cache-line hash table as it tries to put one bucket per CPU cache line. The core idea behind the design of CLHT is to minimize the amount cache coherence traffic. In concurrent data structures, cache coherence traffic is generated when a thread running on a core updates a cache line while the other remote cores hold the same cache line. In this scenario, cache coherence protocol would kick in, thus requiring the other cores to invalidate the cache line and fetch it from RAM. 
+CLHT stands for cache-line hash table as it tries to put one bucket per CPU cache line. The core idea behind the design of CLHT is to minimize the amount cache coherence traffic. In concurrent data structures, **cache coherence traffic** is generated when a thread running on a core updates a cache line while the other remote cores hold the same cache line. In this scenario, cache coherence protocol would kick in, thus requiring the other cores to invalidate the cache line and fetch it from RAM. 
 
 CLHT has the following ideas:
 
