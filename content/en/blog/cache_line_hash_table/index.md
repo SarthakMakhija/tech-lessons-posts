@@ -378,10 +378,61 @@ One of the key benefits of CLHT is its minimal impact on CPU cache lines during 
 
 ### Understanding the Resize Operation
 
+Let's take a look at the `resize` operation which can increase or decrease the number of buckets in the map. In this section, we'll delve deeper into how the resize operation handles map growth.
+
+#### Ensure one resize at a time
+
+There can be only one `resize` running at a time.
+
+```go
+if !atomic.CompareAndSwapInt64(&m.resizing, 0, 1) {
+    // Someone else started resize. Wait for it to finish.
+    m.waitForResize()
+    return
+}
+```
+
+This method checks to see if an existing `resize` operation is running. `CompareAndSwapInt64` will compare the value of the field `resizing` with 0. The zero value for the field `resizing` signifies that there is no resize operation in progress.
+
+If `resizing` is 0, it will be set to 1 and the `resize` operation will proceed. Else, `CompareAndSwapInt64` will fail and the goroutine will wait for the ongoing `resize` operation to finish and return.
+
+#### Access the current table atomically
+
+Consider that there is no resize operation in progress.
+
+```go
+table := (*mapOfTable[K, V])(atomic.LoadPointer(&m.table))
+tableLen := len(table.buckets)
+```
+
+The `table` field is an unsafe pointer that refers to `mapOfTable`.
+
+```go
+type MapOf[K comparable, V any] struct {
+	table        unsafe.Pointer // *mapOfTable
+}
+```
+
+The method accesses the `table` field to find the total number of buckets present in the table (/map). The field is accessed atomically to ensure that the consistent view of the `table` is obtained. This atomic access becomes crucial because a previous resize operation might have already changed the internal structure of the map (adding or removing buckets). By reading atomically, we avoid any inconsistencies that could lead to errors.
+
+#### Increase the table size locally
+
+The next step is to increase the table size. We already know that the field `table` needs to be operated on atomically. This means unless the new table (/method local table) is ready, the `table` field is not touched.
+
+```go
+var newTable *mapOfTable[K, V]
+	
+case mapGrowHint:
+    // Grow the table with factor of 2.
+    atomic.AddInt64(&m.totalGrowths, 1)
+    newTable = newMapOfTable[K, V](tableLen << 1)
+```
+
+To grow the table, a new method local table is created with twice the size of the existing table.
+
 ### Pending
 
 - Resize
-- Change the image (structure of xsync)
 - CPU Cache line section
 - Go through
 
