@@ -25,9 +25,7 @@ This article dives into a clever solution: the Cache-Line Hash Table (CLHT).  CL
 
 ### Understanding CLHT (Cache-Line Hash table)
 
-CLHT stands for cache-line hash table as it tries to put one bucket per CPU cache line. The core idea behind the design of CLHT is to minimize the amount cache coherence
-traffic. In concurrent data structures, cache coherence traffic is generated when a thread running on a core updates a cache line while the other remote
-cores hold the same cache line. In this scenario, cache coherence protocol would kick in, thus requiring the other cores to invalidate the cache line and fetch it from RAM. 
+CLHT stands for cache-line hash table as it tries to put one bucket per CPU cache line. The core idea behind the design of CLHT is to minimize the amount cache coherence traffic. In concurrent data structures, cache coherence traffic is generated when a thread running on a core updates a cache line while the other remote cores hold the same cache line. In this scenario, cache coherence protocol would kick in, thus requiring the other cores to invalidate the cache line and fetch it from RAM. 
 
 The core ideas behind CLHT include:
 - Minimize the cache coherence traffic by reducing the number of cache lines that are written in an update/put operation
@@ -496,12 +494,34 @@ Finishing the `resize` operation involves the following:
 
 - Atomically store the pointer to the `newTable` in the map.
 - Mark resizing done by atomically storing zero in the `resizing` field.
-- Notify waiters (other goroutines) of the completion of resize operation by invoking `Broadcast` on the `resizeCond`.
+- Notify waiters (other goroutines) of the completion of resize operation by invoking `Broadcast` on the `resizeCond`
 
 ### Pending
 
 - CPU Cache line section
 - Go through
+
+### Conclusion
+
+Imagine a machine with 128 cores, where a thread on core 1 needs to update data. This update involves three cache lines, and unfortunately, all these lines are also cached by every other core.
+
+In a traditional approach, this update triggers a chain reaction:
+
+**Heavy Bus Traffic**
+
+Core 1 writes the updated lines, causing a lot of traffic on the CPU bus, a shared pathway for communication.
+
+**Cache Invalidation** 
+
+Since other cores have copies of these lines, cache coherence protocol kick in. This protocol invalidates the outdated copies in other cores' caches.
+
+**Reloading from RAM** 
+
+Invalidated cores are forced to fetch the latest data from main memory (RAM), further increasing traffic and potentially slowing down the system.
+
+*This process, known as cache coherence traffic, can become a significant bottleneck in multi-core systems with frequent writes.*
+
+Cache-Line Hash Tables (CLHT) offer a clever solution for managing concurrent data access in multi-core processors. By keeping one bucket per CPU cache line, CLHT minimizes the disruptive effects of cache coherence traffic during write operations. With CLHT, updates primarily modify a single bucket, ensuring only one cache line is written at a time.
 
 ### Mentions
 
