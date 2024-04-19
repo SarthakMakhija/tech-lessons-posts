@@ -1,7 +1,7 @@
 ---
 author: "Sarthak Makhija"
 title: "Cache-Line Hash Table"
-date: 2024-04-18
+date: 2024-04-19
 description: "
 In the world of multi-core processors, managing concurrent access to data structures is crucial for efficient performance. But frequent updates can trigger a hidden bottleneck: cache coherence traffic. This traffic arises when one core modifies data another core has cached, forcing updates and invalidation across the system.
 This article dives into a clever solution: the Cache-Line Hash Table (CLHT).  CLHTs are specifically designed to minimize this cache coherence traffic, boosting the speed of concurrent data access.
