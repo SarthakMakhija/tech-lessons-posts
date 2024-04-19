@@ -7,7 +7,7 @@ In the world of multi-core processors, managing concurrent access to data struct
 This article dives into a clever solution: the Cache-Line Hash Table (CLHT).  CLHTs are specifically designed to minimize this cache coherence traffic, boosting the speed of concurrent data access.
 "
 tags: ["CPU Cache-Line", "Hash Table", "CLHT", "Cache-Line Hash Table", "Golang", "xsync"]
-thumbnail: "/clht_title.png"
+thumbnail: "/clht_title.webp"
 caption: "Bakckground by Eva Bronzini on Pexels"
 ---
 
@@ -98,7 +98,7 @@ Each entry is an unsafe pointer to the `entryOf` struct which contains a key/val
 The design of xsync `MapOf` is presented in the below image.
 
 <div class="align-center-exclude-width-change">
-    <img src="/xsync.png" alt="Design of xsync MapOf"/>
+    <img src="/xsync.webp" alt="Design of xsync MapOf"/>
 </div>
 
 ### Understanding the Load Operation
