@@ -3,6 +3,8 @@ author: "Sarthak Makhija"
 title: "Cache-Line Hash Table"
 date: 2024-04-18
 description: "
+In the world of multi-core processors, managing concurrent access to data structures is crucial for efficient performance. But frequent updates can trigger a hidden bottleneck: cache coherence traffic. This traffic arises when one core modifies data another core has cached, forcing updates and invalidation across the system.
+This article dives into a clever solution: the Cache-Line Hash Table (CLHT).  CLHTs are specifically designed to minimize this cache coherence traffic, boosting the speed of concurrent data access.
 "
 tags: ["CPU Cache-Line", "Hash Table", "CLHT", "Cache-Line Hash Table", "Golang", "xsync"]
 thumbnail: 
@@ -11,20 +13,28 @@ caption: ""
 
 ### Introduction
 
+In the world of multi-core processors, managing concurrent access to data structures is crucial for efficient performance. But frequent updates can trigger a hidden bottleneck: cache coherence traffic. This traffic arises when one core modifies data another core has cached, forcing updates and invalidation across the system.
+
+This article dives into a clever solution: the Cache-Line Hash Table (CLHT).  CLHTs are specifically designed to minimize this cache coherence traffic, boosting the speed of concurrent data access. We'll explore the core ideas behind CLHTs, including:
+
+- **One Bucket Per CPU Cache-Line**: By cleverly aligning buckets with CPU cache line sizes, CLHTs minimize the number of lines written during updates.
+- **In-Place Updates**: Instead of shuffling data around, CLHTs update key-value pairs directly within the bucket, reducing memory movement.
+- **Lock-Free Reads**: Reads are designed to be lock-free, meaning they can proceed without acquiring locks, further enhancing performance.
+
 ### Understanding CPU Cache line
 
 ### Understanding CLHT (Cache-Line Hash table)
 
 CLHT stands for cache-line hash table as it tries to put one bucket per CPU cache line. The core idea behind the design of CLHT is to minimize the amount cache coherence
 traffic. In concurrent data structures, cache coherence traffic is generated when a thread running on a core updates a cache line while the other remote
-cores hold the same cache line. In this scenario, cache coherence protocol would kick in, thus requiring the other cores to invalidate the cache line and fetch it from
-RAM. The core ideas behind CLHT include:
+cores hold the same cache line. In this scenario, cache coherence protocol would kick in, thus requiring the other cores to invalidate the cache line and fetch it from RAM. 
+
+The core ideas behind CLHT include:
 - Minimize the cache coherence traffic by reducing the number of cache lines that are written in an update/put operation
 - Perform in-place update of key/value pairs
 - Take no locks during read (/get) operations
 
-I will be taking the example of the [MapOf](https://github.com/puzpuzpuz/xsync/blob/main/mapof.go) implementation from [xsync](https://github.com/puzpuzpuz/xsync/) which is a CLHT-inspired
-concurrent hash map.
+I will be taking the example of the [MapOf](https://github.com/puzpuzpuz/xsync/blob/main/mapof.go) implementation from [xsync](https://github.com/puzpuzpuz/xsync/) which is a CLHT-inspired concurrent hash map.
 
 The core abstraction `MapOf` contains an [unsafe pointer](https://pkg.go.dev/unsafe#Pointer) to the `mapOfTable` struct.
 
@@ -35,8 +45,7 @@ type MapOf[K comparable, V any] struct {
 }
 ```
 
-The abstraction `mapOfTable` contains a slice of buckets. The buckets are linearly linked using the `next` field at each index. CLHT puts one bucket per CPU cache line,
-this simply means that the size of each bucket should be equal to the [CPU cache line size](https://docs.rs/crossbeam-utils/latest/crossbeam_utils/struct.CachePadded.html).
+The abstraction `mapOfTable` contains a slice of buckets. The buckets are linearly linked using the `next` field at each index. CLHT puts one bucket per CPU cache line, this simply means that the size of each bucket should be equal to the [CPU cache line size](https://docs.rs/crossbeam-utils/latest/crossbeam_utils/struct.CachePadded.html).
 With `entriesPerMapBucket` as 3, the size of a single instance of `bucketOf` is 64 bytes, which is the size of CPU cache line on most of the processors.
 Each instance of `bucketOf` contains three hashes and three entries. Each entry is an unsafe pointer to the `entryOf` struct which contains a key/value pair.
 

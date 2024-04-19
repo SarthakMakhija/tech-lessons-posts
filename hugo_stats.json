@@ -407,7 +407,6 @@
       "step-8-deploying-our-stack",
       "step-8-introducing-asyncawait-in-service-and-controller",
       "step-9-lambda-response-with-api-gateway",
-      "store-in-a-new-bucket-if-all-the-linearly-linked-buckets-at-the-idenified-bucket-index-are-full",
       "store-in-a-new-bucket-if-all-the-linearly-linked-buckets-at-the-identified-bucket-index-are-full",
       "store-the-keyvalue-pair-in-an-empty-entry-slot",
       "storing-keyvalue-mapping",
