@@ -515,7 +515,7 @@ m.resizeCond.Broadcast()
 m.resizeMu.Unlock()
 ```
 
-Finishing the `resize` operation involves the following:
+The idea can be summarized as:
 
 - Atomically store the pointer to the `newTable` in the map.
 - Mark resizing done by atomically storing zero in the `resizing` field.
@@ -533,7 +533,7 @@ Core 1 writes the updated lines, causing a lot of traffic on the CPU bus, a shar
 
 **Cache Invalidation** 
 
-Since other cores have copies of these lines, cache coherence protocol kick in. This protocol invalidates the outdated copies in other cores' caches.
+Since other cores have copies of these lines, cache coherence protocol kicks in. This protocol invalidates the outdated copies in other cores' caches.
 
 **Reloading from RAM** 
 
