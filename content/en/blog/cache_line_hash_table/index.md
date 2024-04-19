@@ -430,9 +430,76 @@ case mapGrowHint:
 
 To grow the table, a new method local table is created with twice the size of the existing table.
 
+#### Remap the existing keys
+
+The next step is to go through all the buckets in the existing table and map all the keys to the new structure.
+
+```go
+for i := 0; i < tableLen; i++ {
+    //remap the keys of the existing bucket at index i into the new table.
+    copied := copyBucketOf(&table.buckets[i], newTable, m.hasher)
+}
+```
+
+```go
+func copyBucketOf[K comparable, V any](
+	b *bucketOfPadded,
+	destTable *mapOfTable[K, V],
+	hasher func(K, uint64) uint64,
+) (copied int) {
+
+	rootb := b
+	rootb.mu.Lock()
+	for {
+		for i := 0; i < entriesPerMapBucket; i++ {
+			if b.entries[i] != nil {
+				e := (*entryOf[K, V])(b.entries[i])
+				hash := shiftHash(hasher(e.key, destTable.seed))
+				bidx := uint64(len(destTable.buckets)-1) & hash
+				destb := &destTable.buckets[bidx]
+				appendToBucketOf(hash, b.entries[i], destb)
+				copied++
+			}
+		}
+		if b.next == nil {
+			rootb.mu.Unlock()
+			return
+		}
+		b = (*bucketOfPadded)(b.next)
+	}
+}
+```
+
+The idea behind `copyBucketOf` can be summarized as:
+
+- Acquire a lock on the current bucket.
+- Iterate through the entire bucket (chained bucket(s)).
+- Calculate the hash of each entry in the linearly linked buckets at index `i`.
+- Identify the bucket index based on the new table structure: `uint64(len(destTable.buckets)-1) & hash`
+- Add the entry (or entry pointer) to an empty slot in the existing bucket or append a new bucket.
+- Release the lock for the bucket if the `next` pointer of the current bucket is `nil`.
+
+#### Finish resize
+
+The last step is to mark the resizing done.
+
+```go
+// Publish the new table and wake up all waiters.
+atomic.StorePointer(&m.table, unsafe.Pointer(newTable))
+m.resizeMu.Lock()
+atomic.StoreInt64(&m.resizing, 0)
+m.resizeCond.Broadcast()
+m.resizeMu.Unlock()
+```
+
+Finishing the `resize` operation involves the following:
+
+- Atomically store the pointer to the `newTable` in the map.
+- Mark resizing done by atomically storing zero in the `resizing` field.
+- Notify waiters (other goroutines) of the completion of resize operation by invoking `Broadcast` on the `resizeCond`.
+
 ### Pending
 
-- Resize
 - CPU Cache line section
 - Go through
 
