@@ -7,8 +7,8 @@ In the world of multi-core processors, managing concurrent access to data struct
 This article dives into a clever solution: the Cache-Line Hash Table (CLHT).  CLHTs are specifically designed to minimize this cache coherence traffic, boosting the speed of concurrent data access.
 "
 tags: ["CPU Cache-Line", "Hash Table", "CLHT", "Cache-Line Hash Table", "Golang", "xsync"]
-thumbnail: 
-caption: ""
+thumbnail: "/clht_title.png"
+caption: "Bakckground by Eva Bronzini on Pexels"
 ---
 
 ### Introduction
