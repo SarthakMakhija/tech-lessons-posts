@@ -21,7 +21,21 @@ This article dives into a clever solution: the Cache-Line Hash Table (CLHT).  CL
 - **In-Place Updates**: Instead of shuffling data around, CLHTs update key-value pairs directly within the bucket, reducing memory movement.
 - **Lock-Free Reads**: Reads are designed to be lock-free, meaning they can proceed without acquiring locks, further enhancing performance.
 
-### Understanding CPU Cache line
+### Understanding CPU Cache line and Cache Coherency
+
+To execute an instruction, CPUs need to fetch instruction and data (John von Neumann’s design). Accessing RAM (/DRAM) for fetching data and instruction is expensive, usually in the orders of 50-100ns. To minimize the latency cost, CPUs have caches: L1, L2, L3 and in some cases L4 caches. While L1 and L2 caches are private to each core, L3 caches can be shared between cores. The size of these caches increase from L1 to L4, and so does the latency cost.
+
+Let's focus on data access.
+
+Anytime a CPU executes an operation, it checks for the required data in the cache hierarchy, in the following order L1, L2, L3 and (/L4). If the data is not available in any of these caches, it is fetched from RAM and stored in these caches. 
+
+Let's consider that a program needs to read the value at index `i` of an `uint64` array. When a CPU executes this instruction, it won't fetch just the `8 bytes` of value. Instead, it will fetch a contiguous chunk of memory, on x86 systems this chunk is 64 bytes in size. This chunk is called **CPU cache line**. This means, all the CPU caches organize the data in form of cache lines. This approach improves efficiency by fetching multiple potentially related pieces of data in one go.
+
+On multi-core processors it is possible for multiple cores to cache the same chunk of memory in their own L1 or L2 cache. This means, the same cache line can be present in different cores. 
+
+Continuing with our previous example of the arrray, imagine a thread *A* running on CPU 1 and other thread *B* running on CPU 2 have cached the same cache line corresponding to the array indices 0-7. Consider that thread *A* modifies the value at index 5. This means the cached copy of this cache line is stale on CPU 2. This is the problem of **cache coherency**, ensuring that the local caches in a multi-core processor system stay in sync. The problem is solved by a hardware device called "cache controller" which would invalidate the local copy of the cache on CPU 2 and CPU 2 will have to refetch the data from RAM.
+
+One of the goals behind CLHTs is to minimize this cache coherence traffic.
 
 ### Understanding CLHT (Cache-Line Hash table)
 
@@ -74,11 +88,10 @@ type entryOf[K comparable, V any] struct {
 
 The buckets are linearly linked using the `next` field at each index. CLHT puts one bucket per CPU cache line, this simply means that the size of each bucket should be equal to the [CPU cache line size](https://docs.rs/crossbeam-utils/latest/crossbeam_utils/struct.CachePadded.html).
 
-With `entriesPerMapBucket` as 3, the size of a single instance of `bucketOf` is 64 bytes, which is the size of CPU cache line on most of the processors.
+With `entriesPerMapBucket` as 3, the size of a single instance of `bucketOf` is 64 bytes, which is the size of CPU cache line on x86 systems.
 Each instance of `bucketOf` contains three hashes and three entries. 
 
 Each entry is an unsafe pointer to the `entryOf` struct which contains a key/value pair.
-
 
 > The abstraction `MapOf` uses unsafe pointers which are later used in atomic pointer operations, like `atomic.StorePointer(&b.entries[i], unsafe.Pointer(newEntry))`.
 
@@ -93,7 +106,9 @@ Each entry is an unsafe pointer to the `entryOf` struct which contains a key/val
 >}
 > ```
 >
-> This snippet creates an unsafe pointer using the address of the byte slice, casts it to a string pointer and then dereferences it to get string. This works because both the byte slice and the string share an equivalent memory layout and the resulting string is not larger than the input byte slice.
+> This snippet creates an unsafe pointer using the address of the byte slice, casts it to a string pointer and then 
+> dereferences it to get string. This works because both the byte slice and the string share an equivalent memory 
+> layout and the resulting string is not larger than the input byte slice.
 
 The design of xsync `MapOf` is presented in the below image.
 
@@ -205,8 +220,9 @@ The idea can be summarized as:
 > ```
 >
 > To ensure that there is always the latest information of the `table` field, it is loaded atomically.
-> This atomic access becomes crucial because a previous resize operation might have already changed the internal structure of the map (adding or removing 
-> buckets). By reading atomically, we avoid any inconsistencies that could lead to errors.
+> This atomic access becomes crucial because a previous resize operation might have already changed the internal 
+> structure of the map (adding or removing buckets). 
+> By reading atomically, we avoid any inconsistencies that could lead to errors.
 
 #### Acquire a lock on the identified bucket
 
@@ -371,7 +387,8 @@ This ensures that no goroutine sees these parts in an inconsistent state.
 > Consider two goroutines, one is doing the `Store` operation and the other is doing the `Load` operation on the same key that the store goroutine is trying to put.
 >
 > The goroutine performing the `Store` operation finds an empty
-> slot and updates the hash and then the entry by executing `atomic.StoreUint64(&emptyb.hashes[emptyidx], hash)` and `atomic.StorePointer(&emptyb.entries[emptyidx], unsafe.Pointer(newe))`.
+> slot and updates the hash and then the entry by executing `atomic.StoreUint64(&emptyb.hashes[emptyidx], hash)` and 
+> `atomic.StorePointer(&emptyb.entries[emptyidx], unsafe.Pointer(newe))`.
 >
 > It is possible for the goroutine performing the `Load` operation to see the updated hash because the hash might have been written by the store goroutine at an index `i`, but the value might not have been written yet.
 > So, the load goroutine will not see the value despite seeing the updated hash. It will return with the empty value. This is still the expected behavior.
@@ -537,3 +554,4 @@ Cache-Line Hash Tables (CLHT) offer a clever solution for managing concurrent da
 
 - [xsync](https://github.com/puzpuzpuz/xsync)
 - [Designing ASCY-compliant Concurrent Search Data Structures](https://infoscience.epfl.ch/record/203822)
+- [Cache invalidation really is one of the hardest problems in computer science](https://surfingcomplexity.blog/2022/11/25/cache-invalidation-really-is-one-of-the-hardest-things-in-computer-science/)

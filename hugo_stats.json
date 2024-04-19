@@ -430,6 +430,7 @@
       "understanding-clht-cache-line-hash-table",
       "understanding-count-min-sketch",
       "understanding-cpu-cache-line",
+      "understanding-cpu-cache-line-and-cache-coherency",
       "understanding-localstack",
       "understanding-serializable-snapshot-isolation",
       "understanding-snapshot-isolation",
