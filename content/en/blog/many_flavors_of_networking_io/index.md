@@ -10,8 +10,8 @@ We'll delve into techniques like Single-Threaded Blocking IO, Multi-Threaded Blo
 equipping you with a deeper understanding of how applications juggle network communication with other tasks.
 "
 tags: ["TCP", "Networking", "Golang", "Event loop"]
-thumbnail: ""
-caption: ""
+thumbnail: "/flavors-of-networking-title.png"
+caption: "Background by Bruno Thethe on Pexels"
 ---
 
 ### Introduction
