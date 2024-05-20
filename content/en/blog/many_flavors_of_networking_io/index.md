@@ -30,6 +30,34 @@ understanding of their strengths and weaknesses.
 Throughout this exploration, we'll delve into concepts like **blocking vs non-blocking operations**, **threading strategies**, 
 and **event loops**, equipping you to choose the most suitable approach for your specific networking needs.
 
+### Overview of TCP Server
+
+This TCP server operates on messages encoded using the [protobuf](https://protobuf.dev/) format, specifically the `KeyValueMessage`. 
+These messages can be either "put" requests to update the key-value store (an abstraction layer acting like a giant map) 
+or "get" requests to retrieve a value associated with a specific key. 
+
+Regardless of the message type, the server processes the request, performs the appropriate operation on the store, 
+and transmits a response message back over the network. 
+
+The message format itself includes fields for the key, value, message type ("put" or "get"), and a status code. Status code 
+is used in the response messages. `KeyValueMessage` is represented with the following proto format:
+
+```protobuf
+message KeyValueMessage {
+  string key = 1;
+  string value = 2;
+  uint32 kind = 3;
+  Status status = 4;
+}
+
+enum Status {
+  Ok = 0;
+  NotOk = 1;
+}
+```
+
+Let's start by building a TCP server that is single-threaded and has blocking system calls.
+
 ### Single-Threaded Blocking IO
 
 ### Multi-Threaded Blocking IO
