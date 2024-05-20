@@ -232,6 +232,8 @@ func DeserializeFrom(reader io.Reader) (*KeyValueMessage, error) {
 }
 ```
 
+The complete implementation is available [here](https://github.com/SarthakMakhija/many-flavors-of-networking-io/tree/main/single_thread_blocking_io).
+
 ### Multi-Threaded Blocking IO
 
 ### c10k
