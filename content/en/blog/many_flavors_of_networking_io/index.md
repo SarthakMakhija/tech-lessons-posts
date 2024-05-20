@@ -236,7 +236,61 @@ The complete implementation is available [here](https://github.com/SarthakMakhij
 
 ### Multi-Threaded Blocking IO
 
-### c10k
+This approach tackles the limitations of single-threaded blocking by introducing multiple threads. 
+Instead of a single thread handling everything, a dedicated thread is spawned for each incoming connection. 
+This allows the main thread to continue accepting new connections while other threads handle existing ones.
+
+**Pros:**
+- Multiple threads can handle clients simultaneously, enhancing responsiveness.
+
+**Cons:**
+- Creating and managing threads requires resources, so it's important to find a balance between the number of threads and available resources.
+
+> There's a limit to how many threads a machine can handle effectively. 
+> While a CPU-bound application on a 16-core machine might benefit from 16 threads (one per core), I/O-bound applications require a different approach.
+> 
+> In I/O-bound scenarios, threads can get blocked waiting for data (like reading from a network). 
+> To utilize CPU time efficiently, the operating system can swap a blocked thread with another ready-to-run thread. 
+> This context switching improves responsiveness, but it's not magic.
+> 
+> Creating too many threads can become counterproductive. 
+> As the number of threads grows, the OS spends more time managing them (context switching) instead of executing actual tasks. 
+> This overhead can reduce the application's overall performance.
+>
+> In the world of concurrency, the "c10k problem" refers to the challenge of efficiently managing 
+> around 10,000 concurrent connections, highlighting the trade-off between threads and performance.
+
+The only change is in the `Start` method of the TCPServer which creates a new goroutine for each incoming connection. All the IO operations
+are still blocking.
+
+The `Start` method of `TCPServer` runs in a tight loop waiting for new TCP connections. The `Accept` method is blocking in nature,
+which means the main goroutine running the `Start` is suspended until a new connection arrives.
+
+Once a connection arrives, the server creates a dedicated object (`IncomingTCPConnection`) to handle messages on that
+specific connection. However, this handling happens in a new goroutine and the approach is known as "Multi-Threaded Blocking IO."
+This approach follows unbounded concurrency, meaning there's no predefined limit on the number of goroutines the server can spawn.
+(Proper profiling and benchmarking should be done to decide if goroutine pooling would help or not).
+
+```go
+// Start starts the server.
+// TCPServer implements "Multi thread blocking IO" pattern.
+// TCPServer:
+// - runs a continuous loop in a single goroutine (/main goroutine).
+// - a new instance of IncomingTCPConnection is created for every new connection.
+// - The incoming TCP connection is handled in new goroutine.
+// - This pattern involves goroutine per connection and blocking IO to read from the incoming connection.
+func (server *TCPServer) Start() {
+	for {
+		connection, err := server.listener.Accept()
+		if err != nil {
+			return
+		}
+		go conn.NewIncomingTCPConnection(connection, server.store).Handle()
+	}
+}
+```
+
+The complete implementation is available [here](https://github.com/SarthakMakhija/many-flavors-of-networking-io/tree/main/multi_thread_blocking_io).
 
 ### Non-blocking with Busy Wait
 
