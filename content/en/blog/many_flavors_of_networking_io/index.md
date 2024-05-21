@@ -1,7 +1,7 @@
 ---
 author: "Sarthak Makhija"
 title: "Many flavors of Networking IO"
-date: 2024-05-20
+date: 2024-05-21
 description: "
 The foundation of any networked application hinges on its ability to efficiently handle data exchange. 
 But beneath the surface, there's a hidden world of techniques for managing this communication. 
@@ -32,7 +32,7 @@ and **event loops**, equipping you to choose the most suitable approach for your
 
 ### Overview of our TCP Server
 
-This TCP server operates on messages encoded using the [protobuf](https://protobuf.dev/) format, specifically the `KeyValueMessage`. 
+Our TCP server operates on messages encoded using the [protobuf](https://protobuf.dev/) format, specifically the `KeyValueMessage`. 
 These messages can be either "put" requests to update the key-value store (an abstraction layer acting like a giant map) 
 or "get" requests to retrieve a value associated with a specific key. 
 
@@ -55,6 +55,8 @@ enum Status {
   NotOk = 1;
 }
 ```
+
+We will build our TCP server(s) in Golang.
 
 Let's start by building a TCP server that is single-threaded and has blocking system calls.
 
@@ -293,6 +295,230 @@ func (server *TCPServer) Start() {
 The complete implementation is available [here](https://github.com/SarthakMakhija/many-flavors-of-networking-io/tree/main/multi_thread_blocking_io).
 
 ### Non-blocking with Busy Wait
+
+This approach tackles the limitations of blocking I/O by using non-blocking sockets.
+Here, the server sets the socket file descriptor to non-blocking mode with `syscall.SetNonblock(serverFd, true)`. 
+This means the server won't get stuck waiting for I/O operations to complete (like reading data).
+
+However, non-blocking comes with a trade-off. If the server attempts to read from a non-blocking socket with no available data, it won't block, but an error 
+like `EAGAIN` or `EWOULDBLOCK` will be returned. To address this, the server employs a technique called "busy waiting."
+
+In busy waiting, the server continuously polls the socket (checks for data availability) until it receives an end-of-file 
+(`EOF`) signal or encounters another error.  
+
+**Pros:**
+- Since the server isn't blocked waiting for I/O operations, it should be more responsive.
+
+**Cons:**
+- Busy waiting consumes CPU resources as the server constantly polls the socket for data. This can become a significant issue 
+with a large number of connections, potentially leading to performance degradation.
+- Handling errors may become tricky. Distinguishing actual errors from those indicating no available data can be challenging in this approach.
+My implementation only considers `EAGAIN` or `EWOULDBLOCK` as the errors indicating no available data.
+
+Overall, Non-Blocking with Busy Wait can be a good choice for situations where responsiveness is a priority and the 
+number of connections is relatively low. 
+
+Let's jump into the implementation.
+
+The following code creates a new instance of `TCPServer`. It starts by creating a TCP socket using `syscall.Socket`.
+- `AF_INET` indicates an IPV4 socket,
+- `SOCK_STREAM` indicates a bidirectional sockets and,
+- `0` indicates a TCP socket 
+
+The server file descriptor `serverFd` is marked non-blocking using `syscall.SetNonblock`.
+
+Next, the server binds itself to the specified host (IP address) and port using `syscall.Bind`. 
+Finally, the socket starts listening for incoming connections with `syscall.Listen`, setting a maximum limit on the number of clients (`MaxClients`).
+
+```go
+func NewTCPServer(host string, port uint16) (*TCPServer, error) {
+	//starts the listener on the given port and returns the server file descriptor, if there is no error.
+	startListener := func() (int, error) {
+		// syscall.Socket(syscall.AF_INET, syscall.SOCK_STREAM, 0) creates an IPv4 (AF_INET), bidirectional (SOCK_STREAM), TCP (0) socket.
+		serverFd, err := syscall.Socket(syscall.AF_INET, syscall.SOCK_STREAM, 0)
+		if err != nil {
+			_ = syscall.Close(serverFd)
+			return -1, err
+		}
+		// SetNonblock sets the server file descriptor non-blocking. This means the file descriptor can be polled.
+		// A non-blocking file descriptor does not block on IO operations and can be polled.
+		if err = syscall.SetNonblock(serverFd, true); err != nil {
+			_ = syscall.Close(serverFd)
+			return -1, err
+		}
+
+		ip4 := net.ParseIP(host)
+		if err = syscall.Bind(serverFd, &syscall.SockaddrInet4{
+			Port: int(port),
+			Addr: [4]byte{ip4[0], ip4[1], ip4[2], ip4[3]},
+		}); err != nil {
+			_ = syscall.Close(serverFd)
+			return -1, err
+		}
+		if err = syscall.Listen(serverFd, MaxClients); err != nil {
+			return -1, err
+		}
+		return serverFd, nil
+	}
+	serverFd, err := startListener()
+	if err != nil {
+		return nil, err
+	}
+
+	store := store2.NewInMemoryStore()
+	return &TCPServer{
+		serverFd: serverFd,
+		handlers: map[uint32]conn.Handler{
+			proto.KeyValueMessageKindPutOrUpdate: conn.NewPutOrUpdateHandler(store),
+			proto.KeyValueMessageKindGet:         conn.NewGetHandler(store),
+		},
+		stopChannel: make(chan struct{}),
+	}, nil
+}
+```
+
+The following code starts the `TCPServer`. The method runs a loop to continuously check for incoming connections. 
+However, unlike blocking I/O, it uses `syscall.Accept` method on the non-blocking file descriptor. 
+This means the server won't get stuck waiting for new connections. If `syscall.Accept` doesn't return an error, the code creates a 
+new client (an abstraction) to handle the incoming connection. 
+
+> The code only checks for `syscall.EAGAIN` and `syscall.EWOULDBLOCK` errors to indicate that no data is currently available 
+> on the socket.
+
+It's important to note that **this implementation** is still **single-threaded**. 
+Even though the server does non-blocking I/O, it can only focus on one client at a time due to the nature of the loop. 
+This limitation contrasts with approaches that utilize multiple threads or event loops for true parallel processing.
+
+```go
+// Start starts the server.
+// TCPServer implements "Non-Blocking with Busy-Wait" pattern.
+// TCPServer:
+// - runs a continuous loop in a single goroutine (/main goroutine).
+// - serverFd is already marked non-blocking, this means any IO operations on this file descriptor will not block. However, the file descriptor can be polled.
+// - an incoming connection is represented by its file descriptor "connectionFd".
+// - connectionFd is also marked non-blocking.
+// - a new client is created (for the incoming connectionFd) which handles the connection.
+// - all the IO operations are non-blocking.
+// This server handles only one client (/connection) at a time.
+func (server *TCPServer) Start() {
+	for {
+		select {
+		case <-server.stopChannel:
+			return
+		default:
+			connectionFd, _, err := syscall.Accept(server.serverFd)
+			if err != nil {
+				if errors.Is(err, syscall.EAGAIN) || errors.Is(err, syscall.EWOULDBLOCK) {
+					continue
+				}
+				return
+			}
+			_ = syscall.SetNonblock(connectionFd, true)
+			conn.NewClient(connectionFd, server.handlers).Run()
+		}
+	}
+}
+```
+
+`Client` is a simple abstraction that polls the connection file descriptor. It runs in a tight loop, and attempts to read 
+from the socket.
+
+```go
+// NewClient creates a new instance of the client.
+// It reads chunks from the connection file descriptor and maintains the current buffer.
+// currentBuffer denotes the chunk that is read currently.
+// The provided file descriptor is set to non-blocking by the caller.
+func NewClient(fd int, handlers map[uint32]Handler) *Client {
+	return &Client{
+		fd:            fd,
+		handlers:      handlers,
+		stopChannel:   make(chan struct{}),
+		readBuffer:    make([]byte, 1024),
+		currentBuffer: bytes.NewBuffer([]byte{}),
+	}
+}
+
+// Run runs the client.
+func (client *Client) Run() {
+	for {
+		select {
+		case <-client.stopChannel:
+			return
+		default:
+			keyValueMessage, err := client.read()
+			if err != nil {
+				return
+			}
+			if keyValueMessage == nil {
+				continue
+			}
+			if err := client.handle(keyValueMessage); err != nil {
+				return
+			}
+		}
+	}
+}
+```
+
+The method `client.read` reads a single `proto.KeyValueMessage` from the file descriptor in a non-blocking manner. 
+Since the file descriptor is already set to non-blocking, the `syscall.Read(...)` call won't wait if no data is immediately 
+available. However, an error might be returned in such cases (`EAGAIN` or `EWOULDBLOCK`).
+
+The `read` method employs a loop to handle different scenarios:
+
+- **Successful read**: If `syscall.Read(...)` returns a positive value (`n`) and no errors occur, the received data is appended to the `client.currentBuffer`.
+The received data might be incomplete (missing the footer), so it is buffered until the entire message arrives.
+- **No data available**: If `n` is zero, the loop exits, indicating no data was read. 
+Errors like `EAGAIN` or `EWOULDBLOCK` also signal this condition and the loop exits without raising an error.
+- **End of file (EOF)**: An `io.EOF` error signifies the end of the connection, and the method returns the error.
+- **Other errors**: Any other error encountered during the read process terminates the loop and the method returns the error.
+- **Finding the message footer**: The loop continues until the `readBuffer` contains the message footer bytes (`proto.FooterBytes`). 
+This signifies the complete message has been received.
+- **Deserializing the message**: A single instance of `proto.KeyValueMessage` is created from the current buffer.
+
+```go
+// read reads a single proto.KeyValueMessage from the file descriptor.
+// The file descriptor is already set to non-blocking, which means syscall.Read(..) will not block.
+// However, if there is nothing to be read from the file descriptor, an error would be returned.
+// The error would be EAGAIN or EWOULDBLOCK.
+// For any error, other than EAGAIN or EWOULDBLOCK, the read method will return.
+// read will continue reading till it finds the proto.FooterBytes.
+// However, it is possible that syscall.Read(..) does not return the amount of data that is requested.
+// In that case, the received data will be stored in client.currentBuffer and the read method will perform poll again.
+// When it polls again, it will read further data until proto.FooterBytes are found.
+// The combined data represented by the currentBuffer will be deserialized into proto.KeyValueMessage.
+func (client *Client) read() (*proto.KeyValueMessage, error) {
+	for {
+		n, err := syscall.Read(client.fd, client.readBuffer)
+		if n <= 0 {
+			break
+		}
+		client.currentBuffer.Write(client.readBuffer[:n])
+		if err != nil {
+			if err == io.EOF {
+				return nil, err
+			}
+			if errors.Is(err, syscall.EAGAIN) || errors.Is(err, syscall.EWOULDBLOCK) {
+				return nil, nil
+			}
+			return nil, err
+		}
+		if bytes.Contains(client.readBuffer, proto.FooterBytes) {
+			break
+		}
+	}
+	if client.currentBuffer.Len() > 0 {
+		keyValueMessage, err := proto.DeserializeFrom(client.currentBuffer)
+		if err != nil {
+			return nil, err
+		}
+		return keyValueMessage, nil
+	}
+	return nil, nil
+}
+```
+
+The complete implementation is available [here](https://github.com/SarthakMakhija/many-flavors-of-networking-io/tree/main/non_blocking_busy_waiting).
 
 ### Single-Threaded Event loop
 
