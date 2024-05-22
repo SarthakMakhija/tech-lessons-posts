@@ -1,7 +1,7 @@
 ---
 author: "Sarthak Makhija"
 title: "Many flavors of Networking IO"
-date: 2024-05-21
+date: 2024-05-22
 description: "
 The foundation of any networked application hinges on its ability to efficiently handle data exchange. 
 But beneath the surface, there's a hidden world of techniques for managing this communication. 
@@ -467,7 +467,7 @@ available. However, an error might be returned in such cases (`EAGAIN` or `EWOUL
 The `read` method employs a loop to handle different scenarios:
 
 - **Successful read**: If `syscall.Read(...)` returns a positive value (`n`) and no errors occur, the received data is appended to the `client.currentBuffer`.
-The received data might be incomplete (missing the footer), so it is buffered until the entire message arrives.
+This buffer acts as a temporary storage for incomplete message fragments.
 - **No data available**: If `n` is zero, the loop exits, indicating no data was read. 
 Errors like `EAGAIN` or `EWOULDBLOCK` also signal this condition and the loop exits without raising an error.
 - **End of file (EOF)**: An `io.EOF` error signifies the end of the connection, and the method returns the error.
@@ -522,6 +522,294 @@ The complete implementation is available [here](https://github.com/SarthakMakhij
 
 ### Single-Threaded Event loop
 
+This approach tackles the limitations of blocking I/O by employing **non-blocking sockets** and an **event loop**. The event loop 
+constantly monitors sockets for incoming data or events (connection requests, disconnections, etc.).
+
+The key ideas include:
+
+- **Registering for Events**: The server uses system calls like `epoll`, `select`, or `kqueue` to register file descriptors of 
+sockets with the operating system. These system calls essentially tell the kernel which sockets the server wants to be notified about.
+- **Kernel's Watchlist**: The operating system maintains a data structure (like kqueue for some systems) to efficiently track the 
+registered sockets and any events associated with them. This structure becomes a central point for gathering event information.
+- **Polling for Updates**: Instead of actively checking each socket individually, the server periodically "polls" the event 
+loop (using the chosen system call). This poll essentially asks the kernel if any events have occurred on the registered sockets.
+- **Event Handling**: If kernel detects an event (data arrival, connection request, etc.), it informs the event loop. 
+The loop then triggers the appropriate handler function to process the specific event.
+
+**Pros:**
+- Compared to blocking I/O, the server doesn't get stuck waiting for data on individual sockets. The event loop allows it to 
+remain responsive and handle other events while waiting for data to arrive.
+- Polling the event loop for multiple sockets is a more efficient way to manage I/O compared to constantly checking each socket 
+individually. This reduces CPU overhead associated with busy waiting.
+
+**Cons:**
+- Handling errors may become tricky. The server needs to handle various events (data arrival, connection closure, errors) and 
+ensure proper error propagation through the event handlers.
+
+The following code creates a new instance of `TCPServer`. This code is almost same as the one [here](#non-blocking-with-busy-wait).
+The only thing that is different here is the creation of event loop using: `NewEventLoop`.
+
+```go
+// NewTCPServer creates a new instance of TCPServer.
+func NewTCPServer(host string, port uint16) (*TCPServer, error) {
+	//starts the listener on the given port and returns the server file descriptor, if there is no error.
+	startListener := func() (int, error) {
+		// syscall.Socket(syscall.AF_INET, syscall.SOCK_STREAM, 0) creates an IPv4 (AF_INET), bidirectional (SOCK_STREAM), TCP (0) socket.
+		serverFd, err := syscall.Socket(syscall.AF_INET, syscall.SOCK_STREAM, 0)
+		if err != nil {
+			_ = syscall.Close(serverFd)
+			return -1, err
+		}
+		// SetNonblock sets the server file descriptor non-blocking. This means the file descriptor can be polled.
+		// A non-blocking file descriptor does not block on IO operations and can be polled.
+		if err = syscall.SetNonblock(serverFd, true); err != nil {
+			_ = syscall.Close(serverFd)
+			return -1, err
+		}
+
+		ip4 := net.ParseIP(host)
+		if err = syscall.Bind(serverFd, &syscall.SockaddrInet4{
+			Port: int(port),
+			Addr: [4]byte{ip4[0], ip4[1], ip4[2], ip4[3]},
+		}); err != nil {
+			_ = syscall.Close(serverFd)
+			return -1, err
+		}
+		if err = syscall.Listen(serverFd, MaxClients); err != nil {
+			return -1, err
+		}
+		return serverFd, nil
+	}
+	//createEventLoop creates an instance of Event loop.
+	createEventLoop := func(serverFd int, store *store.InMemoryStore) (*event_loop.EventLoop, error) {
+		eventLoop, err := event_loop.NewEventLoop(serverFd, MaxClients, map[uint32]conn.Handler{
+			proto.KeyValueMessageKindPutOrUpdate: conn.NewPutOrUpdateHandler(store),
+			proto.KeyValueMessageKindGet:         conn.NewGetHandler(store),
+		})
+		if err != nil {
+			return nil, err
+		}
+		return eventLoop, nil
+	}
+	//init creates an instance of TCPServer.
+	init := func() (*TCPServer, error) {
+		serverFd, err := startListener()
+		if err != nil {
+			return nil, err
+		}
+		eventLoop, err := createEventLoop(serverFd, store.NewInMemoryStore())
+		if err != nil {
+			return nil, err
+		}
+		return &TCPServer{
+			serverFd:  serverFd,
+			eventLoop: eventLoop,
+		}, nil
+	}
+	return init()
+}
+```
+
+Let's look at the `NewEventLoop` method. This method does the following:
+
+- **KQueue Creation**: The method starts by creating a new `KQueue` using `NewKQueue`. This KQueue is a kernel data structure 
+that acts like a central hub for tracking events on registered file descriptors (sockets).
+- **Server File Descriptor Subscription**: Next, the method subscribes the server's file descriptor (representing the listening socket) to the 
+`KQueue` using `subscribeRead`. This essentially tells the kernel that the server wants to be notified whenever there's 
+something to read on that socket (typically indicating a new incoming connection).
+  - The `EVFILT_READ` filter specifies that the server is interested in the read events. `EVFILT_READ` for server file descriptor
+    indicates new connection.
+
+```go
+// NewEventLoop creates a new instance of EventLoop.
+// It also subscribes using the EVFILT_READ filter on the server file descriptor.
+func NewEventLoop(serverFd int, maxClients int, clientHandlers map[uint32]conn.Handler) (*EventLoop, error) {
+	// NewKQueue creates a new kernel KQueue data structure to hold various events on the subscribed file descriptor.
+	kQueue, err := NewKQueue(maxClients)
+	if err != nil {
+		return nil, err
+	}
+	eventLoop := &EventLoop{
+		serverFd:       serverFd,
+		kQueue:         kQueue,
+		clients:        make(map[int]*Client),
+		clientHandlers: clientHandlers,
+		stopChannel:    make(chan struct{}),
+	}
+	// subscribes to the given server file descriptor using EVFILT_READ and EV_ADD flag.
+	// This means an event will be added to the kernel KQueue when the server file descriptor is ready to be read
+	// (/meaning there is an incoming connection on the server).
+	err = eventLoop.subscribeRead(serverFd)
+	if err != nil {
+		return nil, err
+	}
+	return eventLoop, nil
+}
+```
+
+The complete implementation of `KQueue` is available [here](https://github.com/SarthakMakhija/many-flavors-of-networking-io/blob/main/single_thread_event_loop/event_loop/kqueue_darwin.go).
+
+The `Start` method of `TCPServer` runs `EventLoop`.
+
+```go
+// Start starts the server which in turn starts the event loop.
+// TCPServer implements "Single thread Non-Blocking with event loop" pattern.
+func (server *TCPServer) Start() {
+	server.eventLoop.Run()
+}
+```
+
+The `Run` method is launched in a separate goroutine to avoid blocking the main thread. Here's what happens within the loop:
+
+- **Polling for Events**: The loop continuously utilizes the `kQueue.Poll` method to retrieve any pending events on the subscribed 
+file descriptors.
+- **Handling Events**: The retrieved events are then processed one by one. The code differentiates between two main scenarios:
+  - **Server File Descriptor**: If the event's file descriptor matches the server's file descriptor (meaning `event.Ident` equals `eventLoop.serverFd`), 
+  it signifies a new incoming connection. The `acceptClient` function is responsible for handling this event and creating 
+  a new `Client` object.
+  - **Existing Client**: If the event doesn't originate from the server socket, it likely belongs to an existing client 
+  connection (identified by `event.Ident`). In this case, the `runClient` function is called to process any data or events 
+  associated with that particular client.
+  - **Terminating Client**: If the event signifies `EOF`, the corresponding client is stopped.
+  
+```go
+// Run runs an event loop. It:
+// - runs an event loop in its own goroutine.
+// - polls the KQueue for events on the subscribed file descriptors.
+// - if the polled event's file descriptor is same as the server's file descriptor: a new client is accepted,
+// - else: an existing client for the file descriptor is run.
+func (eventLoop *EventLoop) Run() {
+	// TODO: Handle client error
+	go func() {
+		for {
+			select {
+			case <-eventLoop.stopChannel:
+				return
+			default:
+				events, err := eventLoop.kQueue.Poll(-1)
+				if err != nil {
+					continue
+				}
+				for _, event := range events {
+					if event.Flags&syscall.EV_EOF == syscall.EV_EOF {
+						eventLoop.stopClient(int(event.Ident))
+						delete(eventLoop.clients, int(event.Ident))
+						continue
+					}
+					if int(event.Ident) == eventLoop.serverFd {
+						if err := eventLoop.acceptClient(); err != nil {
+							continue
+						}
+					} else {
+						eventLoop.runClient(int(event.Ident))
+					}
+				}
+			}
+		}
+	}()
+}
+```
+
+The `acceptClient` accepts the new connection by invoking `syscall.Accept`. The system call does not block because the server file
+descriptor is marked non-blocking. If `syscall.Accept` doesn't return an error, the code creates a new client (an abstraction) 
+to handle the incoming connection. The connection file descriptor is set to non-blocking mode and registered with `KQueue`. 
+This means file descriptors of all sockets are registered with `KQueue` and `EventLoop` keeps on polling `KQueue` to check is any
+of the file descriptors are ready to be acted upon.
+
+```go
+// acceptClient accepts a new client (/socket).
+// syscall.Accept(..) will not block because the method is called when the non-blocking file descriptor is ready.
+func (eventLoop *EventLoop) acceptClient() error {
+	fd, _, err := syscall.Accept(eventLoop.serverFd)
+	if err != nil {
+		return err
+	}
+
+	eventLoop.clients[fd] = NewClient(fd, eventLoop.clientHandlers)
+	_ = syscall.SetNonblock(fd, true)
+
+	if err := eventLoop.subscribeRead(fd); err != nil {
+		return err
+	}
+	return nil
+}
+```
+
+The `Client.Run(..)` is similar to what we have already seen, except that it is invoked when the corresponding file descriptor
+is ready to be read.
+
+> It's important to consider that a single read operation might not always retrieve the complete `KeyValueMessage` data.
+> This can happen if the received data doesn't reach the message boundary (marked by `proto.FooterBytes`).
+> 
+> The received data is stored in the `client.currentBuffer`. This buffer acts as a temporary storage for incomplete message fragments.
+> The `read` method returns control without raising an error. This allows the event loop to handle other events while
+> waiting for more data on the socket.
+> 
+> When the file descriptor becomes ready again (signaling more data is available), the `read` method will be invoked again.
+> This process continues until the complete message, identified by the `proto.FooterBytes`, is received.
+> 
+> Once all parts of the message are accumulated in the `client.currentBuffer`, the combined data is deserialized into a 
+> complete `proto.KeyValueMessage` object.
+
+```go
+// Run runs the client.
+// It is invoked when the client's file descriptor is ready to be read.
+func (client *Client) Run() {
+	for {
+		select {
+		case <-client.stopChannel:
+			return
+		default:
+			keyValueMessage, err := client.read()
+			if err != nil {
+				return
+			}
+			if err := client.handle(keyValueMessage); err != nil {
+				return
+			}
+		}
+	}
+}
+
+// read reads a single proto.KeyValueMessage from the file descriptor.
+// read will be triggered when the non-blocking file descriptor is ready.
+// This means syscall.Read(..) will not block.
+// read will continue reading till it finds the proto.FooterBytes.
+// However, it is possible that syscall.Read(..) does not return the amount of data that is requested.
+// In that case, the received data will be stored in client.currentBuffer and the read method will return.
+// When the read method is invoked again, at a later point in time when the file descriptor is ready,
+// it will read further data until proto.FooterBytes are found.
+// The combined data represented by the currentBuffer will be deserialized into proto.KeyValueMessage.
+func (client *Client) read() (*proto.KeyValueMessage, error) {
+	for {
+		n, err := syscall.Read(client.fd, client.readBuffer)
+		if n <= 0 {
+			break
+		}
+		client.currentBuffer.Write(client.readBuffer[:n])
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return nil, err
+		}
+		if bytes.Contains(client.readBuffer, proto.FooterBytes) {
+			break
+		}
+	}
+	keyValueMessage, err := proto.DeserializeFrom(client.currentBuffer)
+	if err != nil {
+		return nil, err
+	}
+	return keyValueMessage, nil
+}
+```
+
 ### Mentions
 
+- [Google Bard](https://bard.google.com/chat) helped with the article.
+
 ### References
+
+- [Grokking Concurrency](https://www.manning.com/books/grokking-concurrency)
+- [DiceDB](https://github.com/DiceDB/dice)
