@@ -36,11 +36,6 @@ DefaultContentLanguageInSubdir = true
         url = "page/projects/"
         weight = 4
 
-    [[languages.en.menu.main]]
-        name = "Tags"
-        url = "tags"
-        weight = 5
-
 [params]
   # Enable the darkmode toggle in header
   darkModeToggle = false
