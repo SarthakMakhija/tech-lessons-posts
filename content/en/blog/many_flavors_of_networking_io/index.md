@@ -10,7 +10,7 @@ We'll delve into techniques like Single-Threaded Blocking IO, Multi-Threaded Blo
 equipping you with a deeper understanding of how applications juggle network communication with other tasks.
 "
 tags: ["TCP", "Networking", "Golang", "Event loop"]
-thumbnail: "/flavors-of-networking-title.png"
+thumbnail: "/flavors-of-networking-title.webp"
 caption: "Background by Bruno Thethe on Pexels"
 ---
 
@@ -67,6 +67,12 @@ When a connection arrives, the thread reads data until the end is reached (`EOF`
 
 All the IO operations like accepting new connections: `listener.Accept(..)`, reading from connection: `connection.Read(...)`
 and writing to connection: `connection.Write(...)` are blocking.
+
+> Blocking I/O means the thread execution gets stuck waiting for an I/O operation to complete, like reading data from 
+> a file or writing to a file. The thread can't do anything else until the I/O operation finishes. 
+> 
+> This waiting state often leads to a context switch. The operating system temporarily suspends the blocked thread and 
+> switches to another ready-to-run thread, maximizing CPU utilization.
 
 **Pros:**
 - Easy to understand and implement.
@@ -522,8 +528,8 @@ The complete implementation is available [here](https://github.com/SarthakMakhij
 
 ### Single-Threaded Event loop
 
-This approach tackles the limitations of blocking I/O by employing **non-blocking sockets** and an **event loop**. The event loop 
-constantly monitors sockets for incoming data or events (connection requests, disconnections, etc.).
+This approach tackles the limitations of blocking I/O by employing **non-blocking sockets** and an **event loop** that leverages **I/O multiplexing**. 
+The event loop constantly monitors sockets for incoming data or events (connection requests, disconnections, etc.).
 
 The key ideas include:
 
@@ -662,7 +668,7 @@ func (server *TCPServer) Start() {
 The `Run` method is launched in a separate goroutine to avoid blocking the main thread. Here's what happens within the loop:
 
 - **Polling for Events**: The loop continuously utilizes the `kQueue.Poll` method to retrieve any pending events on the subscribed 
-file descriptors.
+file descriptors. `kQueue.Poll` blocks if there are no events on the registered file descriptors.
 - **Handling Events**: The retrieved events are then processed one by one. The code differentiates between two main scenarios:
   - **Server File Descriptor**: If the event's file descriptor matches the server's file descriptor (meaning `event.Ident` equals `eventLoop.serverFd`), 
   it signifies a new incoming connection. The `acceptClient` function is responsible for handling this event and creating 
