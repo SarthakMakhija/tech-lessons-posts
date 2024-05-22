@@ -5,9 +5,8 @@ date: 2024-05-22
 description: "
 The foundation of any networked application hinges on its ability to efficiently handle data exchange. 
 But beneath the surface, there's a hidden world of techniques for managing this communication. 
-This article dives into the various \"flavors\" of networking IO, exploring the trade-offs associated with each approach. 
-We'll delve into techniques like Single-Threaded Blocking IO, Multi-Threaded Blocking IO, Non-blocking with Busy Wait, and Single-Threaded Event loop, 
-equipping you with a deeper understanding of how applications juggle network communication with other tasks.
+This article dives into various \"flavors\" of networking IO, exploring the trade-offs associated with each approach. 
+We'll delve into techniques like Single-Threaded Blocking IO, Multi-Threaded Blocking IO, Non-blocking with Busy Wait, and Single-Threaded Event loop.
 "
 tags: ["TCP", "Networking", "Golang", "Event loop"]
 thumbnail: "/flavors-of-networking-title.webp"
@@ -18,7 +17,7 @@ caption: "Background by Bruno Thethe on Pexels"
 
 The foundation of any networked application hinges on its ability to efficiently handle data exchange.
 But beneath the surface, there's a hidden world of techniques for managing this communication.
-This article dives into the various "flavors" of networking IO, exploring the trade-offs associated with each approach.
+This article dives into various "flavors" of networking IO, exploring the trade-offs associated with each approach.
 
 To illustrate various ways applications handle network traffic, we'll build a TCP server using four distinct approaches: 
 **blocking I/O with a single thread**, **blocking I/O with multiple threads**, **non-blocking I/O with busy waiting**, and 
@@ -27,17 +26,14 @@ To illustrate various ways applications handle network traffic, we'll build a TC
 Each approach offers unique advantages and drawbacks, and by constructing a server for each approach, we'll gain a deeper 
 understanding of their strengths and weaknesses. 
 
-Throughout this exploration, we'll delve into concepts like **blocking vs non-blocking operations**, **threading strategies**, 
-and **event loops**, equipping you to choose the most suitable approach for your specific networking needs.
-
 ### Overview of our TCP Server
 
-Our TCP server operates on messages encoded using the [protobuf](https://protobuf.dev/) format, specifically the `KeyValueMessage`. 
+Our TCP server operates on messages encoded using the [protobuf](https://protobuf.dev/) format, specifically the [KeyValueMessage](https://github.com/SarthakMakhija/many-flavors-of-networking-io/blob/main/single_thread_blocking_io/proto/key_value_message.proto). 
 These messages can be either "put" requests to update the key-value store (an abstraction layer acting like a giant map) 
 or "get" requests to retrieve a value associated with a specific key. 
 
 Regardless of the message type, the server processes the request, performs the appropriate operation on the store, 
-and transmits a response message back over the network. 
+and transmits a response message back over the network. [Store](https://github.com/SarthakMakhija/many-flavors-of-networking-io/tree/main/single_thread_blocking_io/store) is an abstraction over Golang's map.
 
 The message format itself includes fields for the key, value, message type ("put" or "get"), and a status code. Status code 
 is used in the response messages. `KeyValueMessage` is represented with the following proto format:
@@ -304,7 +300,7 @@ The complete implementation is available [here](https://github.com/SarthakMakhij
 
 This approach tackles the limitations of blocking I/O by using non-blocking sockets.
 Here, the server sets the socket file descriptor to non-blocking mode with `syscall.SetNonblock(serverFd, true)`. 
-This means the server won't get stuck waiting for I/O operations to complete (like reading data).
+This means the server won't get stuck waiting for I/O operations to complete (like reading data) on the `serverFd`.
 
 However, non-blocking comes with a trade-off. If the server attempts to read from a non-blocking socket with no available data, it won't block, but an error 
 like `EAGAIN` or `EWOULDBLOCK` will be returned. To address this, the server employs a technique called "busy waiting."
@@ -535,6 +531,7 @@ The key ideas include:
 
 - **Registering for Events**: The server uses system calls like `epoll`, `select`, or `kqueue` to register file descriptors of 
 sockets with the operating system. These system calls essentially tell the kernel which sockets the server wants to be notified about.
+  > Kqueue works on Darwin, epoll, select work on Linux and IOCP on Windows.
 - **Kernel's Watchlist**: The operating system maintains a data structure (like kqueue for some systems) to efficiently track the 
 registered sockets and any events associated with them. This structure becomes a central point for gathering event information.
 - **Polling for Updates**: Instead of actively checking each socket individually, the server periodically "polls" the event 
