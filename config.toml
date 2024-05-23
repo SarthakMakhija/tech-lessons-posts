@@ -54,7 +54,6 @@ DefaultContentLanguageInSubdir = true
     "date",
     "categories",
     "summary",
-    "content",
     "link",
     "author"
   ]
