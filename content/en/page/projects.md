@@ -9,7 +9,7 @@ type: page
 
 ## My Projects
 
-I love working on my projects in my free time.
+I love tinkering with projects when I'm not busy.
 
 ### 🔹[go-lsm](https://github.com/SarthakMakhija/go-lsm)
 

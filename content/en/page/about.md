@@ -23,7 +23,7 @@ type: page
 
 I am Sarthak Makhija, and I am an application developer at ThoughtWorks. I had worked with Citigroup and TCS before I joined ThoughtWorks.
 
-I am currently leading a team that is developing a **strongly consistent** **distributed** **key/value storage** engine with support for **rich queries**.
+I am currently leading a team that is developing a **strongly consistent** **distributed** **key/value storage** engine in Go.
 
 The technical ideas of our distributed key/value storage engine include:
 - [golang](https://go.dev/) as the programming language
@@ -31,6 +31,17 @@ The technical ideas of our distributed key/value storage engine include:
 - [badger](https://github.com/dgraph-io/badger) as the key/value storage engine
 - [raft (/multi-raft)](https://raft.github.io/) as the consensus algorithm and 
 - [two-phase commit](https://martinfowler.com/articles/patterns-of-distributed-systems/two-phase-commit.html) with serial isolation level
+
+Beyond my professional work, I'm passionate about sharing my knowledge and getting feedback from the community:
+
+- **Authoring**: I contributed to the validation of distributed system patterns in the book [Patterns of Distributed Systems](https://learning.oreilly.com/library/view/-/9780138222246/) by Unmesh Joshi.
+  I authored articles on [persistent memory](https://kt.academy/article/pmem-intro) for Marcin Moskala.
+
+- **Open Source**: I contribute to [open source projects](https://github.com/SarthakMakhija) aligned with my interests, exploring innovative solutions for data management and caching.
+
+- **Workshops**: I conduct workshops on:
+  - [Gamifying Refactoring](https://gamifying-refactoring.github.io/): This workshop is focussed on identifying code smells and justifying refactorings by going beyond "ilities". It is run as a game.
+  - [LSM-storage Engine](https://github.com/SarthakMakhija/go-lsm): The participants gain hands-on experience building an LSM-based storage engine to understand the core components of a Key/Value store.
 
 ## Let's connect
 <div class="flex gap-x-3 flex-wrap gap-y-2">
