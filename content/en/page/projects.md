@@ -11,6 +11,18 @@ type: page
 
 I love working on my projects in my free time.
 
+### 🔹[go-lsm](https://github.com/SarthakMakhija/go-lsm)
+
+LSM-based key-value store in Go for educational purpose, [inspired by LSM in a Week](https://skyzh.github.io/mini-lsm/00-preface.html). 
+It is a rewrite of the [existing workshop code](https://github.com/SarthakMakhija/storage-engine-workshop).
+
+**Exploring LSM with go-lsm**
+
+- **Learn LSM from the ground up**: Dive deep into the core concepts of Log-Structured Merge-Trees (LSM) through a practical, well-documented implementation.
+- **Benefit from clean code**: Analyze a meticulously crafted codebase that prioritizes simplicity and readability.
+- **Gain confidence with robust tests**: Verify the correctness and reliability of the storage engine through comprehensive tests.
+- **Experiment and extend**: Customize the code to explore different LSM variations or integrate it into your own projects.
+
 ### 🔹 [Clearcheck](https://github.com/SarthakMakhija/clearcheck)
 
 Write expressive and elegant assertions with ease!
