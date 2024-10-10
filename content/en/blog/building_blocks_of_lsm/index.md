@@ -1,6 +1,6 @@
 ---
 author: "Sarthak Makhija"
-title: "Building blocks of LSM based key/value storage engines"
+title: "Building blocks of LSM based key/value storage engines: Introduction"
 date: 2024-10-10
 description: "asdasdasdsadas"
 tags: ["LSM", "Building blocks of LSM"]
@@ -30,7 +30,7 @@ LSM-tree consists of components of exponentially increasing sizes, C0 to Ck. C0 
 
 <img class="align-center" src="/lsm-c0-ck.png" />
 
-> **Data structure choice for C0**: The data structure for C0 should maintain the keys in the sorted order (for range queries) and provide efficient reads and writes. This data structure could be a [treemap](https://docs.oracle.com/javase/8/docs/api/java/util/TreeMap.html) or a [red-black tree](https://en.wikipedia.org/wiki/Red%E2%80%93black_tree) or a [skiplist](https://en.wikipedia.org/wiki/Skip_list). 
+> **Data structure choice for C0**: The data structure for C0 should maintain the keys in the sorted order (for range queries) and provide efficient reads and writes. This data structure could be a [treemap](https://docs.oracle.com/javase/8/docs/api/java/util/TreeMap.html) or a [red-black tree](https://en.wikipedia.org/wiki/Red%E2%80%93black_tree) or a [Skiplist](https://en.wikipedia.org/wiki/Skip_list). 
 > Of all these data structures, the Skiplist is the one that supports versioned keys, the same key with different versions.
 
 Let's take a look at the overall flow of `put(key: []byte, value: []byte)` and `get(key: []byte)` operations in the LSM-tree.
@@ -67,6 +67,7 @@ This series will cover the following building blocks:
 6. [Manifest]()
 7. [Compaction]()
 
-The source code that will be referred throughout the series is available [here](https://github.com/SarthakMakhija/go-lsm).
+The source code that will be referred throughout the series is available [here](https://github.com/SarthakMakhija/go-lsm). Let's 
+introduce [Memtable](), a fixed-size in-memory data structure.
 
 [^1]: This representation does not consider leveled SSTables.
