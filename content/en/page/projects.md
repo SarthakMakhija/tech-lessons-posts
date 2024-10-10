@@ -11,7 +11,7 @@ type: page
 
 I love tinkering with projects when I'm not busy.
 
-### 🔹[go-lsm](https://github.com/SarthakMakhija/go-lsm)
+### 🔹[Go-LSM](https://github.com/SarthakMakhija/go-lsm)
 
 LSM-based key-value store in Go for educational purpose, [inspired by LSM in a Week](https://skyzh.github.io/mini-lsm/00-preface.html). 
 It is a rewrite of the [existing workshop code](https://github.com/SarthakMakhija/storage-engine-workshop).

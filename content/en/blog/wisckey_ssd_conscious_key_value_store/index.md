@@ -140,7 +140,7 @@ Let's take a quick look at compaction.
 #### Compaction
 To maintain the size limit of each level, once the total size of a level L<sub>i</sub> exceeds its limit, the compaction thread will choose one file from L<sub>i</sub>, merge sort with all the overlapped files of L<sub>i+1</sub>, and generate new L<sub>i+1</sub> SSTable files.
 The compaction process involves:
-- Loading SSTable files in memory,
+- Loading SSTable files in memory (block by block),
 - Performing merge sort on the files,
 - Removing the deleted keys and writing back those files. The compaction thread continues until all levels are within their size limits.
 
