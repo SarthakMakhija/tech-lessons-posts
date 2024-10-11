@@ -701,7 +701,7 @@ func (executor *TransactionExecutor) spin() {
 }
 ```
 
-> Why are transactions applied applied using a single goroutine?
+> Why are transactions applied using a single goroutine?
 > 
 > In the real world, applying a transaction would mean writing it to [WAL](https://martinfowler.com/articles/patterns-of-distributed-systems/write-ahead-log.html) and the state machine.
 > If the transactions are not applied by a single goroutine, the system would need locks to prevent concurrent modifications. These locks
