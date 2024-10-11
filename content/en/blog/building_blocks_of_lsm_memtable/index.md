@@ -109,6 +109,42 @@ type Key struct {
 }
 ```
 
+### Ordering multi-versioned keys in Skiplist
+
+When using Skiplist with versioned keys (keys associated with timestamps), it's crucial to determine the order in which 
+keys with the same name but different timestamps should be arranged. 
+A common approach is to prioritize keys with higher timestamps over those with lower timestamps. This ordering simplifies 
+range iterator.
+
+Consider a system where the key "consensus" has two versions: one with a timestamp of 9 and another with a timestamp of 7. 
+Now, imagine a scan operation that seeks to retrieve all keys between "consensus" and "etcd". 
+If the user's transaction has a begin-timestamp of 10, we only want to return keys whose commit-timestamps are less than 10.
+
+By placing the key "consensus" with the timestamp 9 before the one with timestamp 7, the range iterator can easily 
+identify and return the latest committed version of the key (the one with timestamp 9). It can efficiently skip older 
+versions of the same key, ensuring that only the most recent relevant data is returned.
+
+This prioritization of higher-timestamp keys significantly simplifies the implementation of range iterators in Skiplist-based 
+storage systems.
+
+[Key comparison](https://github.com/SarthakMakhija/go-lsm/blob/main/kv/key.go#L63) typically looks like the following:
+
+```go
+func (key Key) CompareKeysWithDescendingTimestamp(other Key) int {
+	comparison := bytes.Compare(key.key, other.key)
+	if comparison != 0 {
+		return comparison
+	}
+	if key.timestamp == other.timestamp {
+		return 0
+	}
+	if key.timestamp > other.timestamp {
+		return -1
+	}
+	return 1
+}
+```
+
 Let's look at the concurrent implementation choices for Skiplist.
 
 ### Lock-based or lock-free
