@@ -161,7 +161,7 @@ To address this, lock-free algorithms offer a more scalable and concurrent solut
 the Skiplist simultaneously without relying on locks.
 
 [Pebble](https://github.com/cockroachdb/pebble/blob/999b65aeb0525a761bb4b78311945a9995769ff1/internal/arenaskl/skl.go)
-and [Badger](https://github.com/dgraph-io/badger/blob/main/skl/skl.go) provide concurrent and lock-free implementation of skiplist.
+and [Badger](https://github.com/dgraph-io/badger/blob/main/skl/skl.go) provide concurrent and lock-free implementation of Skiplist.
 
 ### Iterator
 
@@ -189,3 +189,5 @@ Many memtable implementations provide iterators to facilitate tasks like scannin
 
 Memtable implementation is available [here](https://github.com/SarthakMakhija/go-lsm/blob/main/memory/memtable.go). This 
 implementation leverages a lock-free Skiplist implementation from [Badger](https://github.com/dgraph-io/badger/blob/main/skl/skl.go) with [minor modifications](https://github.com/SarthakMakhija/go-lsm/tree/main/memory/external).
+
+Let's introduce durability by using [WAL](/en/blog/building_blocks_of_lsm_wal/).

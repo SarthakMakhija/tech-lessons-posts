@@ -123,7 +123,7 @@ During a system crash, write-ahead Logs (WALs) provide a mechanism to recover lo
 maintain a dedicated WAL for each memtable, recovery involves rebuilding the memtable from its corresponding WAL.
 
 However, recovery skips memtables that have already been flushed to SSTables (Sorted String Tables). We'll delve deeper into 
-this process in the upcoming [Manifest]() article of this series.
+this process in the upcoming [Manifest](/en/blog/building_blocks_of_lsm_manifest/) article of this series.
 
 #### Rebuilding Memtables from WALs
 
@@ -200,9 +200,10 @@ WALs are essential for ensuring data durability and facilitating recovery from s
 - Fsync is necessary to ensure data is physically written to disk.
 - Various flushing strategies balance durability and performance.
 - Memtables can be recovered from WALs after system crashes.
-- The article explains alternative WAL loading strategies for efficient recovery.
+- Multiple strategies exist for loading WALs.
 
 ### Code 
 
 WAL implementation is available [here](https://github.com/SarthakMakhija/go-lsm/blob/main/log/wal.go).
 
+Let's understand [SSTables](/en/blog/building_blocks_of_lsm_sstable/), the on-disk representation of data in LSM.

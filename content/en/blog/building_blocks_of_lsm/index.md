@@ -10,14 +10,18 @@ caption: ""
 
 ### LSM-tree: Overview
 
-LSM-tree is a write-optimized data structure implemented by storage engines for supporting write-heavy workloads. A lot of storage engines including [BadgerDB](https://github.com/dgraph-io/badger), [RocksDB](https://github.com/facebook/rocksdb) and
-[LevelDB](https://github.com/google/leveldb) use LSM-tree as their core data structure.
+LSM-tree is a write-optimized data structure implemented by storage engines for supporting write-heavy workloads. A lot of storage 
+engines including [BadgerDB](https://github.com/dgraph-io/badger), [RocksDB](https://github.com/facebook/rocksdb) and [LevelDB](https://github.com/google/leveldb) use LSM-tree as their core 
+data structure.
 
-> Storage engine is a software module that provides data structures for efficient reads and writes. The two most common data structures are B+Tree (read-optimized) and LSM-tree (write-optimized).
+> Storage engine is a software module that provides data structures for efficient reads and writes. 
+> The two most common data structures are B+Tree (read-optimized) and LSM-tree (write-optimized).
 
 Let's look at the structure of LSM-tree to understand why it is write-optimized.
 
-LSM-tree buffers the data in-memory and performs a sequential writes to disk after the in-memory buffer is full. The image below highlights the throughput difference between sequential and random writes on an NVMe SSD; the difference would be much higher on an HDD.
+LSM-tree buffers the data in-memory and performs a sequential writes to disk after the in-memory buffer is full. 
+The image below highlights the throughput difference between sequential and random writes on an NVMe SSD; the difference 
+would be much higher on an HDD.
 
 <figure>
     <img class="align-center" src="/sequential-random-write.png" /> 
@@ -26,7 +30,10 @@ LSM-tree buffers the data in-memory and performs a sequential writes to disk aft
 
 > LSM-tree-based storage engines offer better write throughput by performing sequential writes to disk.
 
-LSM-tree consists of components of exponentially increasing sizes, C0 to Ck. C0 is a *RAM resident* component that stores key-value pairs sorted by key and supports efficient writes and reads, whereas C1 to Ck are *immutable disk-resident* components sorted by key.
+LSM-tree consists of components of exponentially increasing sizes, C0 to Ck. 
+C0 is a *RAM resident* component that stores key-value pairs sorted by key and supports efficient writes and reads, 
+whereas C1 to Ck are *immutable disk-resident* components sorted by key.
+C0 is known as the [Memtable](/en/blog/building_blocks_of_lsm_memtable/) and C1 to Ck are referred as [SSTables](/en/blog/building_blocks_of_lsm_sstable/).
 
 <img class="align-center" src="/lsm-c0-ck.png" />
 
@@ -42,16 +49,15 @@ After C0 is full, a new instance of C0 is created and the entire in-memory data 
 pairs is encoded in a byte array and written to disk. [^1] If the C1 component already exists on disk, the buffered content is merged with the contents of C1.
 
 Because all the new writes are kept in-memory, they can get lost in case of a failure. The durability guarantee is ensured by using 
-a [WAL](https://github.com/SarthakMakhija/go-lsm/blob/main/log/wal.go). 
-Every `put(key, value)` *appends* the key-value pair to a WAL file and then writes the key-value pair to the C0 component. Appending to a WAL 
-file is also a sequential write to disk. If the storage engine supports transactions, then the `put(key, value)` results in addition of the
-key/value pair in a [Batch](https://github.com/SarthakMakhija/go-lsm/blob/main/kv/batch.go). Commit of the transaction results in 
-appending all the batched key/value pairs to [WAL](https://github.com/SarthakMakhija/go-lsm/blob/main/log/wal.go) and writing all 
-the key-value pairs to the C0 component.
+a [WAL](/en/blog/building_blocks_of_lsm_wal/). 
+Every `put(key, value)` *appends* the key-value pair to a WAL file and then writes the key-value pair to the C0 component. Appending 
+to a WAL file is also a sequential write to disk. If the storage engine supports transactions, then the `put(key, value)` results 
+in addition of the key/value pair to a [Batch](https://github.com/SarthakMakhija/go-lsm/blob/main/kv/batch.go).
+When a transaction commits, all batched key-value pairs are appended to the WAL and written to the C0 component
 
 Every `get(key)` in the LSM-tree goes through the RAM based component (C0) to disk components from C1 to Ck in the order. 
-The `get(key)` operation first queries the C0 component, if the value for the key is not found, the search proceeds to the disk resident 
-component C1. This process continues until the value is found or all the disk resident components have been scanned. 
+The `get(key)` operation first queries the C0 component, if the value for the key is not found, the search proceeds to the disk 
+resident component C1. This process continues until the value is found or all the disk resident components have been scanned. 
 LSM-trees may need multiple reads for a point lookup. Hence, LSM-trees are most useful when inserts are more common than lookups.
 
 This article series will delve into the fundamental building blocks of LSM tree-based storage engines, providing a comprehensive 
@@ -59,15 +65,16 @@ understanding of how they work together to achieve high performance and durabili
 
 This series will cover the following building blocks:
 
-1. [Memtable]()
-2. [WAL]()
-3. [SSTables and bloom filter]()
+1. [Memtable](/en/blog/building_blocks_of_lsm_memtable/)
+2. [WAL](/en/blog/building_blocks_of_lsm_wal/)
+3. [SSTables and bloom filter](/en/blog/building_blocks_of_lsm_sstable/)
 4. [MVCC and transactions]()
 5. [Iterators]()
 6. [Manifest]()
 7. [Compaction]()
 
-The source code that will be referred throughout the series is available [here](https://github.com/SarthakMakhija/go-lsm). Let's 
-introduce [Memtable](), a fixed-size in-memory data structure.
+The source code that will be referred throughout the series is available [here](https://github.com/SarthakMakhija/go-lsm). 
+
+Let's introduce [Memtable](/en/blog/building_blocks_of_lsm_memtable/), a fixed-size in-memory data structure.
 
 [^1]: This representation does not consider leveled SSTables.
