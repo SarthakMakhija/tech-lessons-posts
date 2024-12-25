@@ -8,7 +8,7 @@ This article dives into a clever solution: the Cache-Line Hash Table (CLHT).  CL
 "
 tags: ["CPU Cache-Line", "Hash Table", "CLHT", "Cache-Line Hash Table", "Golang", "xsync"]
 thumbnail: "/clht_title.webp"
-caption: "Bakckground by Eva Bronzini on Pexels"
+caption: "Background by Eva Bronzini on Pexels"
 ---
 
 ### Introduction
