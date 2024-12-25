@@ -21,11 +21,11 @@ type: page
     <p><img class="self-image" alt="Sarthak Makhija" src="/self.png"></p>
 </div>
 
-I am Sarthak Makhija, and I am an application developer at ThoughtWorks. I had worked with Citigroup and TCS before I joined ThoughtWorks.
+I am Sarthak Makhija, and I am a Principal Architect at Caizin. 
 
-I am currently leading a team that is developing a **strongly consistent** **distributed** **key/value storage** engine in Go.
+Prior to joining Caizin, I was with Thoughtworks where I led a team that developed a **strongly consistent**, **distributed** **key/value storage** engine in Go.
 
-The technical ideas of our distributed key/value storage engine include:
+The technical ideas of our distributed key/value storage engine included:
 - [golang](https://go.dev/) as the programming language
 - [etcd](https://etcd.io/) as the metadata store 
 - [badger](https://github.com/dgraph-io/badger) as the key/value storage engine
