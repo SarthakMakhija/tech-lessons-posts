@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Storage Engine on tech-lessons.in</title>
+    <link>//localhost:1313/en/tags/storage-engine/</link>
+    <description>Recent content in Storage Engine on tech-lessons.in</description>
+    <generator>Hugo</generator>
+    <language>en</language>
+    <lastBuildDate>Thu, 04 May 2023 00:00:00 +0000</lastBuildDate>
+    <atom:link href="//localhost:1313/en/tags/storage-engine/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Bitcask - A Log-Structured Hash Table</title>
+      <link>//localhost:1313/en/blog/bitcask/</link>
+      <pubDate>Thu, 04 May 2023 00:00:00 +0000</pubDate>
+      <guid>//localhost:1313/en/blog/bitcask/</guid>
+      <description>&lt;p&gt;Bitcask is an embeddable key/value storage engine that is defined as a &amp;ldquo;Log-Structured Hash Table&amp;rdquo; in the paper that introduced it. Bitcask follows a simple model: all the&#xA;key/value pairs are written to &lt;em&gt;append-only files&lt;/em&gt;, and an in-memory data structure contains a mapping between each key and the position of the value in the data file.&lt;/p&gt;&#xA;&lt;p&gt;Let&amp;rsquo;s understand the different components of Bitcask.&lt;/p&gt;&#xA;&lt;h3 id=&#34;bitcask-components&#34;&gt;Bitcask components&lt;/h3&gt;&#xA;&lt;p&gt;Bitcask is a straightforward model to understand. It consists of two components:&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>WiscKey: Separating Keys from Values in SSD-Conscious Storage</title>
+      <link>//localhost:1313/en/blog/wisckey_ssd_conscious_key_value_store/</link>
+      <pubDate>Fri, 10 Mar 2023 00:00:00 +0000</pubDate>
+      <guid>//localhost:1313/en/blog/wisckey_ssd_conscious_key_value_store/</guid>
+      <description>&lt;blockquote&gt;&#xA;&lt;p&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/Log-structured_merge-tree#:~:text=In%20computer%20science%2C%20the%20log,%2C%20maintain%20key%2Dvalue%20pairs.&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;LSM-tree&lt;/a&gt;&#xA; (Log structured merge tree) is a data structure typically used for write-heavy workloads. LSM-tree optimizes the write path by performing sequential writes to disk. WiscKey is a persistent LSM-tree-based key-value store that separates keys from values to minimize read and write amplification. The design of WiscKey is highly SSD optimized, leveraging both the device&amp;rsquo;s sequential and random performance characteristics.&lt;/p&gt;&#xA;&lt;/blockquote&gt;&#xA;&lt;p&gt;This article summarises the &lt;a href=&#34;https://www.usenix.org/system/files/conference/fast16/fast16-papers-lu.pdf&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;WiscKey&lt;/a&gt;&#xA; paper published in 2016.&lt;/p&gt;&#xA;&lt;p&gt;Before we understand the paper, it is essential to understand the LSM-tree data structure, read and write amplification in the LSM-tree and various SSD characteristics that should be considered while building an SSD-conscious storage engine.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Bloom filter</title>
+      <link>//localhost:1313/en/blog/bloom_filter/</link>
+      <pubDate>Sat, 25 Feb 2023 00:00:00 +0000</pubDate>
+      <guid>//localhost:1313/en/blog/bloom_filter/</guid>
+      <description>&lt;p&gt;A Bloom filter is a probabilistic data structure&lt;sup id=&#34;fnref:1&#34;&gt;&lt;a href=&#34;#fn:1&#34; class=&#34;footnote-ref&#34; role=&#34;doc-noteref&#34;&gt;1&lt;/a&gt;&lt;/sup&gt; used to test whether an element is a set member. A bloom filter can query against large amounts of data and return either &amp;ldquo;possibly in the set&amp;rdquo; or &amp;ldquo;definitely not in the set&amp;rdquo;.&lt;/p&gt;&#xA;&lt;p&gt;A bloom filter can have false positives, but false negatives are impossible.&lt;/p&gt;&#xA;&lt;p&gt;Elements can only be added to the set, &lt;em&gt;but not removed&lt;/em&gt; (though this can be addressed with the counting bloom filter variant).&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Persistent memory - Introduction</title>
+      <link>//localhost:1313/en/blog/persistent_memory/</link>
+      <pubDate>Thu, 28 Apr 2022 00:00:00 +0000</pubDate>
+      <guid>//localhost:1313/en/blog/persistent_memory/</guid>
+      <description></description>
+    </item>
+  </channel>
+</rss>

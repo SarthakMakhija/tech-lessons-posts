@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en" itemscope itemtype="http://schema.org/WebPage"><head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <link rel="icon" href="/favicon.png">
+
+  <title>
+  Let&#39;s define Legacy code - tech-lessons.in
+  </title>
+  <meta name="description" content="I have been having sleepless nights trying to add features in the code that we acquired from other company. I am dealing with the purest form of Legacy code. I am having a real hard time dealing with tangled, unstructured code that I have to work with, but I don’t understand a bit. Legacy code!. Let&#39;s understand what is Legacy code." />
+  <meta name="author" content="Sarthak Makhija" />
+  
+     <meta property="og:image" content="/legacy-code.webp" />
+  <meta name="generator" content="Hugo 0.140.1"><link rel="stylesheet" href="/css/styles.css" />
+
+  
+  
+
+  <meta property="og:url" content="//localhost:1313/en/blog/lets_define_legacy_code/">
+  <meta property="og:site_name" content="tech-lessons.in">
+  <meta property="og:title" content="Let&#39;s define Legacy code">
+  <meta property="og:description" content="I have been having sleepless nights trying to add features in the code that we acquired from other company. I am dealing with the purest form of Legacy code. I am having a real hard time dealing with tangled, unstructured code that I have to work with, but I don’t understand a bit. Legacy code!. Let&#39;s understand what is Legacy code.">
+  <meta property="og:locale" content="en">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="blog">
+    <meta property="article:published_time" content="2018-04-10T00:00:00+00:00">
+    <meta property="article:modified_time" content="2018-04-10T00:00:00+00:00">
+    <meta property="article:tag" content="Legacy Code">
+    <meta property="article:tag" content="Boy Scout Rule">
+
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Let&#39;s define Legacy code">
+  <meta name="twitter:description" content="I have been having sleepless nights trying to add features in the code that we acquired from other company. I am dealing with the purest form of Legacy code. I am having a real hard time dealing with tangled, unstructured code that I have to work with, but I don’t understand a bit. Legacy code!. Let&#39;s understand what is Legacy code.">
+
+  
+  <meta itemprop="name" content="Let&#39;s define Legacy code">
+  <meta itemprop="description" content="I have been having sleepless nights trying to add features in the code that we acquired from other company. I am dealing with the purest form of Legacy code. I am having a real hard time dealing with tangled, unstructured code that I have to work with, but I don’t understand a bit. Legacy code!. Let&#39;s understand what is Legacy code.">
+  <meta itemprop="datePublished" content="2018-04-10T00:00:00+00:00">
+  <meta itemprop="dateModified" content="2018-04-10T00:00:00+00:00">
+  <meta itemprop="wordCount" content="1366">
+  <meta itemprop="keywords" content="Legacy Code,Boy Scout Rule">
+
+  
+</head>
+<body class="dark:bg-gray-800 dark:text-white relative flex flex-col min-h-screen"><header class="container flex justify-between md:justify-between gap-4 flex-wrap p-6 mx-auto relative">
+  <a href="//localhost:1313/en/" class="capitalize font-extrabold text-2xl">
+    
+    <img src="/logo.png" alt="tech-lessons.in" class="h-8 max-w-full" />
+    
+  </a>
+  <button class="mobile-menu-button md:hidden">
+    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <line x1="4" y1="8" x2="20" y2="8" />
+      <line x1="4" y1="16" x2="20" y2="16" />
+    </svg>
+  </button>
+  <ul class="mobile-menu absolute z-10 px-6 pb-6 md:p-0 top-full left-0 w-full md:w-auto md:relative hidden md:flex flex-col md:flex-row items-end md:items-center gap-4 lg:gap-6 bg-white dark:bg-gray-800">
+
+    
+    <li><a href="/en/">Home</a></li>
+    
+    <li><a href="/en/blog">Blogs</a></li>
+    
+    <li><a href="/en/page/about/">About Me</a></li>
+    
+    <li><a href="/en/page/projects/">My projects</a></li>
+    
+
+    
+
+    
+    <li class="grid place-items-center">
+      <span class="open-search inline-block cursor-pointer">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5"
+          stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+          <circle cx="10" cy="10" r="7" />
+          <line x1="21" y1="21" x2="15" y2="15" />
+        </svg>
+      </span>
+    </li>
+    
+
+    
+  </ul>
+</header>
+<main class="flex-1">
+  
+  
+
+  
+  <div class="relative max-w-5xl mx-auto px-4">
+    <img src="/legacy-code.webp" class="rounded-lg shadow-sm w-full object-contain" />
+    
+    <figcaption class="font-extralight text-xs"><i>Photo by Markus Spiske on Pexels</i></figcaption>
+    
+    
+    <div class="absolute top-4 right-8 rounded shadow bg-white text-gray-900 dark:bg-gray-900 dark:text-white px-2 py-0.5">
+      
+  
+    April 10, 2018
+  
+
+
+    </div>
+    
+  </div>
+  
+
+  <article class="prose lg:prose-lg mx-auto my-8 dark:prose-dark px-4 max-w-5xl">
+
+    <h1 class="text-2xl font-bold mb-2">Let&#39;s define Legacy code</h1>
+    
+    <h5 class="text-sm flex items-center flex-wrap">
+      <svg xmlns="http://www.w3.org/2000/svg" class="mr-1" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+        <rect x="4" y="5" width="16" height="16" rx="2" />
+        <line x1="16" y1="3" x2="16" y2="7" />
+        <line x1="8" y1="3" x2="8" y2="7" />
+        <line x1="4" y1="11" x2="20" y2="11" />
+        <rect x="8" y="15" width="2" height="2" />
+      </svg>
+      Posted on 
+  
+    April 10, 2018
+  
+
+
+      
+        &nbsp;&bull;&nbsp;
+      
+      <svg xmlns="http://www.w3.org/2000/svg" class="mr-1" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+        <circle cx="12" cy="12" r="9" />
+        <polyline points="12 7 12 12 15 15" />
+      </svg>
+      7&nbsp;minutes
+      &nbsp;&bull;
+      <svg xmlns="http://www.w3.org/2000/svg" class="mx-1" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+        <path d="M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0" />
+        <path d="M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0" />
+        <line x1="3" y1="6" x2="3" y2="19" />
+        <line x1="12" y1="6" x2="12" y2="19" />
+        <line x1="21" y1="6" x2="21" y2="19" />
+      </svg>
+      1366&nbsp;words
+      
+    </h5>
+    
+
+    <details id="TableOfContents" class="px-4 mt-4 bg-gray-100 dark:bg-gray-700 rounded toc">
+    <summary class="flex items-center font-bold py-2 px-4 cursor-pointer justify-between select-none text-black dark:text-white">
+      <span>Table of contents</span>
+      <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-down" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+        <polyline points="6 9 12 15 18 9"></polyline>
+     </svg>
+    </summary>
+
+    <ul class="mt-2 pb-4">
+        
+
+        
+        <li>
+        <a href="#defining-legacy-code">Defining Legacy code</a>
+        
+
+        
+        </li><li>
+        <a href="#working-with-legacy-code">Working with Legacy code</a>
+        
+
+        
+        </li><li>
+        <a href="#the-boy-scout-rule">The Boy Scout Rule</a>
+        
+
+        
+        </li><li>
+        <a href="#which-tests-to-write">Which Tests To Write</a>
+        
+
+        
+        </li><li>
+        <a href="#writing-characterization-test">Writing Characterization Test</a>
+        
+
+        
+        </li><li>
+        <a href="#how-much-to-refactor">How Much To Refactor</a>
+        
+
+        
+        </li><li>
+        <a href="#references">References</a>
+        </li></ul>
+  </details>
+
+    <p>&ldquo;I have been having sleepless nights trying to add features in the code that we acquired from other company. I am dealing with the purest form of <em>Legacy code</em>.&rdquo;</p>
+<p>&ldquo;I am having a real hard time dealing with tangled, unstructured code that I have to work with, but I don’t understand a bit. <em>Legacy code</em>&rdquo;</p>
+<p><em>Legacy code</em> is a term which probably has a lot of different definitions like: code acquired from someone else, code written by someone else, code that is hard to understand or code written in outdated technologies. Whatever be the definition, most of us believe <em>Legacy code is Scary.</em></p>
+<p><strong>Q</strong>uestion&gt; How would you define legacy code?</p>
+<h3 id="defining-legacy-code">Defining Legacy code</h3>
+<p>Michael Feathers in his book “Working Effectively with Legacy code” defines legacy code as the code without tests.</p>
+<p>code without tests is a bad code. It doesn’t matter how well it is written; how well it is structured; how well it is encapsulated. Without tests there is no way to tell if our code is getting better or worse.</p>
+<p>Well, a slightly modified version of this definition is “code without unit tests is called legacy code”. It is always better to have tests as close to the code as possible <em>unit tests &gt; integration tests &gt; UI tests</em>. So, it would not be unfair to call a code without unit tests a <em>legacy code</em>.</p>
+<h3 id="working-with-legacy-code">Working with Legacy code</h3>
+<p><strong>Q</strong>uestion&gt; What approach will you take if you were to make a change in legacy code?</p>
+<p>Most of us might say, “I will make the change and call it a day, why bother about improving the code”. Rationale behind this thought process could be:</p>
+<ul>
+<li>I don’t have enough time to refactor the code, I would prefer making a change and completing my story</li>
+<li>Why risk changing the structure of the code that has been running on the production environment for a long time</li>
+<li>What is the overall benefit of refactoring legacy code</li>
+</ul>
+<p>Michael Feathers calls this style of making a change as <em>Edit and Pray</em>. You plan and make your changes and when you are done, you pray and pray harder to get your changes right.
+With this style, one can only contribute to increasing the Legacy code.</p>
+<div class="align-center">
+<img title="Legacy code" src="/legacy-code.jpeg" alt="Legacy code" />
+</div>
+<p>There is a different style of making changes in the legacy code and that is <em>Cover and Modify</em>. Build a safety net, make changes in the system, let the safety net provide feedback and work on those feedbacks.</p>
+<p>It can be safely assumed that <em>Cover and Modify</em> is a way to go to deal with Legacy code.</p>
+<p><strong>Q</strong>uestion&gt; Should you even spend time writing tests in a legacy code or even think about refactoring a legacy code?</p>
+<h3 id="the-boy-scout-rule">The Boy Scout Rule</h3>
+<blockquote>
+<p>The idea behind the Boy Scout Rule, as stated by Uncle Bob, is fairly simple: Leave the code cleaner than you found it! Whenever you touch an old code, you should clean it properly. Do not just apply a shortcut solution that will make the code more difficult to understand but instead treat it with care. It’s not enough to write code well, the code has to be kept clean over time.</p>
+</blockquote>
+<p>We get a very strong message when Boy Scout rule is applied to legacy code: <em>leave a trace of understanding behind you for others to follow</em>, which means we will refactor the code to make it more understandable. And in order to refactor, we will build  safety net around it.
+Now that we understand that we can not take shortcuts, the only option that is left with us is to write some tests, refactor code and then proceed with the development.</p>
+<p><strong>Q</strong>uestions&gt;</p>
+<ul>
+<li>Which tests should we write?</li>
+<li>How much should we refactor?</li>
+</ul>
+<h3 id="which-tests-to-write">Which Tests To Write</h3>
+<p>In nearly every legacy system, what the system does is more important than what it is supposed to do.</p>
+<blockquote>
+<p>Characterization Tests, the tests that we need when we want to preserve the behavior are called as characterization tests. A characterization test is a test that characterizes the actual behavior of a piece of code. There’s no “Well, it should do this” or “I think it does that”. These tests document the current behavior of the system.</p>
+</blockquote>
+<h3 id="writing-characterization-test">Writing Characterization Test</h3>
+<p>A <em>Characterization Test</em> by definition documents the current behavior of the system the exact same way it is running on the production environment.</p>
+<p>Let’s write a characterization test for a <code>Customer</code> class that generates text statement for some movies rented by a customer.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#ff79c6">import static</span> com.code.legacy.movie.MovieType.CHILDREN;
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">import static</span> org.junit.Assert.assertEquals;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">public</span> <span style="color:#8be9fd">void</span> <span style="color:#50fa7b">shouldGenerateTextStatement</span>(){
+</span></span><span style="display:flex;"><span>    Customer john          <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">new</span> Customer(<span style="color:#f1fa8c">&#34;John&#34;</span>);
+</span></span><span style="display:flex;"><span>    Movie    childrenMovie <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">new</span> Movie(<span style="color:#f1fa8c">&#34;Toy Story&#34;</span>, CHILDREN);   
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd">int</span>      daysRented    <span style="color:#ff79c6">=</span> 3;
+</span></span><span style="display:flex;"><span>    Rental   rental        <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">new</span> Rental(childrenMovie, daysRented);
+</span></span><span style="display:flex;"><span>    john.<span style="color:#50fa7b">addRental</span>(rental);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    String statement <span style="color:#ff79c6">=</span> john.<span style="color:#50fa7b">generateTextStatement</span>();
+</span></span><span style="display:flex;"><span>    assertEquals(<span style="color:#f1fa8c">&#34;&#34;</span>, statement);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>This test attempts to understand (or characterize) the &ldquo;Text Statement&rdquo; generation for a customer given a children’s movie rented for 3 days. Because we do not understand the system (at least as of now), we expect the statement to be blank or contain any value that we are not aware of.
+Let’s run the test and let it fail. When it does, <em>we have found out what the code actually does under that condition</em>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>    java.<span style="color:#50fa7b">lang</span>.<span style="color:#50fa7b">AssertionError</span>:
+</span></span><span style="display:flex;"><span>    Expected :<span style="color:#f1fa8c">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    Actual   :Rental Record <span style="color:#ff79c6">for</span> John, Total amount owed <span style="color:#ff79c6">=</span> 12.<span style="color:#50fa7b">5</span>. You earned 4 frequent renter points.<span style="color:#ff79c6">&lt;/</span>pre<span style="color:#ff79c6">&gt;&lt;/</span>div<span style="color:#ff79c6">&gt;</span>
+</span></span></code></pre></div><p>Now, that we know the behavior of the code, we can go ahead and change the test.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#ff79c6">import static</span> com.code.legacy.movie.MovieType.CHILDREN;
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">import static</span> org.junit.Assert.assertEquals;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">public</span> <span style="color:#8be9fd">void</span> <span style="color:#50fa7b">shouldGenerateTextStatement</span>(){
+</span></span><span style="display:flex;"><span>    String expectedStatement <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">&#34;Rental Record for John, Total amount  owed = 12.5. You earned 4 frequent renter points&#34;</span>;
+</span></span><span style="display:flex;"><span>    Customer john          <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">new</span> Customer(<span style="color:#f1fa8c">&#34;John&#34;</span>);
+</span></span><span style="display:flex;"><span>    Movie    childrenMovie <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">new</span> Movie(<span style="color:#f1fa8c">&#34;Toy Story&#34;</span>, CHILDREN);   
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd">int</span>      daysRented    <span style="color:#ff79c6">=</span> 3;
+</span></span><span style="display:flex;"><span>    Rental   rental        <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">new</span> Rental(childrenMovie, daysRented);
+</span></span><span style="display:flex;"><span>    john.<span style="color:#50fa7b">addRental</span>(rental);
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    Sting statement <span style="color:#ff79c6">=</span> john.<span style="color:#50fa7b">generateTextStatement</span>();
+</span></span><span style="display:flex;"><span>    assertEquals(expectedStatement, statement);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><strong>Hold on</strong>, did we just copy the output generated by the code and placed into our test. <em>Yes, that is exactly what we did.</em></p>
+<p>We aren’t trying to find bugs right now. We are trying to put in a mechanism to find bugs later, bugs that show up as differences from the system’s current behavior. When we adopt this perspective, our view of tests is different: They don’t have any moral authority; they just sit there <em>documenting what the system really does</em>. At this stage, it’s very important to have the knowledge of what the system actually does.</p>
+<p><strong>Q</strong>uestion&gt; What is the total number of tests that we write to characterize a system?</p>
+<p><strong>A</strong>nswer&gt; It’s infinite. We could dedicate a good portion of our lives for writing case after case for any class in a legacy code.</p>
+<p><strong>Q</strong>uestion&gt; When do we stop then? Is there any way of knowing which cases are more important than others?</p>
+<p><strong>A</strong>nswer&gt; Look at the code we are characterizing. The code itself can give us ideas about what it does, and if we have questions, tests are an ideal way of asking them. At that point, write a test or tests that cover good enough portion of the code.</p>
+<p><strong>Q</strong>uestion&gt; Does that cover everything in the code?</p>
+<p><strong>A</strong>nswer&gt; It might not. But then we do the next step. We think about the changes that we want to make in the code and try to figure out whether the tests that we have will sense the problems that can happen. If they won’t, we add more tests until we feel confident that they will.</p>
+<h3 id="how-much-to-refactor">How Much To Refactor</h3>
+<p>There is so much to refactor in legacy code, and we can not refactor everything. In order to answer this we need to go back to understanding our purpose of refactoring the legacy code.
+We want to refactor legacy code to leave it cleaner than what it was when it came to us and to make it understandable for others.
+With that said, we want to make the system better keeping the focus on the task. We don’t want to go crazy with refactoring trying to improve the whole system in a few days. What we want to do is <em>refactor the code that comes in our way of implementing any new change</em>. We will try and understand this better with an example in the next article.</p>
+
+    <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+      <iframe allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen="allowfullscreen" loading="eager" referrerpolicy="strict-origin-when-cross-origin" src="https://www.youtube.com/embed/0U83rST3ang?autoplay=0&amp;controls=1&amp;end=0&amp;loop=0&amp;mute=0&amp;start=0" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border:0;" title="YouTube video"></iframe>
+    </div>
+
+<p>Let&rsquo;s move on to the <a href="/en/blog/lets_deal_with_legacy_code/">next article</a>
+ that explains how to deal with legacy code.</p>
+<h3 id="references">References</h3>
+<ul>
+<li>Working Effectively with Legacy code</li>
+</ul>
+
+  </article>
+<div class="tag-list-container">
+    <div class="tag-list">
+        
+        <a class="button" href="">
+            <p class="tag"><i class="fa fa-fw fa-tag"></i>Legacy code</p>
+        </a>
+        
+        <a class="button" href="">
+            <p class="tag"><i class="fa fa-fw fa-tag"></i>Boy Scout Rule</p>
+        </a>
+        
+    </div>
+</div>
+
+
+
+<div class="px-2 mb-2">
+  
+  <script src="https://giscus.app/client.js"
+    data-repo="SarthakMakhija/tech-lessons-comments"
+    data-repo-id="R_kgDOJHu3mA"
+    data-category="Announcements"
+    data-category-id="DIC_kwDOJHu3mM4CUxhS"
+    data-mapping="og:title"
+    data-strict="0"
+    data-reactions-enabled="1"
+    data-emit-metadata="0"
+    data-input-position="bottom"
+    data-theme="light"
+    data-lang="en"
+    crossorigin="anonymous"
+    async>
+  </script>
+  
+</div>
+
+
+
+    </main><footer class="container p-6 mx-auto flex justify-between items-center">
+  <span></span>
+
+  <span class="text-base font-thin">
+    
+    tech-lessons.in © 2020 / Powered by  <a class="font-bold" target="_blank" href="https://gohugo.io/">Hugo</a>
+    
+  </span>
+
+  <span onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="p-1 cursor-pointer">
+    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" stroke-width="1.5"
+      stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M18 15l-6 -6l-6 6h12" />
+    </svg>
+  </span>
+</footer>
+
+<div class="search-ui absolute top-0 left-0 w-full h-full bg-white dark:bg-gray-800 hidden">
+  <div class="container max-w-3xl mx-auto p-12">
+    <div class="relative">
+      <div class="my-4 text-center text-2xl font-bold">Search</div>
+
+      <span class="p-2 absolute right-0 top-0 cursor-pointer close-search">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5"
+          stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </span>
+    </div>
+
+    <input type="search" class="py-2 px-3 w-full dark:text-black border dark:border-transparent"
+      placeholder="Enter search query" />
+
+    <div class="search-results text-lg font-medium my-4 hidden">Results</div>
+    <ul class="search-list my-2">
+
+    </ul>
+
+    <div class="no-results text-center my-8 hidden">
+      <div class="text-xl font-semibold mb-2">No results found</div>
+      <p class="font-light text-sm">Try adjusting your search query</p>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+<script src="//localhost:1313/js/scripts.min.js"></script>
+
+
+      <script async src="https://www.googletagmanager.com/gtag/js?id=G-9KKTKFQ2CM"></script>
+      <script>
+        var doNotTrack = false;
+        if ( false ) {
+          var dnt = (navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack);
+          var doNotTrack = (dnt == "1" || dnt == "yes");
+        }
+        if (!doNotTrack) {
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-9KKTKFQ2CM');
+        }
+      </script>
+
+
+
+
+
+<script>
+  const mobileMenuButton = document.querySelector('.mobile-menu-button')
+  const mobileMenu = document.querySelector('.mobile-menu')
+  function toggleMenu() {
+    mobileMenu.classList.toggle('hidden');
+    mobileMenu.classList.toggle('flex');
+  }
+  if(mobileMenu && mobileMenuButton){
+    mobileMenuButton.addEventListener('click', toggleMenu)
+  }
+</script>
+</body>
+</html>

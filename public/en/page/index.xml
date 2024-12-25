@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Pages on tech-lessons.in</title>
+    <link>//localhost:1313/en/page/</link>
+    <description>Recent content in Pages on tech-lessons.in</description>
+    <generator>Hugo</generator>
+    <language>en</language>
+    <lastBuildDate>Sat, 20 Jan 2024 00:00:00 +0000</lastBuildDate>
+    <atom:link href="//localhost:1313/en/page/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>My projects</title>
+      <link>//localhost:1313/en/page/projects/</link>
+      <pubDate>Sat, 20 Jan 2024 00:00:00 +0000</pubDate>
+      <guid>//localhost:1313/en/page/projects/</guid>
+      <description>&lt;h2 id=&#34;my-projects&#34;&gt;My Projects&lt;/h2&gt;&#xA;&lt;p&gt;I love tinkering with projects when I&amp;rsquo;m not busy.&lt;/p&gt;&#xA;&lt;h3 id=&#34;go-lsmhttpsgithubcomsarthakmakhijago-lsm&#34;&gt;🔹&lt;a href=&#34;https://github.com/SarthakMakhija/go-lsm&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Go-LSM&lt;/a&gt;&#xA;&lt;/h3&gt;&#xA;&lt;p&gt;LSM-based key-value store in Go for educational purpose, &lt;a href=&#34;https://skyzh.github.io/mini-lsm/00-preface.html&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;inspired by LSM in a Week&lt;/a&gt;&#xA;.&#xA;It is a rewrite of the &lt;a href=&#34;https://github.com/SarthakMakhija/storage-engine-workshop&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;existing workshop code&lt;/a&gt;&#xA;.&lt;/p&gt;&#xA;&lt;p&gt;&lt;strong&gt;Exploring LSM with go-lsm&lt;/strong&gt;&lt;/p&gt;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;&lt;strong&gt;Learn LSM from the ground up&lt;/strong&gt;: Dive deep into the core concepts of Log-Structured Merge-Trees (LSM) through a practical, well-documented implementation.&lt;/li&gt;&#xA;&lt;li&gt;&lt;strong&gt;Benefit from clean code&lt;/strong&gt;: Analyze a meticulously crafted codebase that prioritizes simplicity and readability.&lt;/li&gt;&#xA;&lt;li&gt;&lt;strong&gt;Gain confidence with robust tests&lt;/strong&gt;: Verify the correctness and reliability of the storage engine through comprehensive tests.&lt;/li&gt;&#xA;&lt;li&gt;&lt;strong&gt;Experiment and extend&lt;/strong&gt;: Customize the code to explore different LSM variations or integrate it into your own projects.&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;h3 id=&#34;-clearcheckhttpsgithubcomsarthakmakhijaclearcheck&#34;&gt;🔹 &lt;a href=&#34;https://github.com/SarthakMakhija/clearcheck&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Clearcheck&lt;/a&gt;&#xA;&lt;/h3&gt;&#xA;&lt;p&gt;Write expressive and elegant assertions with ease!&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>About Me</title>
+      <link>//localhost:1313/en/page/about/</link>
+      <pubDate>Fri, 24 Feb 2023 00:00:00 +0000</pubDate>
+      <guid>//localhost:1313/en/page/about/</guid>
+      <description>&lt;style&gt;&#xA; .social{&#xA;    display: inline-block;&#xA;    text-align: left;&#xA;    width: 100%;&#xA;    color: #a6a6a6;&#xA;    font-size: .9em;&#xA;}&#xA;&lt;/style&gt;&#xA;&lt;div class=&#34;self-container&#34;&gt;&#xA;    &lt;p&gt;&lt;img class=&#34;self-image&#34; alt=&#34;Sarthak Makhija&#34; src=&#34;//localhost:1313/self.png&#34;&gt;&lt;/p&gt;&#xA;&lt;/div&gt;&#xA;&lt;p&gt;I am Sarthak Makhija, and I am an application developer at ThoughtWorks. I had worked with Citigroup and TCS before I joined ThoughtWorks.&lt;/p&gt;&#xA;&lt;p&gt;I am currently leading a team that is developing a &lt;strong&gt;strongly consistent&lt;/strong&gt; &lt;strong&gt;distributed&lt;/strong&gt; &lt;strong&gt;key/value storage&lt;/strong&gt; engine in Go.&lt;/p&gt;&#xA;&lt;p&gt;The technical ideas of our distributed key/value storage engine include:&lt;/p&gt;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;&lt;a href=&#34;https://go.dev/&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;golang&lt;/a&gt;&#xA; as the programming language&lt;/li&gt;&#xA;&lt;li&gt;&lt;a href=&#34;https://etcd.io/&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;etcd&lt;/a&gt;&#xA; as the metadata store&lt;/li&gt;&#xA;&lt;li&gt;&lt;a href=&#34;https://github.com/dgraph-io/badger&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;badger&lt;/a&gt;&#xA; as the key/value storage engine&lt;/li&gt;&#xA;&lt;li&gt;&lt;a href=&#34;https://raft.github.io/&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;raft (/multi-raft)&lt;/a&gt;&#xA; as the consensus algorithm and&lt;/li&gt;&#xA;&lt;li&gt;&lt;a href=&#34;https://martinfowler.com/articles/patterns-of-distributed-systems/two-phase-commit.html&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;two-phase commit&lt;/a&gt;&#xA; with serial isolation level&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;p&gt;Beyond my professional work, I&amp;rsquo;m passionate about sharing my knowledge and getting feedback from the community:&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

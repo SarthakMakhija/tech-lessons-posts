@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Agile on tech-lessons.in</title>
+    <link>//localhost:1313/en/tags/agile/</link>
+    <description>Recent content in Agile on tech-lessons.in</description>
+    <generator>Hugo</generator>
+    <language>en</language>
+    <lastBuildDate>Fri, 24 Feb 2023 00:00:00 +0000</lastBuildDate>
+    <atom:link href="//localhost:1313/en/tags/agile/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Code without automated tests? Are we serious?</title>
+      <link>//localhost:1313/en/blog/code_without_tests/</link>
+      <pubDate>Fri, 24 Feb 2023 00:00:00 +0000</pubDate>
+      <guid>//localhost:1313/en/blog/code_without_tests/</guid>
+      <description>&lt;p&gt;Automated tests are an essential part of every piece of code that we write. The benefits of these tests are so compelling that it does not even&#xA;make sense to think about writing code without tests or writing code today and adding tests later. Despite the benefits, we still see code without tests,&#xA;we still see ideas like &amp;ldquo;writing code today and adding tests when the delivery pressure reduces&amp;rdquo; floating around.&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

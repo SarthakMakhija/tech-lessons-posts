@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en" itemscope itemtype="http://schema.org/WebPage"><head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <link rel="icon" href="/favicon.png">
+
+  <title>
+  Kotlin Wishlist for Java - tech-lessons.in
+  </title>
+  <meta name="description" content="There is no doubt that Java has enjoyed a superior position when it comes to programming languages and is considered as one of the most important languages for development. However, there have been a number of languages developed on top of the JVM like Kotlin. After working on the &#34;data-anonymization&#34; project I realized that there are things that Java should consider importing from Kotlin." />
+  <meta name="author" content="Sarthak Makhija" />
+  
+     <meta property="og:image" content="/wishlist.webp" />
+  <meta name="generator" content="Hugo 0.140.1"><link rel="stylesheet" href="/css/styles.css" />
+
+  
+  
+
+  <meta property="og:url" content="//localhost:1313/en/blog/kotlin_wishlist_for_java/">
+  <meta property="og:site_name" content="tech-lessons.in">
+  <meta property="og:title" content="Kotlin Wishlist for Java">
+  <meta property="og:description" content="There is no doubt that Java has enjoyed a superior position when it comes to programming languages and is considered as one of the most important languages for development. However, there have been a number of languages developed on top of the JVM like Kotlin. After working on the &#34;data-anonymization&#34; project I realized that there are things that Java should consider importing from Kotlin.">
+  <meta property="og:locale" content="en">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="blog">
+    <meta property="article:published_time" content="2018-04-20T00:00:00+00:00">
+    <meta property="article:modified_time" content="2018-04-20T00:00:00+00:00">
+    <meta property="article:tag" content="Kotlin">
+    <meta property="article:tag" content="Java">
+
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Kotlin Wishlist for Java">
+  <meta name="twitter:description" content="There is no doubt that Java has enjoyed a superior position when it comes to programming languages and is considered as one of the most important languages for development. However, there have been a number of languages developed on top of the JVM like Kotlin. After working on the &#34;data-anonymization&#34; project I realized that there are things that Java should consider importing from Kotlin.">
+
+  
+  <meta itemprop="name" content="Kotlin Wishlist for Java">
+  <meta itemprop="description" content="There is no doubt that Java has enjoyed a superior position when it comes to programming languages and is considered as one of the most important languages for development. However, there have been a number of languages developed on top of the JVM like Kotlin. After working on the &#34;data-anonymization&#34; project I realized that there are things that Java should consider importing from Kotlin.">
+  <meta itemprop="datePublished" content="2018-04-20T00:00:00+00:00">
+  <meta itemprop="dateModified" content="2018-04-20T00:00:00+00:00">
+  <meta itemprop="wordCount" content="1467">
+  <meta itemprop="keywords" content="Kotlin,Java">
+
+  
+</head>
+<body class="dark:bg-gray-800 dark:text-white relative flex flex-col min-h-screen"><header class="container flex justify-between md:justify-between gap-4 flex-wrap p-6 mx-auto relative">
+  <a href="//localhost:1313/en/" class="capitalize font-extrabold text-2xl">
+    
+    <img src="/logo.png" alt="tech-lessons.in" class="h-8 max-w-full" />
+    
+  </a>
+  <button class="mobile-menu-button md:hidden">
+    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <line x1="4" y1="8" x2="20" y2="8" />
+      <line x1="4" y1="16" x2="20" y2="16" />
+    </svg>
+  </button>
+  <ul class="mobile-menu absolute z-10 px-6 pb-6 md:p-0 top-full left-0 w-full md:w-auto md:relative hidden md:flex flex-col md:flex-row items-end md:items-center gap-4 lg:gap-6 bg-white dark:bg-gray-800">
+
+    
+    <li><a href="/en/">Home</a></li>
+    
+    <li><a href="/en/blog">Blogs</a></li>
+    
+    <li><a href="/en/page/about/">About Me</a></li>
+    
+    <li><a href="/en/page/projects/">My projects</a></li>
+    
+
+    
+
+    
+    <li class="grid place-items-center">
+      <span class="open-search inline-block cursor-pointer">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5"
+          stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+          <circle cx="10" cy="10" r="7" />
+          <line x1="21" y1="21" x2="15" y2="15" />
+        </svg>
+      </span>
+    </li>
+    
+
+    
+  </ul>
+</header>
+<main class="flex-1">
+  
+  
+
+  
+  <div class="relative max-w-5xl mx-auto px-4">
+    <img src="/wishlist.webp" class="rounded-lg shadow-sm w-full object-contain" />
+    
+    <figcaption class="font-extralight text-xs"><i>Moved from dzone</i></figcaption>
+    
+    
+    <div class="absolute top-4 right-8 rounded shadow bg-white text-gray-900 dark:bg-gray-900 dark:text-white px-2 py-0.5">
+      
+  
+    April 20, 2018
+  
+
+
+    </div>
+    
+  </div>
+  
+
+  <article class="prose lg:prose-lg mx-auto my-8 dark:prose-dark px-4 max-w-5xl">
+
+    <h1 class="text-2xl font-bold mb-2">Kotlin Wishlist for Java</h1>
+    
+    <h5 class="text-sm flex items-center flex-wrap">
+      <svg xmlns="http://www.w3.org/2000/svg" class="mr-1" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+        <rect x="4" y="5" width="16" height="16" rx="2" />
+        <line x1="16" y1="3" x2="16" y2="7" />
+        <line x1="8" y1="3" x2="8" y2="7" />
+        <line x1="4" y1="11" x2="20" y2="11" />
+        <rect x="8" y="15" width="2" height="2" />
+      </svg>
+      Posted on 
+  
+    April 20, 2018
+  
+
+
+      
+        &nbsp;&bull;&nbsp;
+      
+      <svg xmlns="http://www.w3.org/2000/svg" class="mr-1" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+        <circle cx="12" cy="12" r="9" />
+        <polyline points="12 7 12 12 15 15" />
+      </svg>
+      7&nbsp;minutes
+      &nbsp;&bull;
+      <svg xmlns="http://www.w3.org/2000/svg" class="mx-1" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+        <path d="M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0" />
+        <path d="M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0" />
+        <line x1="3" y1="6" x2="3" y2="19" />
+        <line x1="12" y1="6" x2="12" y2="19" />
+        <line x1="21" y1="6" x2="21" y2="19" />
+      </svg>
+      1467&nbsp;words
+      
+    </h5>
+    
+
+    <details id="TableOfContents" class="px-4 mt-4 bg-gray-100 dark:bg-gray-700 rounded toc">
+    <summary class="flex items-center font-bold py-2 px-4 cursor-pointer justify-between select-none text-black dark:text-white">
+      <span>Table of contents</span>
+      <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-down" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+        <polyline points="6 9 12 15 18 9"></polyline>
+     </svg>
+    </summary>
+
+    <ul class="mt-2 pb-4">
+        
+
+        
+        <li>
+        <a href="#promote-immutability">Promote Immutability</a>
+        
+
+        
+        </li><li>
+        <a href="#method-parameters-should-be-final-by-default">Method Parameters Should Be Final by Default</a>
+        
+
+        
+        </li><li>
+        <a href="#handle-null-at-compile-time">Handle NULL at Compile Time</a>
+        
+
+        
+        </li><li>
+        <a href="#improve-lambdas">Improve Lambdas</a>
+        
+
+        
+        </li><li>
+        <a href="#support-extension-functions">Support Extension Functions</a>
+        
+
+        
+        </li><li>
+        <a href="#tail-recursion">Tail Recursion</a>
+        
+
+        
+        </li><li>
+        <a href="#miscellaneous">Miscellaneous</a>
+        
+
+        
+        </li><li>
+        <a href="#conclusion">Conclusion</a>
+        </li></ul>
+  </details>
+
+    <p>There is no doubt that Java has enjoyed a superior position when it comes to programming languages and is considered as one of the most important languages for development. However, there have been a number of languages developed on top of the JVM, like <a href="https://kotlinlang.org/" target="_blank" rel="nofollow noopener noreferrer">Kotlin</a>
+Kotlin is a statically typed programming language for modern multi-platform applications. While I have been a Java developer for quite a long while, working on the <a href="https://github.com/dataanon/data-anon" target="_blank" rel="nofollow noopener noreferrer">data-anonymization</a> project made me feel that there are things that Java should consider importing from Kotlin.
+These are some Kotlin features that I would love to see making a place in Java.</p>
+<h3 id="promote-immutability">Promote Immutability</h3>
+<p>Java 9 promotes immutability by introducing factory methods to create collections. It would be great to see immutable collections embedded in the language, rather than relying on wrappers to generate immutable collections. <code>existingDepartments()</code> is a function that returns an immutable list of <code>Strings</code> in Kotlin.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-kotlin" data-lang="kotlin"><span style="display:flex;"><span><span style="color:#ff79c6">fun</span> <span style="color:#50fa7b">existingDepartments</span>(): List =
+</span></span><span style="display:flex;"><span>    listOf(<span style="color:#f1fa8c">&#34;Human Assets&#34;</span>, <span style="color:#f1fa8c">&#34;Learning &amp; Development&#34;</span>, <span style="color:#f1fa8c">&#34;Research&#34;</span>)
+</span></span></code></pre></div><p>Java 9 comes closest to returning an immutable list by throwing an <code>UnsupportedOperationException</code> when an attempt is made to add or remove an element from the list. It would be great to have a separate hierarchy of mutable and immutable collections and avoid exposing add/remove or any other mutating methods from immutable collections.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#6272a4">//pre Java 8</span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">public</span> List <span style="color:#50fa7b">existingDepartments</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">return</span> <span style="color:#ff79c6">new</span> ArrayList(){{
+</span></span><span style="display:flex;"><span>        add(<span style="color:#f1fa8c">&#34;Human Assets&#34;</span>);
+</span></span><span style="display:flex;"><span>        add(<span style="color:#f1fa8c">&#34;Learning &amp; Development&#34;</span>);
+</span></span><span style="display:flex;"><span>        add(<span style="color:#f1fa8c">&#34;Research&#34;</span>);
+</span></span><span style="display:flex;"><span>    }};
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#6272a4">//Java 8</span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">public</span> List <span style="color:#50fa7b">existingDepartments</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">return</span> Stream.<span style="color:#50fa7b">of</span>(<span style="color:#f1fa8c">&#34;Human Assets&#34;</span>, <span style="color:#f1fa8c">&#34;Learning &amp; Development&#34;</span>, <span style="color:#f1fa8c">&#34;Research&#34;</span>)
+</span></span><span style="display:flex;"><span>                 .<span style="color:#50fa7b">collect</span>(Collectors.<span style="color:#50fa7b">toList</span>());
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#6272a4">//Java 9</span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">public</span> List <span style="color:#50fa7b">existingDepartments</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">return</span> List.<span style="color:#50fa7b">of</span>(<span style="color:#f1fa8c">&#34;Human Assets&#34;</span>, 
+</span></span><span style="display:flex;"><span>                   <span style="color:#f1fa8c">&#34;Learning &amp; Development&#34;</span>,
+</span></span><span style="display:flex;"><span>                   <span style="color:#f1fa8c">&#34;Research&#34;</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><blockquote>
+<p>Being more explicit about immutable collections and letting immutable collections speak out loud for themselves should be given preference over exposing methods and throwing <code>UnsupportedOperationExceptions</code>.</p>
+</blockquote>
+<h3 id="method-parameters-should-be-final-by-default">Method Parameters Should Be Final by Default</h3>
+<p>With an intent to promote immutability and avoid errors because of mutation, it might be worth to at least giving a thought to making method parameters final by default.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Kotlin" data-lang="Kotlin"><span style="display:flex;"><span><span style="color:#ff79c6">fun</span> <span style="color:#50fa7b">add</span> (augend: Int, addend: Int) = augend + addend
+</span></span></code></pre></div><p>Parameters for the <code>add()</code> function are <code>val</code> by default cannot be changed, which means as a client of any function, I can rest assured that the function is not changing the arguments (<em>not to be confused with object mutation</em>) that are passed to it.</p>
+<blockquote>
+<p>Making method parameters final by default might and will most likely break existing code bases on Java upgrades but is worth giving a thought.</p>
+</blockquote>
+<h3 id="handle-null-at-compile-time">Handle NULL at Compile Time</h3>
+<p>Every Java developer is bound to know the infamous <code>NullPointerException</code>. Kotlin took a major step by handling NULLs at compile time. Everything is non-null be default unless it is explicitly stated.
+Did Java 8 not introduce <code>Optional</code> for the very same reason ? Let&rsquo;s see with an example:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Kotlin" data-lang="Kotlin"><span style="display:flex;"><span><span style="color:#ff79c6">class</span> <span style="color:#50fa7b">Employee</span>(<span style="color:#ff79c6">private</span> <span style="color:#ff79c6">val</span> id: Int, <span style="color:#ff79c6">private</span> <span style="color:#ff79c6">val</span> department: Department?) {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">fun</span> <span style="color:#50fa7b">departmentName</span>() = department<span style="color:#ff79c6">?.</span>name <span style="color:#ff79c6">?:</span> <span style="color:#f1fa8c">&#34;Unassigned&#34;</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">class</span> <span style="color:#50fa7b">Department</span>(<span style="color:#ff79c6">val</span> name: String)
+</span></span><span style="display:flex;"><span><span style="color:#6272a4">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4">Employee needs a non-nullable &#34;id&#34; and an optional department to be constructed.
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4">val employee = Employee(null, null); //Compile Time Error
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"> **/</span>
+</span></span></code></pre></div><p>The <code>Employee</code> class has a primary constructor with a non-nullable <code>id</code> and an optional (nullable) <code>department</code>. Passing null for the <code>id</code> will result in a compilation error.
+The <code>departmentName</code> function accesses the name property of <code>Department</code> using the optional operator <code>?</code> on the nullable field. If <code>department</code> is null, <code>name</code> will not be accessed and the expression on the left-hand side <code>department?.name</code> will return null. The <code>Elvis</code> operator <code>?:</code> will return the right-hand side (&ldquo;Unassigned&rdquo;) if the left-hand side of the expression is null.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#6272a4">//Java8</span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">class</span> <span style="color:#50fa7b">Employee</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">private</span> Integer id;
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">private</span> Optional department;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    Employee(Integer id, Optional department){
+</span></span><span style="display:flex;"><span>       <span style="color:#ff79c6">this</span>.<span style="color:#50fa7b">id</span> <span style="color:#ff79c6">=</span> id;
+</span></span><span style="display:flex;"><span>       <span style="color:#ff79c6">this</span>.<span style="color:#50fa7b">department</span> <span style="color:#ff79c6">=</span> department;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">public</span> String <span style="color:#50fa7b">departmentName</span>() {
+</span></span><span style="display:flex;"><span>       <span style="color:#ff79c6">return</span> department.<span style="color:#50fa7b">orElse</span>(<span style="color:#f1fa8c">&#34;Unassigned&#34;</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#6272a4">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4">Employee needs a non-nullable &#34;id&#34; and an optional department to be constructed.
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4">Employee employee = new Employee(null, null); //NPE;
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4">**/</span>
+</span></span></code></pre></div><p>Optional will not protect the code from NPE, but Optional has its advantages:</p>
+<ul>
+<li>It makes the domain model clear. The <code>Employee</code> class has an <code>optional department</code>, which is good enough to conclude that every employee may not be assigned a department</li>
+<li>It promotes composability as in the case of the <code>departmentName</code> method</li>
+</ul>
+<blockquote>
+<p>Handling NULLs at compile time should result in cleaner code by removing unnecessary NULL checks in the form of an if statement, <code>Objects.requireNonNull</code>, <code>Preconditions.checkNotNull</code>, any other form.</p>
+</blockquote>
+<h3 id="improve-lambdas">Improve Lambdas</h3>
+<p>Java 8 introduced lambdas, which are built on top of a functional interface and a functional descriptor, meaning every lambda expression will map to the signature of an abstract method defined in that functional interface. This means it is a mandate to have an interface (Functional Interface) with only one abstract method (Functional Descriptor) to create a lambda expression.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-kotlin" data-lang="kotlin"><span style="display:flex;"><span><span style="color:#ff79c6">val</span> isPositive: (Int) <span style="color:#ff79c6">-&gt;</span> Boolean = { <span style="color:#ff79c6">it</span> &gt; <span style="color:#bd93f9">0</span> }
+</span></span><span style="display:flex;"><span>OR,
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">val</span> isPositive: (Int) <span style="color:#ff79c6">-&gt;</span> Boolean = { num &gt; <span style="color:#bd93f9">0</span> }
+</span></span><span style="display:flex;"><span>OR,
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">val</span> isPositive: (Int) <span style="color:#ff79c6">-&gt;</span> Boolean = { num: Int &gt; <span style="color:#bd93f9">0</span> }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4">//Usage
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>isPositive(<span style="color:#bd93f9">10</span>) returns <span style="color:#ff79c6">true</span>
+</span></span><span style="display:flex;"><span>isPositive(-<span style="color:#bd93f9">1</span>) returns <span style="color:#ff79c6">false</span>
+</span></span></code></pre></div><p>In the above code, the variable <code>isPositive</code> a function that takes an <code>Int</code> as an argument and returns a <code>Boolean</code>. The value of this variable is a function definition or a lambda defined in braces, which checks that the passed argument is greater than zero.
+Whereas, as seen in Java below, <code>Predicate</code> is a functional interface containing an abstract method <code>test()</code> — which takes an argument of type <code>T</code> and returns a <code>boolean</code>.
+So, <code>isPositive</code> takes an argument of type <code>Integer</code> and checks that it is greater than zero. In order to use it, we need to invoke the <code>test()</code> method on the <code>isPositive</code> method.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#6272a4">//Java 8</span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">private</span> Predicate<span style="color:#ff79c6">&lt;</span>Integer<span style="color:#ff79c6">&gt;</span> isPositive <span style="color:#ff79c6">=</span> (Integer arg) <span style="color:#ff79c6">-&gt;</span> arg <span style="color:#ff79c6">&gt;</span> 0;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4">//Usage</span>
+</span></span><span style="display:flex;"><span>isPositive.<span style="color:#50fa7b">test</span>(10) returns <span style="color:#ff79c6">true</span>
+</span></span><span style="display:flex;"><span>isPositive.<span style="color:#50fa7b">test</span>(<span style="color:#ff79c6">-</span>1) returns <span style="color:#ff79c6">false</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>@FunctionalInterface
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">public</span> <span style="color:#8be9fd;font-style:italic">interface</span> <span style="color:#50fa7b">Predicate</span><span style="color:#ff79c6">&lt;</span>T<span style="color:#ff79c6">&gt;</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd">boolean</span> <span style="color:#50fa7b">test</span>(T t);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><blockquote>
+<p>Lambdas should be independent of functional interfaces and their functional descriptors.</p>
+</blockquote>
+<h3 id="support-extension-functions">Support Extension Functions</h3>
+<p>Kotlin supports extension functions, which provide the ability to extend a class with new functionality without having to inherit from the class or use any type of design pattern, such as Decorator.
+Let&rsquo;s write an extension function to return the last character of a String, meaning <code>&quot;Kotin&quot;.lastChar()</code> will return &rsquo;n'.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-kotlin" data-lang="kotlin"><span style="display:flex;"><span><span style="color:#ff79c6">fun</span> <span style="color:#50fa7b">String</span>.lastChar() = <span style="color:#ff79c6">this</span>.toCharArray()[<span style="color:#ff79c6">this</span>.length - <span style="color:#bd93f9">1</span>]
+</span></span><span style="display:flex;"><span><span style="color:#6272a4">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4">    Extension functions are of the form -
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4">    fun &lt;ReceiverObject&gt;.function_name() = body
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4">    OR,
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4">    fun &lt;ReceiverObject&gt;.function_name(arg1: Type1, ... argN: TypeN) = body
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4">**/</span>
+</span></span></code></pre></div><p>Here, <code>lastChar()</code> is an extension function defined on the <code>String</code> type, which is called a receiver object. This function can now be invoked as <code>&quot;Kotlin&quot;.lastChar()</code>.</p>
+<blockquote>
+<p>Extension functions provide an ability to extend a class with new functionalities without inheritance or any other design pattern.</p>
+</blockquote>
+<h3 id="tail-recursion">Tail Recursion</h3>
+<p>Kotlin provides support for <a href="https://kotlinlang.org/docs/reference/functions.html" target="_blank" rel="nofollow noopener noreferrer">Tail-recursion</a>. Tail-recursion is a form of recursion in which the recursive calls are the last instructions in the function (tail). In this way, we don&rsquo;t care about previous values, and one stack frame suffices for all the recursive calls; tail-recursion is one way of optimizing recursive algorithms.
+The other advantage/optimization is that there is an easy way to transform a tail-recursive algorithm to an equivalent one that uses iteration instead of recursion.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-kotlin" data-lang="kotlin"><span style="display:flex;"><span><span style="color:#ff79c6">fun</span> <span style="color:#50fa7b">factorialTco</span>(<span style="color:#ff79c6">val</span>: Int): Int {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">tailrec</span> <span style="color:#ff79c6">fun</span> <span style="color:#50fa7b">factorial</span>(n: Int, acc: Int): Int = <span style="color:#ff79c6">if</span> ( n <span style="color:#ff79c6">==</span> <span style="color:#bd93f9">1</span> ) acc <span style="color:#ff79c6">else</span> factorial(n - <span style="color:#bd93f9">1</span>, acc * n)
+</span></span><span style="display:flex;"><span>  <span style="color:#ff79c6">return</span>  factorial(<span style="color:#ff79c6">val</span>, acc = <span style="color:#bd93f9">1</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>When a function is marked with the <code>tailrec</code> modifier and meets the required form, the compiler optimizes out the recursion, leaving behind a fast and efficient loop-based version instead.</p>
+<blockquote>
+<p>Effectively, a tail-recursive function can execute in constant stack space, so it&rsquo;s really just another formulation of an iterative process</p>
+</blockquote>
+<p>Java does not directly support tail-call optimization at the compiler level, but one can use <a href="http://blog.agiledeveloper.com/2013/01/functional-programming-in-java-is-quite.html" target="_blank" rel="nofollow noopener noreferrer">lambda expressions</a> to implement it. It would be nice to see TCO at the compiler level.</p>
+<h3 id="miscellaneous">Miscellaneous</h3>
+<p><strong>Remove inherent duplication [new, return, semicolon]:</strong> Kotlin does not require <code>new</code> to create an instance. It still needs a <code>return</code> if a function is treated as a statement instead of an expression.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-kotlin" data-lang="kotlin"><span style="display:flex;"><span><span style="color:#ff79c6">class</span> <span style="color:#50fa7b">Employee</span>(<span style="color:#ff79c6">private</span> <span style="color:#ff79c6">val</span> id: Int, <span style="color:#ff79c6">private</span> <span style="color:#ff79c6">val</span> department: Department?) {
+</span></span><span style="display:flex;"><span>    <span style="color:#6272a4">//no return
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    <span style="color:#ff79c6">fun</span> <span style="color:#50fa7b">departmentNameWithoutReturn</span>() = department<span style="color:#ff79c6">?.</span>name <span style="color:#ff79c6">?:</span> <span style="color:#f1fa8c">&#34;Unassigned&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#6272a4">//return is needed if a function is treated as a statement rather than an expression
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    <span style="color:#ff79c6">fun</span> <span style="color:#50fa7b">departmentNameWithoutReturn</span>() {
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">val</span> departmentName = department<span style="color:#ff79c6">?.</span>name <span style="color:#ff79c6">?:</span> <span style="color:#f1fa8c">&#34;Unassigned&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">return</span> departmentName
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><strong>Singleton Classes</strong>: It would be great to see an easier way to create singleton classes in Java. An equivalent syntax in Kotlin is seen below.</li></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-kotlin" data-lang="kotlin"><span style="display:flex;"><span><span style="color:#ff79c6">object</span> <span style="color:#50fa7b">DataProviderManager</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">fun</span> <span style="color:#50fa7b">registerDataProvider</span>(provider: DataProvider) {
+</span></span><span style="display:flex;"><span>        <span style="color:#6272a4">// ...
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><strong>Immutable Classes</strong>: It would be good to see something like a <code>readonly</code> or <code>immutable</code> modifier to create an immutable class. The below-mentioned code snippet is simply a thought (not available in Kotlin or Java).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#6272a4">//Hypothetical</span>
+</span></span><span style="display:flex;"><span>immutable <span style="color:#8be9fd;font-style:italic">class</span> <span style="color:#50fa7b">User</span>(<span style="color:#8be9fd;font-style:italic">private</span> val name: String, <span style="color:#8be9fd;font-style:italic">private</span> val id: Int)
+</span></span></code></pre></div><h3 id="conclusion">Conclusion</h3>
+<p>As developers, we will always make mistakes (skipping NULL checks, mutating a collection, etc.), but providing features at the language level that can stop these mistakes will make our lives easier and prevent mistakes.</p>
+
+  </article>
+<div class="tag-list-container">
+    <div class="tag-list">
+        
+        <a class="button" href="">
+            <p class="tag"><i class="fa fa-fw fa-tag"></i>Kotlin</p>
+        </a>
+        
+        <a class="button" href="">
+            <p class="tag"><i class="fa fa-fw fa-tag"></i>Java</p>
+        </a>
+        
+    </div>
+</div>
+
+
+
+<div class="px-2 mb-2">
+  
+  <script src="https://giscus.app/client.js"
+    data-repo="SarthakMakhija/tech-lessons-comments"
+    data-repo-id="R_kgDOJHu3mA"
+    data-category="Announcements"
+    data-category-id="DIC_kwDOJHu3mM4CUxhS"
+    data-mapping="og:title"
+    data-strict="0"
+    data-reactions-enabled="1"
+    data-emit-metadata="0"
+    data-input-position="bottom"
+    data-theme="light"
+    data-lang="en"
+    crossorigin="anonymous"
+    async>
+  </script>
+  
+</div>
+
+
+
+    </main><footer class="container p-6 mx-auto flex justify-between items-center">
+  <span></span>
+
+  <span class="text-base font-thin">
+    
+    tech-lessons.in © 2020 / Powered by  <a class="font-bold" target="_blank" href="https://gohugo.io/">Hugo</a>
+    
+  </span>
+
+  <span onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="p-1 cursor-pointer">
+    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" stroke-width="1.5"
+      stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M18 15l-6 -6l-6 6h12" />
+    </svg>
+  </span>
+</footer>
+
+<div class="search-ui absolute top-0 left-0 w-full h-full bg-white dark:bg-gray-800 hidden">
+  <div class="container max-w-3xl mx-auto p-12">
+    <div class="relative">
+      <div class="my-4 text-center text-2xl font-bold">Search</div>
+
+      <span class="p-2 absolute right-0 top-0 cursor-pointer close-search">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5"
+          stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </span>
+    </div>
+
+    <input type="search" class="py-2 px-3 w-full dark:text-black border dark:border-transparent"
+      placeholder="Enter search query" />
+
+    <div class="search-results text-lg font-medium my-4 hidden">Results</div>
+    <ul class="search-list my-2">
+
+    </ul>
+
+    <div class="no-results text-center my-8 hidden">
+      <div class="text-xl font-semibold mb-2">No results found</div>
+      <p class="font-light text-sm">Try adjusting your search query</p>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+<script src="//localhost:1313/js/scripts.min.js"></script>
+
+
+      <script async src="https://www.googletagmanager.com/gtag/js?id=G-9KKTKFQ2CM"></script>
+      <script>
+        var doNotTrack = false;
+        if ( false ) {
+          var dnt = (navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack);
+          var doNotTrack = (dnt == "1" || dnt == "yes");
+        }
+        if (!doNotTrack) {
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-9KKTKFQ2CM');
+        }
+      </script>
+
+
+
+
+
+<script>
+  const mobileMenuButton = document.querySelector('.mobile-menu-button')
+  const mobileMenu = document.querySelector('.mobile-menu')
+  function toggleMenu() {
+    mobileMenu.classList.toggle('hidden');
+    mobileMenu.classList.toggle('flex');
+  }
+  if(mobileMenu && mobileMenuButton){
+    mobileMenuButton.addEventListener('click', toggleMenu)
+  }
+</script>
+</body>
+</html>

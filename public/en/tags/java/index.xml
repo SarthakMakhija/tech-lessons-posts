@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Java on tech-lessons.in</title>
+    <link>//localhost:1313/en/tags/java/</link>
+    <description>Recent content in Java on tech-lessons.in</description>
+    <generator>Hugo</generator>
+    <language>en</language>
+    <lastBuildDate>Sun, 04 Apr 2021 00:00:00 +0000</lastBuildDate>
+    <atom:link href="//localhost:1313/en/tags/java/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Diving into Java Bytecode</title>
+      <link>//localhost:1313/en/blog/diving_into_java_bytecode/</link>
+      <pubDate>Sun, 04 Apr 2021 00:00:00 +0000</pubDate>
+      <guid>//localhost:1313/en/blog/diving_into_java_bytecode/</guid>
+      <description>&lt;blockquote class=&#34;wp-block-quote&#34;&gt;&#xA;    &lt;p&gt;Java code is compiled into an intermediate representation called &#34;bytecode&#34;. It is this bytecode which gets executed by JVM and is later converted into machine specific instructions by JIT compiler. With this article, we attempt to dive into bytecode and understand the internals of various bytecode operations.&lt;/p&gt;&#xA;&lt;/blockquote&gt;&#xA;&lt;p&gt;Let&amp;rsquo;s get an understanding of some terms before we start to dive in.&lt;/p&gt;&#xA;&lt;h3 id=&#34;terminology&#34;&gt;Terminology&lt;/h3&gt;&#xA;&lt;p&gt;&lt;strong&gt;Bytecode&lt;/strong&gt;&lt;/p&gt;&#xA;&lt;p&gt;An intermediate representation of Java code which JVM understands.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Kotlin Wishlist for Java</title>
+      <link>//localhost:1313/en/blog/kotlin_wishlist_for_java/</link>
+      <pubDate>Fri, 20 Apr 2018 00:00:00 +0000</pubDate>
+      <guid>//localhost:1313/en/blog/kotlin_wishlist_for_java/</guid>
+      <description>&lt;p&gt;There is no doubt that Java has enjoyed a superior position when it comes to programming languages and is considered as one of the most important languages for development. However, there have been a number of languages developed on top of the JVM, like &lt;a href=&#34;https://kotlinlang.org/&#34; target=&#34;_blank&#34; rel=&#34;nofollow noopener noreferrer&#34;&gt;Kotlin&lt;/a&gt;&#xA;Kotlin is a statically typed programming language for modern multi-platform applications. While I have been a Java developer for quite a long while, working on the &lt;a href=&#34;https://github.com/dataanon/data-anon&#34; target=&#34;_blank&#34; rel=&#34;nofollow noopener noreferrer&#34;&gt;data-anonymization&lt;/a&gt; project made me feel that there are things that Java should consider importing from Kotlin.&#xA;These are some Kotlin features that I would love to see making a place in Java.&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

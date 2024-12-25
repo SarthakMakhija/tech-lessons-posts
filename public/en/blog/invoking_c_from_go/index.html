@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en" itemscope itemtype="http://schema.org/WebPage"><head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <link rel="icon" href="/favicon.png">
+
+  <title>
+  Invoking C Code from Golang - tech-lessons.in
+  </title>
+  <meta name="description" content="Let&#39;s explore Golang&#39;s C package to invoke C code from Golang by building a linked list in C which would offer put, get, getAllValues, length and close features." />
+  <meta name="author" content="Sarthak Makhija" />
+  
+     <meta property="og:image" content="/invoking-C-code-from-golang.png" />
+  <meta name="generator" content="Hugo 0.140.1"><link rel="stylesheet" href="/css/styles.css" />
+
+  
+  
+
+  <meta property="og:url" content="//localhost:1313/en/blog/invoking_c_from_go/">
+  <meta property="og:site_name" content="tech-lessons.in">
+  <meta property="og:title" content="Invoking C Code from Golang">
+  <meta property="og:description" content="Let&#39;s explore Golang&#39;s C package to invoke C code from Golang by building a linked list in C which would offer put, get, getAllValues, length and close features.">
+  <meta property="og:locale" content="en">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="blog">
+    <meta property="article:published_time" content="2021-12-21T00:00:00+00:00">
+    <meta property="article:modified_time" content="2021-12-21T00:00:00+00:00">
+    <meta property="article:tag" content="Golang">
+    <meta property="article:tag" content="C">
+    <meta property="article:tag" content="CGO">
+
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Invoking C Code from Golang">
+  <meta name="twitter:description" content="Let&#39;s explore Golang&#39;s C package to invoke C code from Golang by building a linked list in C which would offer put, get, getAllValues, length and close features.">
+
+  
+  <meta itemprop="name" content="Invoking C Code from Golang">
+  <meta itemprop="description" content="Let&#39;s explore Golang&#39;s C package to invoke C code from Golang by building a linked list in C which would offer put, get, getAllValues, length and close features.">
+  <meta itemprop="datePublished" content="2021-12-21T00:00:00+00:00">
+  <meta itemprop="dateModified" content="2021-12-21T00:00:00+00:00">
+  <meta itemprop="wordCount" content="1522">
+  <meta itemprop="keywords" content="Golang,C,CGO">
+
+  
+</head>
+<body class="dark:bg-gray-800 dark:text-white relative flex flex-col min-h-screen"><header class="container flex justify-between md:justify-between gap-4 flex-wrap p-6 mx-auto relative">
+  <a href="//localhost:1313/en/" class="capitalize font-extrabold text-2xl">
+    
+    <img src="/logo.png" alt="tech-lessons.in" class="h-8 max-w-full" />
+    
+  </a>
+  <button class="mobile-menu-button md:hidden">
+    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <line x1="4" y1="8" x2="20" y2="8" />
+      <line x1="4" y1="16" x2="20" y2="16" />
+    </svg>
+  </button>
+  <ul class="mobile-menu absolute z-10 px-6 pb-6 md:p-0 top-full left-0 w-full md:w-auto md:relative hidden md:flex flex-col md:flex-row items-end md:items-center gap-4 lg:gap-6 bg-white dark:bg-gray-800">
+
+    
+    <li><a href="/en/">Home</a></li>
+    
+    <li><a href="/en/blog">Blogs</a></li>
+    
+    <li><a href="/en/page/about/">About Me</a></li>
+    
+    <li><a href="/en/page/projects/">My projects</a></li>
+    
+
+    
+
+    
+    <li class="grid place-items-center">
+      <span class="open-search inline-block cursor-pointer">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5"
+          stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+          <circle cx="10" cy="10" r="7" />
+          <line x1="21" y1="21" x2="15" y2="15" />
+        </svg>
+      </span>
+    </li>
+    
+
+    
+  </ul>
+</header>
+<main class="flex-1">
+  
+  
+
+  
+  <div class="relative max-w-5xl mx-auto px-4">
+    <img src="/invoking-C-code-from-golang.png" class="rounded-lg shadow-sm w-full object-contain" />
+    
+    <figcaption class="font-extralight text-xs"><i>Background by Giorgio Trovato on Unsplash</i></figcaption>
+    
+    
+    <div class="absolute top-4 right-8 rounded shadow bg-white text-gray-900 dark:bg-gray-900 dark:text-white px-2 py-0.5">
+      
+  
+    December 21, 2021
+  
+
+
+    </div>
+    
+  </div>
+  
+
+  <article class="prose lg:prose-lg mx-auto my-8 dark:prose-dark px-4 max-w-5xl">
+
+    <h1 class="text-2xl font-bold mb-2">Invoking C Code from Golang</h1>
+    
+    <h5 class="text-sm flex items-center flex-wrap">
+      <svg xmlns="http://www.w3.org/2000/svg" class="mr-1" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+        <rect x="4" y="5" width="16" height="16" rx="2" />
+        <line x1="16" y1="3" x2="16" y2="7" />
+        <line x1="8" y1="3" x2="8" y2="7" />
+        <line x1="4" y1="11" x2="20" y2="11" />
+        <rect x="8" y="15" width="2" height="2" />
+      </svg>
+      Posted on 
+  
+    December 21, 2021
+  
+
+
+      
+        &nbsp;&bull;&nbsp;
+      
+      <svg xmlns="http://www.w3.org/2000/svg" class="mr-1" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+        <circle cx="12" cy="12" r="9" />
+        <polyline points="12 7 12 12 15 15" />
+      </svg>
+      8&nbsp;minutes
+      &nbsp;&bull;
+      <svg xmlns="http://www.w3.org/2000/svg" class="mx-1" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+        <path d="M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0" />
+        <path d="M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0" />
+        <line x1="3" y1="6" x2="3" y2="19" />
+        <line x1="12" y1="6" x2="12" y2="19" />
+        <line x1="21" y1="6" x2="21" y2="19" />
+      </svg>
+      1522&nbsp;words
+      
+    </h5>
+    
+
+    <details id="TableOfContents" class="px-4 mt-4 bg-gray-100 dark:bg-gray-700 rounded toc">
+    <summary class="flex items-center font-bold py-2 px-4 cursor-pointer justify-between select-none text-black dark:text-white">
+      <span>Table of contents</span>
+      <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-down" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+        <polyline points="6 9 12 15 18 9"></polyline>
+     </svg>
+    </summary>
+
+    <ul class="mt-2 pb-4">
+        
+
+        
+        <li>
+        <a href="#interfacing-with-an-existing-c-library">Interfacing with an existing C library</a>
+        
+
+        
+        </li><li>
+        <a href="#c-package-in-golang">&ldquo;C&rdquo; package in Golang</a>
+        
+
+        
+        </li><li>
+        <a href="#c-code">C Code</a>
+        
+
+        
+        </li><li>
+        <a href="#time-to-invoke-c-code-from-golang">Time to invoke C code from Golang</a>
+        
+
+        
+        </li><li>
+        <a href="#freeing-the-linked-list">Freeing the linked list</a>
+        
+
+        
+        </li><li>
+        <a href="#lets-get-all-the-values">Let&rsquo;s get all the values</a>
+        
+
+        
+        </li><li>
+        <a href="#code">Code</a>
+        
+
+        
+        </li><li>
+        <a href="#references">References</a>
+        </li></ul>
+  </details>
+
+    <p>The article attempts to explore Golang&rsquo;s &ldquo;C&rdquo; package which allows invoking C code from Golang. Before we get into the idea
+of invoking C code from Golang, let&rsquo;s see a use-case where this might be needed.</p>
+<h3 id="interfacing-with-an-existing-c-library">Interfacing with an existing C library</h3>
+<p>Let&rsquo;s consider that we wish to develop a storage engine for pmem (persistent memory) in Golang. In order to develop this, we might want to use
+<a href="https://github.com/pmem/pmdk" target="_blank" rel="noopener">pmdk - persistent memory development kit</a>
+ which is written in C. This effectively means we want a way to bridge Golang and C code; invoke C code
+from Golang.</p>
+<h3 id="c-package-in-golang">&ldquo;C&rdquo; package in Golang</h3>
+<p>Go provides a package called &ldquo;C&rdquo; to interface with C code. Some features provided by this package include -</p>
+<ul>
+<li>standard C numeric types</li>
+<li>access to structs defined in C</li>
+<li>access to function like <code>malloc</code> and <code>free</code></li>
+</ul>
+<h3 id="c-code">C Code</h3>
+<p>Let&rsquo;s start by creating a linked list in C which will be later invoked from Golang code. Let&rsquo;s start with <code>linkedlist.h</code> file which defines a struct called <code>Node</code>, and a set of operations supported by linked list.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C" data-lang="C"><span style="display:flex;"><span><span style="color:#ff79c6">struct</span> Node {
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd">int</span> key;
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd">int</span> value;
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">struct</span> Node <span style="color:#ff79c6">*</span>next;
+</span></span><span style="display:flex;"><span>};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd">void</span> <span style="color:#50fa7b">put</span>(<span style="color:#8be9fd">int</span> key, <span style="color:#8be9fd">int</span> value);
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd">int</span> <span style="color:#50fa7b">get</span>(<span style="color:#8be9fd">int</span> key);
+</span></span></code></pre></div><p>Our <code>Node</code> struct has a key, and a value which are of type <code>integer</code> and a pointer to the next node. It also supports 2 behaviors <code>put</code> and <code>get</code>.</p>
+<p>Let&rsquo;s add <code>linkedlist.c</code> and add <code>put</code> to begin with.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C" data-lang="C"><span style="display:flex;"><span><span style="color:#ff79c6">#include</span> <span style="color:#ff79c6">&#34;linkedlist.h&#34;</span><span style="color:#ff79c6">
+</span></span></span><span style="display:flex;"><span><span style="color:#ff79c6">#include</span> <span style="color:#ff79c6">&lt;stdlib.h&gt;</span><span style="color:#ff79c6">
+</span></span></span><span style="display:flex;"><span><span style="color:#ff79c6"></span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">struct</span> Node <span style="color:#ff79c6">*</span>head <span style="color:#ff79c6">=</span> <span style="color:#8be9fd;font-style:italic">NULL</span>;
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">struct</span> Node <span style="color:#ff79c6">*</span>current <span style="color:#ff79c6">=</span> <span style="color:#8be9fd;font-style:italic">NULL</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd">void</span> <span style="color:#50fa7b">put</span>(<span style="color:#8be9fd">int</span> key, <span style="color:#8be9fd">int</span> value) {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">if</span> (head <span style="color:#ff79c6">==</span> <span style="color:#8be9fd;font-style:italic">NULL</span>) {
+</span></span><span style="display:flex;"><span>        head <span style="color:#ff79c6">=</span> (<span style="color:#ff79c6">struct</span> Node<span style="color:#ff79c6">*</span>)<span style="color:#50fa7b">malloc</span>(<span style="color:#ff79c6">sizeof</span>(<span style="color:#ff79c6">struct</span> Node));
+</span></span><span style="display:flex;"><span>        head <span style="color:#ff79c6">-&gt;</span> key <span style="color:#ff79c6">=</span> key;
+</span></span><span style="display:flex;"><span>        head <span style="color:#ff79c6">-&gt;</span> value <span style="color:#ff79c6">=</span> value;
+</span></span><span style="display:flex;"><span>        current <span style="color:#ff79c6">=</span> head;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">else</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">struct</span> Node <span style="color:#ff79c6">*</span>next <span style="color:#ff79c6">=</span> (<span style="color:#ff79c6">struct</span> Node<span style="color:#ff79c6">*</span>)<span style="color:#50fa7b">malloc</span>(<span style="color:#ff79c6">sizeof</span>(<span style="color:#ff79c6">struct</span> Node));
+</span></span><span style="display:flex;"><span>        next <span style="color:#ff79c6">-&gt;</span> key <span style="color:#ff79c6">=</span> key;
+</span></span><span style="display:flex;"><span>        next <span style="color:#ff79c6">-&gt;</span> value <span style="color:#ff79c6">=</span> value;
+</span></span><span style="display:flex;"><span>        current <span style="color:#ff79c6">-&gt;</span> next <span style="color:#ff79c6">=</span> next;
+</span></span><span style="display:flex;"><span>        current <span style="color:#ff79c6">=</span> next;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><code>put</code> does the following -</p>
+<ul>
+<li>If head is NULL
+<ul>
+<li>Creates a <code>new node</code></li>
+<li>Points <code>head</code> to the <code>new node</code></li>
+<li>Assigns key and value to the <code>head</code></li>
+<li>Points <code>current</code> to the <code>head</code></li>
+</ul>
+</li>
+<li>Else
+<ul>
+<li>Creates a <code>new node</code></li>
+<li>Assigns key and value to the <code>new node</code></li>
+<li>Assigns <code>next</code> of the <code>current</code> node to the <code>new node</code></li>
+<li>Points <code>current</code> to the <code>new node</code></li>
+</ul>
+</li>
+</ul>
+<p>Let&rsquo;s add <code>get</code> which will return a value by key.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C" data-lang="C"><span style="display:flex;"><span><span style="color:#8be9fd">int</span> <span style="color:#50fa7b">get</span>(<span style="color:#8be9fd">int</span> key) {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">struct</span> Node<span style="color:#ff79c6">*</span> node <span style="color:#ff79c6">=</span> head;
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">while</span> (node<span style="color:#ff79c6">-&gt;</span>key <span style="color:#ff79c6">!=</span> key <span style="color:#ff79c6">&amp;&amp;</span> node <span style="color:#ff79c6">!=</span> <span style="color:#8be9fd;font-style:italic">NULL</span>) {
+</span></span><span style="display:flex;"><span>        node <span style="color:#ff79c6">=</span> node <span style="color:#ff79c6">-&gt;</span> next;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">if</span> (node <span style="color:#ff79c6">==</span> <span style="color:#8be9fd;font-style:italic">NULL</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">return</span> <span style="color:#ff79c6">-</span><span style="color:#bd93f9">1</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">return</span> node <span style="color:#ff79c6">-&gt;</span> value;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><code>get</code> does the following -</p>
+<ul>
+<li>Makes a temporary variable <code>node</code> point to <code>head</code></li>
+<li>Iterates while <code>node</code> is not NULL and <code>key of the node</code> is not equal to the incoming <code>key</code></li>
+<li>If <code>node</code> is NULL, returns -1</li>
+<li>Else returns the value pointed by <code>node</code></li>
+</ul>
+<h3 id="time-to-invoke-c-code-from-golang">Time to invoke C code from Golang</h3>
+<p>Let&rsquo;s create a file <code>linkedlist.go</code> which will provide <code>Put</code> and <code>GetBy</code> behaviors. These functions will internally invoke C functions.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-golang" data-lang="golang"><span style="display:flex;"><span><span style="color:#ff79c6">package</span> linkedlist
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4">// #cgo CFLAGS: -g -Wall
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4">// #include &#34;linkedlist.h&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span><span style="color:#ff79c6">import</span> <span style="color:#f1fa8c">&#34;C&#34;</span>
+</span></span></code></pre></div><p>This is how the beginning of our go file looks like -</p>
+<ul>
+<li>Go package is <code>linkedlist</code></li>
+<li>Adding the line <code>#cgo CFLAGS: -g -Wall</code> compiles the C code with gcc options: (-g) which is used to enable debug symbols and (-Wall) which is used to enable all warnings</li>
+<li><code>linkedlist.h</code> is included for our linked list related functions</li>
+<li>The import &ldquo;C&rdquo; allows us to integrate with C code</li>
+<li>The comments above <code>import C</code> represent the actual C code that will be consumed by the rest of our golang code</li>
+</ul>
+<p>Let&rsquo;s add <code>Put</code> in Golang.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-golang" data-lang="golang"><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">Put</span>(key, value <span style="color:#8be9fd">int</span>) {
+</span></span><span style="display:flex;"><span>    C.<span style="color:#50fa7b">put</span>(C.<span style="color:#8be9fd;font-style:italic">int</span>(key), C.<span style="color:#8be9fd;font-style:italic">int</span>(value))
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Golang <code>Put</code> does the following -</p>
+<ul>
+<li>Creates a C int by using <code>C.int</code> on key and value</li>
+<li>Invokes <code>put</code> by using <code>C.put</code>, passing C.int</li>
+</ul>
+<p>Let&rsquo;s add <code>GetBy</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-golang" data-lang="golang"><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">GetBy</span>(key <span style="color:#8be9fd">int</span>) <span style="color:#8be9fd">int</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">return</span> <span style="color:#8be9fd;font-style:italic">int</span>(C.<span style="color:#50fa7b">get</span>(C.<span style="color:#8be9fd;font-style:italic">int</span>(key)))
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Golang <code>GetBy</code> does the following -</p>
+<ul>
+<li>Creates a C int by using <code>C.int</code> on key</li>
+<li>Invokes <code>get</code> by using <code>C.get</code></li>
+<li>Convert the return value received from <code>C.get(C.int(key))</code> to <code>Golang's int</code></li>
+</ul>
+<p><em>Putting it all together</em> -</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-golang" data-lang="golang"><span style="display:flex;"><span><span style="color:#ff79c6">package</span> linkedlist
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4">// #cgo CFLAGS: -g -Wall
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4">// #include &#34;linkedlist.h&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span><span style="color:#ff79c6">import</span> <span style="color:#f1fa8c">&#34;C&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">Put</span>(key, value <span style="color:#8be9fd">int</span>) {
+</span></span><span style="display:flex;"><span>    C.<span style="color:#50fa7b">put</span>(C.<span style="color:#8be9fd;font-style:italic">int</span>(key), C.<span style="color:#8be9fd;font-style:italic">int</span>(value))
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">GetBy</span>(key <span style="color:#8be9fd">int</span>) <span style="color:#8be9fd">int</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">return</span> <span style="color:#8be9fd;font-style:italic">int</span>(C.<span style="color:#50fa7b">get</span>(C.<span style="color:#8be9fd;font-style:italic">int</span>(key)))
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Let&rsquo;s add a Golang test to see if this integration works or not.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-golang" data-lang="golang"><span style="display:flex;"><span><span style="color:#ff79c6">package</span> linkedlist_test
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">import</span> (
+</span></span><span style="display:flex;"><span><span style="color:#f1fa8c">&#34;reflect&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f1fa8c">&#34;testing&#34;</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">import</span> <span style="color:#f1fa8c">&#34;linkedlist&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">TestPutsASingleKeyValue</span>(t <span style="color:#ff79c6">*</span>testing.T) {
+</span></span><span style="display:flex;"><span>    linkedlist.<span style="color:#50fa7b">Put</span>(<span style="color:#bd93f9">10</span>, <span style="color:#bd93f9">100</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    value <span style="color:#ff79c6">:=</span> linkedlist.<span style="color:#50fa7b">GetBy</span>(<span style="color:#bd93f9">10</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">if</span> value <span style="color:#ff79c6">!=</span> <span style="color:#bd93f9">100</span> {
+</span></span><span style="display:flex;"><span>        t.<span style="color:#50fa7b">Fatalf</span>(<span style="color:#f1fa8c">&#34;Expected %v, received %v&#34;</span>, <span style="color:#bd93f9">100</span>, value)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Let&rsquo;s Run the test using <code>go test</code>, and it should work.</p>
+<h3 id="freeing-the-linked-list">Freeing the linked list</h3>
+<p>We would like to add another test which adds multiple key value pairs and gets a value by key. Before we do that, we would like to start with a fresh linked list
+for each test. In order to do that let&rsquo;s add a behavior <code>close</code> in C linked list which frees all the nodes in the linked list.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C" data-lang="C"><span style="display:flex;"><span><span style="color:#8be9fd">void</span> <span style="color:#50fa7b">close</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">struct</span> Node<span style="color:#ff79c6">*</span> node;
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">while</span> (head <span style="color:#ff79c6">!=</span> <span style="color:#8be9fd;font-style:italic">NULL</span>) {
+</span></span><span style="display:flex;"><span>        node <span style="color:#ff79c6">=</span> head;
+</span></span><span style="display:flex;"><span>        head <span style="color:#ff79c6">=</span> head<span style="color:#ff79c6">-&gt;</span>next;
+</span></span><span style="display:flex;"><span>        <span style="color:#50fa7b">free</span>(node);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><code>close</code> does the following -</p>
+<ul>
+<li>Makes a temporary variable <code>node</code></li>
+<li>Iterates while <code>head</code> is not NULL</li>
+<li>Makes <code>node</code> point to head and moves <code>head</code> ahead</li>
+<li>Frees the memory pointed to by <code>node</code></li>
+</ul>
+<p>Let&rsquo;s invoke <code>C's close</code> from Golang</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-golang" data-lang="golang"><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">Close</span>() {
+</span></span><span style="display:flex;"><span>    C.<span style="color:#8be9fd;font-style:italic">close</span>()
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Let&rsquo;s edit the existing test case and add a new one.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-golang" data-lang="golang"><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">TestPutsASingleKeyValue</span>(t <span style="color:#ff79c6">*</span>testing.T) {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">defer</span> linkedlist.<span style="color:#50fa7b">Close</span>()
+</span></span><span style="display:flex;"><span>    linkedlist.<span style="color:#50fa7b">Put</span>(<span style="color:#bd93f9">10</span>, <span style="color:#bd93f9">100</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    value <span style="color:#ff79c6">:=</span> linkedlist.<span style="color:#50fa7b">GetBy</span>(<span style="color:#bd93f9">10</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">if</span> value <span style="color:#ff79c6">!=</span> <span style="color:#bd93f9">100</span> {
+</span></span><span style="display:flex;"><span>        t.<span style="color:#50fa7b">Fatalf</span>(<span style="color:#f1fa8c">&#34;Expected %v, received %v&#34;</span>, <span style="color:#bd93f9">100</span>, value)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">TestPutsMultipleKeyValues</span>(t <span style="color:#ff79c6">*</span>testing.T) {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">defer</span> linkedlist.<span style="color:#50fa7b">Close</span>()
+</span></span><span style="display:flex;"><span>    linkedlist.<span style="color:#50fa7b">Put</span>(<span style="color:#bd93f9">10</span>, <span style="color:#bd93f9">100</span>)
+</span></span><span style="display:flex;"><span>    linkedlist.<span style="color:#50fa7b">Put</span>(<span style="color:#bd93f9">20</span>, <span style="color:#bd93f9">200</span>)
+</span></span><span style="display:flex;"><span>    linkedlist.<span style="color:#50fa7b">Put</span>(<span style="color:#bd93f9">30</span>, <span style="color:#bd93f9">300</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    value <span style="color:#ff79c6">:=</span> linkedlist.<span style="color:#50fa7b">GetBy</span>(<span style="color:#bd93f9">20</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">if</span> value <span style="color:#ff79c6">!=</span> <span style="color:#bd93f9">200</span> {
+</span></span><span style="display:flex;"><span>        t.<span style="color:#50fa7b">Fatalf</span>(<span style="color:#f1fa8c">&#34;Expected %v, received %v&#34;</span>, <span style="color:#bd93f9">200</span>, value)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>As a part of these tests, we are now closing the linked list by invoking <code>defer linkedlist.Close()</code> which will internally free all the nodes.</p>
+<h3 id="lets-get-all-the-values">Let&rsquo;s get all the values</h3>
+<p>We would like to return all the values from linked list. As a first step, we would like to return a pointer to an integer from C code to Golang.
+Let&rsquo;s code <code>getAllValues</code> in C.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C" data-lang="C"><span style="display:flex;"><span><span style="color:#8be9fd">int</span><span style="color:#ff79c6">*</span> <span style="color:#50fa7b">getAllValues</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd">int</span> len <span style="color:#ff79c6">=</span> <span style="color:#50fa7b">length</span>();
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd">int</span><span style="color:#ff79c6">*</span> values <span style="color:#ff79c6">=</span> <span style="color:#50fa7b">malloc</span>(len <span style="color:#ff79c6">*</span> <span style="color:#ff79c6">sizeof</span>(<span style="color:#8be9fd">int</span>));
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">struct</span> Node<span style="color:#ff79c6">*</span> node <span style="color:#ff79c6">=</span> head;
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd">int</span> index <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>     <span style="color:#ff79c6">while</span> (node <span style="color:#ff79c6">!=</span> <span style="color:#8be9fd;font-style:italic">NULL</span>) {
+</span></span><span style="display:flex;"><span>         values[index] <span style="color:#ff79c6">=</span> node <span style="color:#ff79c6">-&gt;</span> value;
+</span></span><span style="display:flex;"><span>         node <span style="color:#ff79c6">=</span> node <span style="color:#ff79c6">-&gt;</span> next;
+</span></span><span style="display:flex;"><span>         index <span style="color:#ff79c6">=</span> index <span style="color:#ff79c6">+</span> <span style="color:#bd93f9">1</span>;
+</span></span><span style="display:flex;"><span>     }
+</span></span><span style="display:flex;"><span>     <span style="color:#ff79c6">return</span> values;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><code>getAllValues</code> does the following -</p>
+<ul>
+<li>Invokes <code>length</code> to get the total number of nodes in the linked list</li>
+<li>Allocates memory to hold <code>len</code> integer values in a variable called <code>values</code></li>
+<li>Creates a pointer called <code>node</code> to point to <code>head</code></li>
+<li>Iterates while <code>node</code> is not NULL</li>
+<li>Collects the value pointed to by <code>node</code> in <code>values</code></li>
+<li>Returns <code>values</code> which is a pointer to an integer</li>
+</ul>
+<p>Let&rsquo;s also add <code>length</code> function -</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C" data-lang="C"><span style="display:flex;"><span><span style="color:#8be9fd">int</span> <span style="color:#50fa7b">length</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd">int</span> count <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">struct</span> Node<span style="color:#ff79c6">*</span> node <span style="color:#ff79c6">=</span> head;
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">while</span> (node <span style="color:#ff79c6">!=</span> <span style="color:#8be9fd;font-style:italic">NULL</span>) {
+</span></span><span style="display:flex;"><span>        node <span style="color:#ff79c6">=</span> node <span style="color:#ff79c6">-&gt;</span> next;
+</span></span><span style="display:flex;"><span>        count <span style="color:#ff79c6">=</span> count <span style="color:#ff79c6">+</span> <span style="color:#bd93f9">1</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">return</span> count;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><code>length</code> does the following -</p>
+<ul>
+<li>Creates a pointer called <code>node</code> to point to <code>head</code></li>
+<li>Iterates while <code>node</code> is not NULL</li>
+<li>Increments count for each node</li>
+<li>Returns count</li>
+</ul>
+<p>Time to invoke <code>getAllValues</code> from Golang.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-golang" data-lang="golang"><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">GetsAllValues</span>() []<span style="color:#8be9fd">int</span> {
+</span></span><span style="display:flex;"><span>    length <span style="color:#ff79c6">:=</span> <span style="color:#8be9fd;font-style:italic">int</span>(C.<span style="color:#50fa7b">length</span>())
+</span></span><span style="display:flex;"><span>    intPointer <span style="color:#ff79c6">:=</span> C.<span style="color:#50fa7b">getAllValues</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">defer</span> C.<span style="color:#50fa7b">free</span>(unsafe.<span style="color:#50fa7b">Pointer</span>(intPointer))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	slice <span style="color:#ff79c6">:=</span> (<span style="color:#ff79c6">*</span>[<span style="color:#bd93f9">1</span> <span style="color:#ff79c6">&lt;&lt;</span> <span style="color:#bd93f9">28</span>]C.<span style="color:#8be9fd">int</span>)(unsafe.<span style="color:#50fa7b">Pointer</span>(intPointer))[:length:length]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#8be9fd;font-style:italic">var</span> values []<span style="color:#8be9fd">int</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#ff79c6">for</span> index <span style="color:#ff79c6">:=</span> <span style="color:#bd93f9">0</span>; index &lt; length; index<span style="color:#ff79c6">++</span> {
+</span></span><span style="display:flex;"><span>		values = <span style="color:#8be9fd;font-style:italic">append</span>(values, <span style="color:#8be9fd;font-style:italic">int</span>(slice[index]))
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#ff79c6">return</span> values
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><code>GetAllValues</code> does the following -</p>
+<ul>
+<li>Invokes <code>C.length</code> to get the total number of linked list nodes</li>
+<li>Invokes <code>C.getAllValues()</code> to get a pointer to an integer</li>
+<li>We would like to free the memory held by the pointer returned from <code>C.getAllValues()</code>. In order to do that, we need to invoke <code>C.free</code> and
+we use <code>unsafe.Pointer</code> which allows creating a pointer to any arbitrary type</li>
+<li>In order to be able to invoke <code>C.free</code> or <code>C.malloc</code>, we need to import <code>stdlib.h</code> in Golang code</li>
+<li>So far we have a pointer or let&rsquo;s say a C pointer. We need a way to convert that to Go slice.</li>
+</ul>
+<p>The expression <code>slice := (*[1 &lt;&lt; 28]C.int)(unsafe.Pointer(intPointer))[:length:length]</code> is made up of 3 parts -</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-golang" data-lang="golang"><span style="display:flex;"><span><span style="color:#bd93f9">1.</span> unsafePointer <span style="color:#ff79c6">:=</span> unsafe.<span style="color:#50fa7b">Pointer</span>(intPointer) creates an unsafe pointer
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#bd93f9">2.</span> arrayPtr <span style="color:#ff79c6">:=</span> (<span style="color:#ff79c6">*</span>[<span style="color:#bd93f9">1</span> <span style="color:#ff79c6">&lt;&lt;</span> <span style="color:#bd93f9">28</span>]C.<span style="color:#8be9fd">int</span>)(unsafePointer).<span style="color:#f1fa8c">`*[1 &lt;&lt; 28]C.YourType`</span> doesn&#39;t do anything itself, it is a <span style="color:#8be9fd;font-style:italic">type</span>.
+</span></span><span style="display:flex;"><span>   Specifically, it is a pointer to an array of size <span style="color:#bd93f9">1</span> <span style="color:#ff79c6">&lt;&lt;</span> <span style="color:#bd93f9">28</span>, of C.YourType values.
+</span></span><span style="display:flex;"><span>   Statement <span style="color:#bd93f9">2</span>) converts unsafePointer to a pointer of the <span style="color:#8be9fd;font-style:italic">type</span> <span style="color:#ff79c6">*</span>[<span style="color:#bd93f9">1</span> <span style="color:#ff79c6">&lt;&lt;</span> <span style="color:#bd93f9">28</span>]C.<span style="color:#8be9fd">int</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#bd93f9">3.</span> slice <span style="color:#ff79c6">:=</span> arrayPtr[:length:length], slices the array into a Go slice
+</span></span></code></pre></div><blockquote>
+<p><a href="https://stackoverflow.com/questions/48756732/what-does-1-30c-yourtype-do-exactly-in-cgo" target="_blank" rel="noopener">what-does-1-30c-yourtype-do-exactly-in-cgo</a>
+</p>
+</blockquote>
+<ul>
+<li>We now have a Golang slice of type <code>C.int</code> but we need to return a Golang slice of <code>Go int</code>. So we iterate through the <code>slice</code>, convert <code>C.int</code> to <code>Golang int</code>,
+collect <code>values</code> and return it</li>
+</ul>
+<p>Let&rsquo;s quickly add a golang test for <code>GetAllValues</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-golang" data-lang="golang"><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">TestGetAllValues</span>(t <span style="color:#ff79c6">*</span>testing.T) {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">defer</span> linkedlist.<span style="color:#50fa7b">Close</span>()
+</span></span><span style="display:flex;"><span>    linkedlist.<span style="color:#50fa7b">Put</span>(<span style="color:#bd93f9">10</span>, <span style="color:#bd93f9">100</span>)
+</span></span><span style="display:flex;"><span>    linkedlist.<span style="color:#50fa7b">Put</span>(<span style="color:#bd93f9">20</span>, <span style="color:#bd93f9">200</span>)
+</span></span><span style="display:flex;"><span>    linkedlist.<span style="color:#50fa7b">Put</span>(<span style="color:#bd93f9">30</span>, <span style="color:#bd93f9">300</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    values <span style="color:#ff79c6">:=</span> linkedlist.<span style="color:#50fa7b">GetAllValues</span>()
+</span></span><span style="display:flex;"><span>    expected <span style="color:#ff79c6">:=</span> []<span style="color:#8be9fd">int</span>{<span style="color:#bd93f9">100</span>, <span style="color:#bd93f9">200</span>, <span style="color:#bd93f9">300</span>}
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">if</span> !reflect.<span style="color:#50fa7b">DeepEqual</span>(expected, values) {
+</span></span><span style="display:flex;"><span>        t.<span style="color:#50fa7b">Fatalf</span>(<span style="color:#f1fa8c">&#34;Expected %v, received %v&#34;</span>, expected, values)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>That is it, run the test and get all the values from linked list.</p>
+<h3 id="code">Code</h3>
+<p>The code for this article is available <a href="https://github.com/SarthakMakhija/CGO-learning" target="_blank" rel="noopener">here</a>
+</p>
+<h3 id="references">References</h3>
+<ul>
+<li><a href="https://karthikkaranth.me/blog/calling-c-code-from-go/" target="_blank" rel="noopener">Calling C code from go</a>
+</li>
+<li><a href="https://stackoverflow.com/questions/64852226/how-to-iterate-through-a-c-array" target="_blank" rel="noopener">Golang slices and C pointers</a>
+</li>
+<li><a href="https://stackoverflow.com/questions/48756732/what-does-1-30c-yourtype-do-exactly-in-cgo" target="_blank" rel="noopener">What does 1-30c-yourtype do exactly in cgo</a>
+</li>
+<li><a href="https://github.com/golang/go/issues/31409" target="_blank" rel="noopener">ld: symbol(s) not found for architecture x86_64</a>
+</li>
+</ul>
+
+  </article>
+<div class="tag-list-container">
+    <div class="tag-list">
+        
+        <a class="button" href="">
+            <p class="tag"><i class="fa fa-fw fa-tag"></i>Golang</p>
+        </a>
+        
+        <a class="button" href="">
+            <p class="tag"><i class="fa fa-fw fa-tag"></i>C</p>
+        </a>
+        
+        <a class="button" href="">
+            <p class="tag"><i class="fa fa-fw fa-tag"></i>CGO</p>
+        </a>
+        
+    </div>
+</div>
+
+
+
+<div class="px-2 mb-2">
+  
+  <script src="https://giscus.app/client.js"
+    data-repo="SarthakMakhija/tech-lessons-comments"
+    data-repo-id="R_kgDOJHu3mA"
+    data-category="Announcements"
+    data-category-id="DIC_kwDOJHu3mM4CUxhS"
+    data-mapping="og:title"
+    data-strict="0"
+    data-reactions-enabled="1"
+    data-emit-metadata="0"
+    data-input-position="bottom"
+    data-theme="light"
+    data-lang="en"
+    crossorigin="anonymous"
+    async>
+  </script>
+  
+</div>
+
+
+
+    </main><footer class="container p-6 mx-auto flex justify-between items-center">
+  <span></span>
+
+  <span class="text-base font-thin">
+    
+    tech-lessons.in © 2020 / Powered by  <a class="font-bold" target="_blank" href="https://gohugo.io/">Hugo</a>
+    
+  </span>
+
+  <span onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="p-1 cursor-pointer">
+    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" stroke-width="1.5"
+      stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M18 15l-6 -6l-6 6h12" />
+    </svg>
+  </span>
+</footer>
+
+<div class="search-ui absolute top-0 left-0 w-full h-full bg-white dark:bg-gray-800 hidden">
+  <div class="container max-w-3xl mx-auto p-12">
+    <div class="relative">
+      <div class="my-4 text-center text-2xl font-bold">Search</div>
+
+      <span class="p-2 absolute right-0 top-0 cursor-pointer close-search">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5"
+          stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </span>
+    </div>
+
+    <input type="search" class="py-2 px-3 w-full dark:text-black border dark:border-transparent"
+      placeholder="Enter search query" />
+
+    <div class="search-results text-lg font-medium my-4 hidden">Results</div>
+    <ul class="search-list my-2">
+
+    </ul>
+
+    <div class="no-results text-center my-8 hidden">
+      <div class="text-xl font-semibold mb-2">No results found</div>
+      <p class="font-light text-sm">Try adjusting your search query</p>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+<script src="//localhost:1313/js/scripts.min.js"></script>
+
+
+      <script async src="https://www.googletagmanager.com/gtag/js?id=G-9KKTKFQ2CM"></script>
+      <script>
+        var doNotTrack = false;
+        if ( false ) {
+          var dnt = (navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack);
+          var doNotTrack = (dnt == "1" || dnt == "yes");
+        }
+        if (!doNotTrack) {
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-9KKTKFQ2CM');
+        }
+      </script>
+
+
+
+
+
+<script>
+  const mobileMenuButton = document.querySelector('.mobile-menu-button')
+  const mobileMenu = document.querySelector('.mobile-menu')
+  function toggleMenu() {
+    mobileMenu.classList.toggle('hidden');
+    mobileMenu.classList.toggle('flex');
+  }
+  if(mobileMenu && mobileMenuButton){
+    mobileMenuButton.addEventListener('click', toggleMenu)
+  }
+</script>
+</body>
+</html>

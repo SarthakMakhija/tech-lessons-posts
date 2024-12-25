@@ -1,0 +1,723 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/blog/</loc>
+        
+        <lastmod>2024-10-10T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/building-blocks-of-lsm/</loc>
+        
+        <lastmod>2024-10-10T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/blog/building_blocks_of_lsm/</loc>
+        
+        <lastmod>2024-10-10T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/blog/building_blocks_of_lsm_memtable/</loc>
+        
+        <lastmod>2024-10-10T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/blog/building_blocks_of_lsm_wal/</loc>
+        
+        <lastmod>2024-10-10T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/lsm/</loc>
+        
+        <lastmod>2024-10-10T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/memtable/</loc>
+        
+        <lastmod>2024-10-10T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/</loc>
+        
+        <lastmod>2024-10-10T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/</loc>
+        
+        <lastmod>2024-10-10T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/wal/</loc>
+        
+        <lastmod>2024-10-10T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/event-loop/</loc>
+        
+        <lastmod>2024-05-22T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/golang/</loc>
+        
+        <lastmod>2024-05-22T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/blog/many_flavors_of_networking_io/</loc>
+        
+        <lastmod>2024-05-22T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/networking/</loc>
+        
+        <lastmod>2024-05-22T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/tcp/</loc>
+        
+        <lastmod>2024-05-22T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/cache-line-hash-table/</loc>
+        
+        <lastmod>2024-04-19T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/blog/cache_line_hash_table/</loc>
+        
+        <lastmod>2024-04-19T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/clht/</loc>
+        
+        <lastmod>2024-04-19T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/cpu-cache-line/</loc>
+        
+        <lastmod>2024-04-19T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/hash-table/</loc>
+        
+        <lastmod>2024-04-19T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/xsync/</loc>
+        
+        <lastmod>2024-04-19T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/blog/serializable_snapshot_isolation/</loc>
+        
+        <lastmod>2024-03-22T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/badgerdb/</loc>
+        
+        <lastmod>2024-03-22T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/isolation/</loc>
+        
+        <lastmod>2024-03-22T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/serializable-snapshot-isolation/</loc>
+        
+        <lastmod>2024-03-22T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/transaction/</loc>
+        
+        <lastmod>2024-03-22T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/assertions/</loc>
+        
+        <lastmod>2024-01-24T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/clearcheck/</loc>
+        
+        <lastmod>2024-01-24T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/blog/diving_into_rust/</loc>
+        
+        <lastmod>2024-01-24T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/elegant-assertions/</loc>
+        
+        <lastmod>2024-01-24T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/rust/</loc>
+        
+        <lastmod>2024-01-24T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/page/projects/</loc>
+        
+        <lastmod>2024-01-20T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/page/</loc>
+        
+        <lastmod>2024-01-20T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/cache/</loc>
+        
+        <lastmod>2023-05-26T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/cached/</loc>
+        
+        <lastmod>2023-05-26T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/blog/designing_lfu_cache/</loc>
+        
+        <lastmod>2023-05-26T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/tinylfu/</loc>
+        
+        <lastmod>2023-05-26T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/bitcask/</loc>
+        
+        <lastmod>2023-05-04T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/blog/bitcask/</loc>
+        
+        <lastmod>2023-05-04T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/log-structured/</loc>
+        
+        <lastmod>2023-05-04T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/storage-engine/</loc>
+        
+        <lastmod>2023-05-04T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/lsm-tree/</loc>
+        
+        <lastmod>2023-03-10T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/ssd-conscious/</loc>
+        
+        <lastmod>2023-03-10T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/wisckey/</loc>
+        
+        <lastmod>2023-03-10T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/blog/wisckey_ssd_conscious_key_value_store/</loc>
+        
+        <lastmod>2023-03-10T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/blog/bloom_filter/</loc>
+        
+        <lastmod>2023-02-25T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/bloom-filter/</loc>
+        
+        <lastmod>2023-02-25T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/probabilistic-data-structure/</loc>
+        
+        <lastmod>2023-02-25T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/page/about/</loc>
+        
+        <lastmod>2023-02-24T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/agile/</loc>
+        
+        <lastmod>2023-02-24T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/blog/code_without_tests/</loc>
+        
+        <lastmod>2023-02-24T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/blog/count_min_sketch/</loc>
+        
+        <lastmod>2023-02-24T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/count-min-sketch/</loc>
+        
+        <lastmod>2023-02-24T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/refactoring/</loc>
+        
+        <lastmod>2023-02-24T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/testing/</loc>
+        
+        <lastmod>2023-02-24T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/persistent-memory/</loc>
+        
+        <lastmod>2022-04-28T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/blog/persistent_memory/</loc>
+        
+        <lastmod>2022-04-28T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/c/</loc>
+        
+        <lastmod>2021-12-21T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/cgo/</loc>
+        
+        <lastmod>2021-12-21T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/blog/invoking_c_from_go/</loc>
+        
+        <lastmod>2021-12-21T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/bytecode/</loc>
+        
+        <lastmod>2021-04-04T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/blog/diving_into_java_bytecode/</loc>
+        
+        <lastmod>2021-04-04T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/java/</loc>
+        
+        <lastmod>2021-04-04T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/jvm/</loc>
+        
+        <lastmod>2021-04-04T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/aws-lambda/</loc>
+        
+        <lastmod>2020-04-19T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/blog/aws_lambda_a_virtual_podcast/</loc>
+        
+        <lastmod>2020-04-19T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/serverless/</loc>
+        
+        <lastmod>2020-04-19T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/cdk/</loc>
+        
+        <lastmod>2020-03-18T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/blog/concluding_serverless_journey/</loc>
+        
+        <lastmod>2020-03-18T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/localstack/</loc>
+        
+        <lastmod>2020-03-14T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/blog/testing_serverless_journey/</loc>
+        
+        <lastmod>2020-03-14T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/blog/beginning_serverless_journey/</loc>
+        
+        <lastmod>2020-03-10T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/blogging/</loc>
+        
+        <lastmod>2019-06-07T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/blog/invest_in_blogging/</loc>
+        
+        <lastmod>2019-06-07T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/domain-specific-language/</loc>
+        
+        <lastmod>2018-05-27T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/dsl/</loc>
+        
+        <lastmod>2018-05-27T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/kotlin/</loc>
+        
+        <lastmod>2018-05-27T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/blog/kotlin_dsl/</loc>
+        
+        <lastmod>2018-05-27T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/blog/kotlin_wishlist_for_java/</loc>
+        
+        <lastmod>2018-04-20T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/broken-window-theory/</loc>
+        
+        <lastmod>2018-04-12T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/legacy-code/</loc>
+        
+        <lastmod>2018-04-12T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/blog/lets_deal_with_legacy_code/</loc>
+        
+        <lastmod>2018-04-12T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/boy-scout-rule/</loc>
+        
+        <lastmod>2018-04-10T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/blog/lets_define_legacy_code/</loc>
+        
+        <lastmod>2018-04-10T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/feature-toggles/</loc>
+        
+        <lastmod>2017-10-07T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/flips/</loc>
+        
+        <lastmod>2017-10-07T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/blog/flips_feature_flipping_for_java/</loc>
+        
+        <lastmod>2017-10-07T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/spring/</loc>
+        
+        <lastmod>2017-10-07T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/tags/spring-mvc/</loc>
+        
+        <lastmod>2017-10-07T00:00:00+00:00</lastmod>
+        
+        
+    </url>
+    
+    <url>
+        <loc>https://tech-lessons.in//localhost:1313/en/categories/</loc>
+        
+        
+    </url>
+    
+</urlset>

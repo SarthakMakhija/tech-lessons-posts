@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>CLHT on tech-lessons.in</title>
+    <link>//localhost:1313/en/tags/clht/</link>
+    <description>Recent content in CLHT on tech-lessons.in</description>
+    <generator>Hugo</generator>
+    <language>en</language>
+    <lastBuildDate>Fri, 19 Apr 2024 00:00:00 +0000</lastBuildDate>
+    <atom:link href="//localhost:1313/en/tags/clht/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Cache-Line Hash Table</title>
+      <link>//localhost:1313/en/blog/cache_line_hash_table/</link>
+      <pubDate>Fri, 19 Apr 2024 00:00:00 +0000</pubDate>
+      <guid>//localhost:1313/en/blog/cache_line_hash_table/</guid>
+      <description>&lt;h3 id=&#34;introduction&#34;&gt;Introduction&lt;/h3&gt;&#xA;&lt;p&gt;In the world of multi-core processors, managing concurrent access to data structures is crucial for efficient performance. But frequent updates can trigger a hidden bottleneck: cache coherence traffic. This traffic arises when one core modifies the data another core has cached, forcing updates and invalidation across the system.&lt;/p&gt;&#xA;&lt;p&gt;This article dives into a clever solution: the Cache-Line Hash Table (CLHT).  CLHTs are specifically designed to minimize this cache coherence traffic, boosting the speed of concurrent data access. We&amp;rsquo;ll explore the core ideas behind CLHTs, including:&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

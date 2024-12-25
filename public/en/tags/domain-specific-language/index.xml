@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Domain Specific Language on tech-lessons.in</title>
+    <link>//localhost:1313/en/tags/domain-specific-language/</link>
+    <description>Recent content in Domain Specific Language on tech-lessons.in</description>
+    <generator>Hugo</generator>
+    <language>en</language>
+    <lastBuildDate>Sun, 27 May 2018 00:00:00 +0000</lastBuildDate>
+    <atom:link href="//localhost:1313/en/tags/domain-specific-language/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Kotlin DSL</title>
+      <link>//localhost:1313/en/blog/kotlin_dsl/</link>
+      <pubDate>Sun, 27 May 2018 00:00:00 +0000</pubDate>
+      <guid>//localhost:1313/en/blog/kotlin_dsl/</guid>
+      <description>&lt;blockquote&gt;&#xA;&lt;blockquote&gt;&#xA;&lt;p&gt;A domain-specific language (DSL) is a computer language specialized to a particular application domain. This is in contrast to a general-purpose language (GPL), which is broadly applicable across domains. There are a wide variety of DSLs, ranging from widely used languages for common domains, such as HTML for web pages, down to languages used by only one or a few pieces of software.&lt;/p&gt;&#xA;&lt;/blockquote&gt;&#xA;&lt;/blockquote&gt;&#xA;&lt;h3 id=&#34;kotlin-dsl&#34;&gt;Kotlin DSL&lt;/h3&gt;&#xA;&lt;p&gt;Kotlin provides first class support for DSL which allows us to express domain-specific operations much more concisely than an equivalent piece of code in a general-purpose language.&#xA;Let&amp;rsquo;s try and build a simple DSL in Kotlin -&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

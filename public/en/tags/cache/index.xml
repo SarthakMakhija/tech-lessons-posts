@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Cache on tech-lessons.in</title>
+    <link>//localhost:1313/en/tags/cache/</link>
+    <description>Recent content in Cache on tech-lessons.in</description>
+    <generator>Hugo</generator>
+    <language>en</language>
+    <lastBuildDate>Fri, 26 May 2023 00:00:00 +0000</lastBuildDate>
+    <atom:link href="//localhost:1313/en/tags/cache/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Designing an in-memory LFU cache</title>
+      <link>//localhost:1313/en/blog/designing_lfu_cache/</link>
+      <pubDate>Fri, 26 May 2023 00:00:00 +0000</pubDate>
+      <guid>//localhost:1313/en/blog/designing_lfu_cache/</guid>
+      <description>&lt;p&gt;I had been working on building an in-memory LFU cache (least frequently used cache) and now that it is done, I thought of writing about the building blocks of an LFU cache. This article shares the building blocks of an LFU cache along with the ideas from two research papers: &lt;a href=&#34;https://dgraph.io/blog/refs/TinyLFU%20-%20A%20Highly%20Efficient%20Cache%20Admission%20Policy.pdf&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;TinyLFU&lt;/a&gt;&#xA; and &lt;a href=&#34;https://dgraph.io/blog/refs/bp_wrapper.pdf&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;BP-Wrapper&lt;/a&gt;&#xA;&lt;/p&gt;&#xA;&lt;p&gt;&lt;a href=&#34;https://github.com/SarthakMakhija/cached&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;CacheD&lt;/a&gt;&#xA; is the name of my cache, and it is inspired by &lt;a href=&#34;https://github.com/dgraph-io/ristretto&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Ristretto&lt;/a&gt;&#xA;.&#xA;I know &lt;strong&gt;CacheD&lt;/strong&gt; is a very creative name. Thank you.&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

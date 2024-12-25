@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Boy Scout Rule on tech-lessons.in</title>
+    <link>//localhost:1313/en/tags/boy-scout-rule/</link>
+    <description>Recent content in Boy Scout Rule on tech-lessons.in</description>
+    <generator>Hugo</generator>
+    <language>en</language>
+    <lastBuildDate>Tue, 10 Apr 2018 00:00:00 +0000</lastBuildDate>
+    <atom:link href="//localhost:1313/en/tags/boy-scout-rule/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Let&#39;s define Legacy code</title>
+      <link>//localhost:1313/en/blog/lets_define_legacy_code/</link>
+      <pubDate>Tue, 10 Apr 2018 00:00:00 +0000</pubDate>
+      <guid>//localhost:1313/en/blog/lets_define_legacy_code/</guid>
+      <description>&lt;p&gt;&amp;ldquo;I have been having sleepless nights trying to add features in the code that we acquired from other company. I am dealing with the purest form of &lt;em&gt;Legacy code&lt;/em&gt;.&amp;rdquo;&lt;/p&gt;&#xA;&lt;p&gt;&amp;ldquo;I am having a real hard time dealing with tangled, unstructured code that I have to work with, but I don’t understand a bit. &lt;em&gt;Legacy code&lt;/em&gt;&amp;rdquo;&lt;/p&gt;&#xA;&lt;p&gt;&lt;em&gt;Legacy code&lt;/em&gt; is a term which probably has a lot of different definitions like: code acquired from someone else, code written by someone else, code that is hard to understand or code written in outdated technologies. Whatever be the definition, most of us believe &lt;em&gt;Legacy code is Scary.&lt;/em&gt;&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

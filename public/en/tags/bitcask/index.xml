@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Bitcask on tech-lessons.in</title>
+    <link>//localhost:1313/en/tags/bitcask/</link>
+    <description>Recent content in Bitcask on tech-lessons.in</description>
+    <generator>Hugo</generator>
+    <language>en</language>
+    <lastBuildDate>Thu, 04 May 2023 00:00:00 +0000</lastBuildDate>
+    <atom:link href="//localhost:1313/en/tags/bitcask/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Bitcask - A Log-Structured Hash Table</title>
+      <link>//localhost:1313/en/blog/bitcask/</link>
+      <pubDate>Thu, 04 May 2023 00:00:00 +0000</pubDate>
+      <guid>//localhost:1313/en/blog/bitcask/</guid>
+      <description>&lt;p&gt;Bitcask is an embeddable key/value storage engine that is defined as a &amp;ldquo;Log-Structured Hash Table&amp;rdquo; in the paper that introduced it. Bitcask follows a simple model: all the&#xA;key/value pairs are written to &lt;em&gt;append-only files&lt;/em&gt;, and an in-memory data structure contains a mapping between each key and the position of the value in the data file.&lt;/p&gt;&#xA;&lt;p&gt;Let&amp;rsquo;s understand the different components of Bitcask.&lt;/p&gt;&#xA;&lt;h3 id=&#34;bitcask-components&#34;&gt;Bitcask components&lt;/h3&gt;&#xA;&lt;p&gt;Bitcask is a straightforward model to understand. It consists of two components:&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

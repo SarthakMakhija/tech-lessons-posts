@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en" itemscope itemtype="http://schema.org/WebPage"><head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <link rel="icon" href="/favicon.png">
+
+  <title>
+  Building blocks of LSM based key/value storage engines: WAL - tech-lessons.in
+  </title>
+  <meta name="description" content="asdasdasdsadas" />
+  <meta name="author" content="Sarthak Makhija" />
+  
+     <meta property="og:image" content="/bloomfilter_title.webp" />
+  <meta name="generator" content="Hugo 0.140.1"><link rel="stylesheet" href="/css/styles.css" />
+
+  
+  
+
+  <meta property="og:url" content="//localhost:1313/en/blog/building_blocks_of_lsm_wal/">
+  <meta property="og:site_name" content="tech-lessons.in">
+  <meta property="og:title" content="Building blocks of LSM based key/value storage engines: WAL">
+  <meta property="og:description" content="asdasdasdsadas">
+  <meta property="og:locale" content="en">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="blog">
+    <meta property="article:published_time" content="2024-10-10T00:00:00+00:00">
+    <meta property="article:modified_time" content="2024-10-10T00:00:00+00:00">
+    <meta property="article:tag" content="LSM">
+    <meta property="article:tag" content="Building Blocks of LSM">
+    <meta property="article:tag" content="WAL">
+
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Building blocks of LSM based key/value storage engines: WAL">
+  <meta name="twitter:description" content="asdasdasdsadas">
+
+  
+  <meta itemprop="name" content="Building blocks of LSM based key/value storage engines: WAL">
+  <meta itemprop="description" content="asdasdasdsadas">
+  <meta itemprop="datePublished" content="2024-10-10T00:00:00+00:00">
+  <meta itemprop="dateModified" content="2024-10-10T00:00:00+00:00">
+  <meta itemprop="wordCount" content="1540">
+  <meta itemprop="keywords" content="LSM,Building Blocks of LSM,WAL">
+
+  
+</head>
+<body class="dark:bg-gray-800 dark:text-white relative flex flex-col min-h-screen"><header class="container flex justify-between md:justify-between gap-4 flex-wrap p-6 mx-auto relative">
+  <a href="//localhost:1313/en/" class="capitalize font-extrabold text-2xl">
+    
+    <img src="/logo.png" alt="tech-lessons.in" class="h-8 max-w-full" />
+    
+  </a>
+  <button class="mobile-menu-button md:hidden">
+    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <line x1="4" y1="8" x2="20" y2="8" />
+      <line x1="4" y1="16" x2="20" y2="16" />
+    </svg>
+  </button>
+  <ul class="mobile-menu absolute z-10 px-6 pb-6 md:p-0 top-full left-0 w-full md:w-auto md:relative hidden md:flex flex-col md:flex-row items-end md:items-center gap-4 lg:gap-6 bg-white dark:bg-gray-800">
+
+    
+    <li><a href="/en/">Home</a></li>
+    
+    <li><a href="/en/blog">Blogs</a></li>
+    
+    <li><a href="/en/page/about/">About Me</a></li>
+    
+    <li><a href="/en/page/projects/">My projects</a></li>
+    
+
+    
+
+    
+    <li class="grid place-items-center">
+      <span class="open-search inline-block cursor-pointer">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5"
+          stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+          <circle cx="10" cy="10" r="7" />
+          <line x1="21" y1="21" x2="15" y2="15" />
+        </svg>
+      </span>
+    </li>
+    
+
+    
+  </ul>
+</header>
+<main class="flex-1">
+  
+  
+
+  
+  <div class="relative max-w-5xl mx-auto px-4">
+    <img src="/bloomfilter_title.webp" class="rounded-lg shadow-sm w-full object-contain" />
+    
+    
+    <div class="absolute top-4 right-8 rounded shadow bg-white text-gray-900 dark:bg-gray-900 dark:text-white px-2 py-0.5">
+      
+  
+    October 10, 2024
+  
+
+
+    </div>
+    
+  </div>
+  
+
+  <article class="prose lg:prose-lg mx-auto my-8 dark:prose-dark px-4 max-w-5xl">
+
+    <h1 class="text-2xl font-bold mb-2">Building blocks of LSM based key/value storage engines: WAL</h1>
+    
+    <h5 class="text-sm flex items-center flex-wrap">
+      <svg xmlns="http://www.w3.org/2000/svg" class="mr-1" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+        <rect x="4" y="5" width="16" height="16" rx="2" />
+        <line x1="16" y1="3" x2="16" y2="7" />
+        <line x1="8" y1="3" x2="8" y2="7" />
+        <line x1="4" y1="11" x2="20" y2="11" />
+        <rect x="8" y="15" width="2" height="2" />
+      </svg>
+      Posted on 
+  
+    October 10, 2024
+  
+
+
+      
+        &nbsp;&bull;&nbsp;
+      
+      <svg xmlns="http://www.w3.org/2000/svg" class="mr-1" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+        <circle cx="12" cy="12" r="9" />
+        <polyline points="12 7 12 12 15 15" />
+      </svg>
+      8&nbsp;minutes
+      &nbsp;&bull;
+      <svg xmlns="http://www.w3.org/2000/svg" class="mx-1" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+        <path d="M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0" />
+        <path d="M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0" />
+        <line x1="3" y1="6" x2="3" y2="19" />
+        <line x1="12" y1="6" x2="12" y2="19" />
+        <line x1="21" y1="6" x2="21" y2="19" />
+      </svg>
+      1540&nbsp;words
+      
+    </h5>
+    
+
+    <details id="TableOfContents" class="px-4 mt-4 bg-gray-100 dark:bg-gray-700 rounded toc">
+    <summary class="flex items-center font-bold py-2 px-4 cursor-pointer justify-between select-none text-black dark:text-white">
+      <span>Table of contents</span>
+      <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-down" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+        <polyline points="6 9 12 15 18 9"></polyline>
+     </svg>
+    </summary>
+
+    <ul class="mt-2 pb-4">
+        
+
+        
+        <li>
+        <a href="#encode-and-append">Encode and append</a>
+        
+
+        
+        </li><li>
+        <a href="#fsync">Fsync</a>
+        
+
+        
+        </li><li>
+        <a href="#recovery-from-wal">Recovery from WAL</a>
+        
+
+        
+        <ul>
+            <li>
+        <a href="#rebuilding-memtables-from-wals">Rebuilding Memtables from WALs</a>
+        
+
+        
+        </li><li>
+        <a href="#wal-loading-and-recovery-strategies">WAL loading and recovery strategies</a>
+        
+
+        
+        </li></ul>
+      </li><li>
+        <a href="#summary">Summary</a>
+        
+
+        
+        </li><li>
+        <a href="#code">Code</a>
+        </li></ul>
+  </details>
+
+    <p>The Write-Ahead Log (WAL) is a fundamental component of LSM-based key-value storage engines, ensuring data durability and
+enabling recovery from system failures. The concept is straightforward: a WAL is an append-only log file on disk.
+In an LSM-based storage engine, every write operation, whether it&rsquo;s a single key-value pair or a transactional batch, is first
+recorded in the WAL before being added to the active memtable. This append-only nature of WALs allows for efficient sequential disk
+access.</p>
+<h3 id="encode-and-append">Encode and append</h3>
+<p><a href="https://github.com/SarthakMakhija/go-lsm/blob/main/log/wal.go#L71" target="_blank" rel="noopener">Appending</a>
+ to a WAL involves accepting a key-value pair or a
+transactional batch, encoding the data, and writing it to the file. The code for append looks like the following:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">var</span> ReservedKeySize = <span style="color:#8be9fd;font-style:italic">int</span>(unsafe.<span style="color:#50fa7b">Sizeof</span>(<span style="color:#8be9fd;font-style:italic">uint16</span>(<span style="color:#bd93f9">0</span>)))
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">var</span> ReservedValueSize = <span style="color:#8be9fd;font-style:italic">int</span>(unsafe.<span style="color:#50fa7b">Sizeof</span>(<span style="color:#8be9fd;font-style:italic">uint16</span>(<span style="color:#bd93f9">0</span>)))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">func</span> (wal <span style="color:#ff79c6">*</span>WAL) <span style="color:#50fa7b">Append</span>(key kv.Key, value kv.Value) <span style="color:#8be9fd">error</span> {
+</span></span><span style="display:flex;"><span>	buffer <span style="color:#ff79c6">:=</span> <span style="color:#8be9fd;font-style:italic">make</span>([]<span style="color:#8be9fd">byte</span>, key.<span style="color:#50fa7b">EncodedSizeInBytes</span>()<span style="color:#ff79c6">+</span>value.<span style="color:#50fa7b">SizeInBytes</span>()<span style="color:#ff79c6">+</span>ReservedKeySize<span style="color:#ff79c6">+</span>ReservedValueSize)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	binary.LittleEndian.<span style="color:#50fa7b">PutUint16</span>(buffer, <span style="color:#8be9fd;font-style:italic">uint16</span>(key.<span style="color:#50fa7b">EncodedSizeInBytes</span>()))
+</span></span><span style="display:flex;"><span>	<span style="color:#8be9fd;font-style:italic">copy</span>(buffer[block.ReservedKeySize:], key.<span style="color:#50fa7b">EncodedBytes</span>())
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	binary.LittleEndian.<span style="color:#50fa7b">PutUint16</span>(buffer[block.ReservedKeySize<span style="color:#ff79c6">+</span>key.<span style="color:#50fa7b">EncodedSizeInBytes</span>():], <span style="color:#8be9fd;font-style:italic">uint16</span>(value.<span style="color:#50fa7b">SizeInBytes</span>()))
+</span></span><span style="display:flex;"><span>	<span style="color:#8be9fd;font-style:italic">copy</span>(buffer[block.ReservedKeySize<span style="color:#ff79c6">+</span>key.<span style="color:#50fa7b">EncodedSizeInBytes</span>()<span style="color:#ff79c6">+</span>block.ReservedValueSize:], value.<span style="color:#50fa7b">Bytes</span>())
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	_, err <span style="color:#ff79c6">:=</span> wal.file.<span style="color:#50fa7b">Write</span>(buffer)
+</span></span><span style="display:flex;"><span>	<span style="color:#ff79c6">return</span> err
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>The append operation in the WAL (Write-Ahead Log) involves handling variable-length data for
+<a href="https://github.com/SarthakMakhija/go-lsm/blob/737fa1ee1266bf9b96b454e729d63bbb9d7a928f/kv/key.go" target="_blank" rel="noopener">Key</a>
+/<a href="https://github.com/SarthakMakhija/go-lsm/blob/737fa1ee1266bf9b96b454e729d63bbb9d7a928f/kv/value.go" target="_blank" rel="noopener">Value</a>
+
+pairs. Since the file needs information about the key and value sizes for proper decoding during recovery, the code utilizes
+a specific encoding scheme.</p>
+<ol>
+<li><strong>Size Precedence</strong>:</li>
+</ol>
+<ul>
+<li>Two bytes are reserved at the beginning to store the size (encoded length) of the key.</li>
+<li>Another two bytes are reserved following the key to store the size of the value.
+This approach limits both key and value sizes to a maximum of 64KB (2 bytes can represent a maximum value of 65535).</li>
+</ul>
+<ol start="2">
+<li><strong>Encoding Format</strong>:
+The following format illustrates the structure of the data written to the WAL:</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span> <span style="color:#ff79c6">-------------------------------------------------------</span>
+</span></span><span style="display:flex;"><span>| <span style="color:#bd93f9">2</span> bytes key size | kv.Key | <span style="color:#bd93f9">2</span> bytes value size | Value|
+</span></span><span style="display:flex;"><span> <span style="color:#ff79c6">-------------------------------------------------------</span>
+</span></span></code></pre></div><ul>
+<li>The first two bytes represent the encoded size of the key.</li>
+<li>Following this is the actual encoded byte sequence of the key itself.</li>
+<li>Next two bytes contain the encoded size of the value.</li>
+<li>Finally, the remaining bytes represent the actual value data.</li>
+</ul>
+<ol start="3">
+<li><strong>Writing to the WAL File</strong>:
+Once the key-value pair is encoded according to the defined format, the entire byte sequence is written to the underlying WAL file.</li>
+</ol>
+<p>Before moving further, I would like to refer to the post by <a href="https://www.databass.dev/" target="_blank" rel="noopener">Alex Petrov</a>
+ on <a href="https://medium.com/databasss/on-disk-io-part-1-flavours-of-io-8e1ace1de017#:~:text=There%20are%20several%20%E2%80%9Cflavors%E2%80%9D%20of,Vectored%20IO%3A%20writev%2C%20readv" target="_blank" rel="noopener">Flavors of IO</a>
+.</p>
+<p><strong>Standard IO</strong>: uses <code>read()</code> and <code>write()</code> system calls for performing IO operations. These system calls involve three components:
+Application, kernel page cache and the underlying block device. A file read from the application will check if the data is available
+in the kernel page cache. If the data is present in the page cache, it is simply copied to the user-space, else the data
+is loaded from the underlying block device to the page cache and then returned to the user. A file write simply copies
+user-space buffer (/byte array) to kernel page cache, marking the written page as dirty. The data is not written to the disk immediately.</p>
+<p><strong>Direct IO</strong>: bypasses kernel page cache, thereby transferring the data from the application to the underlying device. While
+direct I/O can improve performance by reducing the number of context switches and memory copies, it doesn&rsquo;t guarantee that the
+data is immediately written to disk.</p>
+<p>We need to ensure that the data modifications are transferred to the underlying device. Let&rsquo;s look at fsync.</p>
+<h3 id="fsync">Fsync</h3>
+<p>Durability in a storage system guarantees that data modifications persist even in the event of crashes or power failures.
+While a file write (<code>file.write(..)</code>) system call modifies OS page caches, it doesn&rsquo;t necessarily ensure the data is immediately
+transferred to the physical disk.</p>
+<p>To achieve true durability, the operating system&rsquo;s page cache needs to be flushed to the underlying storage device.
+This is where the fsync system call comes into play.
+As documented in <a href="https://man7.org/linux/man-pages/man2/fsync.2.html" target="_blank" rel="noopener">man7.org</a>
+, fsync forces the modified data to be written
+to the disk, ensuring its persistence even in system crashes or reboots.</p>
+<p>While fsync guarantees data integrity, it comes at a cost. Each fsync call introduces a performance overhead as it waits for
+the write operation to complete on the disk. This can significantly impact application throughput, as the following figure
+demonstrates with performance figures from a 300GB NVMe SSD.</p>
+<figure>
+    <img class="align-center" src="/fsync_and_without_fsync.png" /> 
+    <figcaption class="figcaption">Throughput with fsync after each write and without fsync: m5d.2xlarge, 8 vCPU, 32 GB Memory, 300GB NVMe SSD </figcaption>
+</figure>
+<p>A crucial question arises: when should the system perform fsync? Here&rsquo;s a breakdown of different strategies:</p>
+<p>Let&rsquo;s explore various choices around the timing of fsync system call.</p>
+<ol>
+<li><strong>After every write</strong>: This approach involves performing fsync after writing each individual key-value pair.
+While offering the strongest durability guarantee, it incurs the highest performance penalty.</li>
+<li><strong>After batch writes</strong>: Transactional key-value stores often <a href="https://github.com/SarthakMakhija/go-lsm/blob/main/kv/batch.go" target="_blank" rel="noopener">batch</a>
+
+writes together. In this case, fsync would be called only upon successful transaction commit, ensuring all key-value pairs in the
+batch are written and persisted.</li>
+<li><strong>Never (rely on OS)</strong>: This simplest approach skips fsync entirely, relying on the operating system to handle page cache
+flushing. However, this sacrifices durability – data might be lost in case of a crash before the OS flushes the updated pages.</li>
+<li><strong>Scheduled WAL flushes</strong>: For key-value stores using Write-Ahead Logs (WAL), the system can periodically flush the WAL to disk,
+triggering fsync. This balances durability with performance by flushing less frequently than option 1.</li>
+<li><strong>Memtable full flush</strong>: If each memtable has a dedicated WAL, fsync can be performed on the WAL when the corresponding memtable
+reaches capacity. This approach combines fsync with the natural flush point of a memtable, offering a reasonable compromise between
+durability and performance.</li>
+</ol>
+<p>It&rsquo;s important to note that only options 1 and 2 guarantee data durability since they involve explicit fsync calls.</p>
+<h3 id="recovery-from-wal">Recovery from WAL</h3>
+<p>During a system crash, write-ahead Logs (WALs) provide a mechanism to recover lost data. In key-value storage engines that
+maintain a dedicated WAL for each memtable, recovery involves rebuilding the memtable from its corresponding WAL.</p>
+<p>However, recovery skips memtables that have already been flushed to SSTables (Sorted String Tables). We&rsquo;ll delve deeper into
+this process in the upcoming <a href="/en/blog/building_blocks_of_lsm_manifest/">Manifest</a>
+ article of this series.</p>
+<h4 id="rebuilding-memtables-from-wals">Rebuilding Memtables from WALs</h4>
+<p>Memtable recovery entails the following steps:</p>
+<ol>
+<li><strong>Read the WAL File</strong>: The recovery process begins by opening the WAL file associated with the crashed memtable in read-only mode.</li>
+<li><strong>Decode Key-Value Pairs</strong>: The system iterates through the WAL file, decoding each byte sequence into individual key-value pairs.
+Decoding typically involves reading the size information of the key and value data followed by extracting the actual data bytes.</li>
+<li><strong>Rebuild the Memtable</strong>: For each decoded key-value pair, a callback function is invoked. This callback inserts the key-value
+pair into the rebuilt memtable data structure (likely a Skiplist).</li>
+</ol>
+<p>The provided code snippet showcases the <code>Recover</code> function responsible for reading WAL:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">Recover</span>(path <span style="color:#8be9fd">string</span>, callback <span style="color:#8be9fd;font-style:italic">func</span>(key kv.Key, value kv.Value)) (<span style="color:#ff79c6">*</span>WAL, <span style="color:#8be9fd">error</span>) {
+</span></span><span style="display:flex;"><span>	file, err <span style="color:#ff79c6">:=</span> os.<span style="color:#50fa7b">OpenFile</span>(path, os.O_RDONLY|os.O_APPEND, <span style="color:#bd93f9">0666</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#ff79c6">return</span> <span style="color:#ff79c6">nil</span>, err
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	bytes, err <span style="color:#ff79c6">:=</span> io.<span style="color:#50fa7b">ReadAll</span>(file)
+</span></span><span style="display:flex;"><span>	<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#ff79c6">return</span> <span style="color:#ff79c6">nil</span>, err
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#ff79c6">for</span> <span style="color:#8be9fd;font-style:italic">len</span>(bytes) &gt; <span style="color:#bd93f9">0</span> {
+</span></span><span style="display:flex;"><span>		keySize <span style="color:#ff79c6">:=</span> binary.LittleEndian.<span style="color:#50fa7b">Uint16</span>(bytes)
+</span></span><span style="display:flex;"><span>		key <span style="color:#ff79c6">:=</span> bytes[block.ReservedKeySize : <span style="color:#8be9fd;font-style:italic">uint16</span>(block.ReservedKeySize)<span style="color:#ff79c6">+</span>keySize]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>		valueSize <span style="color:#ff79c6">:=</span> binary.LittleEndian.<span style="color:#50fa7b">Uint16</span>(bytes[<span style="color:#8be9fd;font-style:italic">uint16</span>(block.ReservedKeySize)<span style="color:#ff79c6">+</span>keySize:])
+</span></span><span style="display:flex;"><span>		value <span style="color:#ff79c6">:=</span> bytes[<span style="color:#8be9fd;font-style:italic">uint16</span>(block.ReservedKeySize)<span style="color:#ff79c6">+</span>keySize<span style="color:#ff79c6">+</span><span style="color:#8be9fd;font-style:italic">uint16</span>(block.ReservedValueSize) : <span style="color:#8be9fd;font-style:italic">uint16</span>(block.ReservedKeySize)<span style="color:#ff79c6">+</span>keySize<span style="color:#ff79c6">+</span><span style="color:#8be9fd;font-style:italic">uint16</span>(block.ReservedValueSize)<span style="color:#ff79c6">+</span>valueSize]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>		<span style="color:#50fa7b">callback</span>(kv.<span style="color:#50fa7b">DecodeFrom</span>(key), kv.<span style="color:#50fa7b">NewValue</span>(value))
+</span></span><span style="display:flex;"><span>		bytes = bytes[<span style="color:#8be9fd;font-style:italic">uint16</span>(block.ReservedKeySize)<span style="color:#ff79c6">+</span>keySize<span style="color:#ff79c6">+</span><span style="color:#8be9fd;font-style:italic">uint16</span>(block.ReservedValueSize)<span style="color:#ff79c6">+</span>valueSize:]
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#ff79c6">return</span> <span style="color:#ff79c6">&amp;</span>WAL{file: file}, <span style="color:#ff79c6">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>The provided callback function receives a decoded key-value pair and inserts it into the Skiplist of memtable.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span>wal, err <span style="color:#ff79c6">:=</span> log.<span style="color:#50fa7b">Recover</span>(log.<span style="color:#50fa7b">CreateWalPathFor</span>(id, walDirectoryPath), <span style="color:#8be9fd;font-style:italic">func</span>(key kv.Key, value kv.Value) {
+</span></span><span style="display:flex;"><span>    memtable.entries.<span style="color:#50fa7b">Put</span>(key, value)
+</span></span><span style="display:flex;"><span>    maxTimestamp = <span style="color:#8be9fd;font-style:italic">max</span>(maxTimestamp, key.<span style="color:#50fa7b">Timestamp</span>())
+</span></span><span style="display:flex;"><span>})
+</span></span></code></pre></div><p>The full implementation is available <a href="https://github.com/SarthakMakhija/go-lsm/blob/main/memory/memtable.go#L55" target="_blank" rel="noopener">here</a>
+.
+The <code>Recover</code> method in the provided example reads the entire WAL file into memory before processing it. This raises the question
+of alternative strategies for reading and processing WAL files during recovery.</p>
+<h4 id="wal-loading-and-recovery-strategies">WAL loading and recovery strategies</h4>
+<ol>
+<li><strong>Full file read (current approach)</strong>: This is the simplest approach, where the entire WAL file is loaded into memory at once.
+While straightforward, it might be inefficient for large WALs due to high memory consumption.</li>
+<li><strong>Page-aligned WAL</strong>: Here, WAL data is aligned to fixed sized application pages (usually multiple(s) of 4K). Recovery can then
+proceed by reading individual pages from disk. This approach improves memory usage during recovery but introduces fragmentation
+within the WAL during write operations. The author of the book <a href="https://link.springer.com/book/10.1007/978-3-030-33836-7" target="_blank" rel="noopener">Database Design and Implementation</a>
+
+implements page-aligned log for his <a href="https://github.com/eatonphil/sciore-simpledb-3.4/tree/main/SimpleDB_3.4" target="_blank" rel="noopener">SimpleDB</a>
+. <em>Please note the SimpleDB link is from Phil Eaton&rsquo;s git repository</em>.</li>
+<li><strong>Read by encoding</strong>:  This approach avoids reading the entire file upfront. Instead, it performs multiple, smaller file
+reads based on the data encoding. For instance, separate reads can be issued to retrieve the key size, key data, value size, and
+value data. This minimizes memory usage but involves multiple reads from the file. Apache Cassandra implements WAL using this approach.</li>
+<li><strong>Memory-mapped files</strong>: This approach maps the WAL file directly into memory. Reads can then be performed efficiently by
+accessing specific memory addresses. This offers good performance but requires careful memory management to avoid memory
+exhaustion, especially for large WALs. <a href="https://github.com/dgraph-io/badger" target="_blank" rel="noopener">Badger</a>
+ implements WAL as memory-mapped file.</li>
+</ol>
+<h3 id="summary">Summary</h3>
+<p>This article provides a comprehensive overview of Write-Ahead Logs (WALs) in LSM-based key-value storage engines.
+WALs are essential for ensuring data durability and facilitating recovery from system failures.</p>
+<p><strong>Key points</strong>:</p>
+<ul>
+<li>WALs are append-only log files that store encoded key-value pairs.</li>
+<li>Fsync is necessary to ensure data is physically written to disk.</li>
+<li>Various flushing strategies balance durability and performance.</li>
+<li>Memtables can be recovered from WALs after system crashes.</li>
+<li>Multiple strategies exist for loading WALs.</li>
+</ul>
+<h3 id="code">Code</h3>
+<p>WAL implementation is available <a href="https://github.com/SarthakMakhija/go-lsm/blob/main/log/wal.go" target="_blank" rel="noopener">here</a>
+.</p>
+<p>Let&rsquo;s understand <a href="/en/blog/building_blocks_of_lsm_sstable/">SSTables</a>
+, the on-disk representation of data in LSM.</p>
+
+  </article>
+<div class="tag-list-container">
+    <div class="tag-list">
+        
+        <a class="button" href="">
+            <p class="tag"><i class="fa fa-fw fa-tag"></i>LSM</p>
+        </a>
+        
+        <a class="button" href="">
+            <p class="tag"><i class="fa fa-fw fa-tag"></i>Building blocks of LSM</p>
+        </a>
+        
+        <a class="button" href="">
+            <p class="tag"><i class="fa fa-fw fa-tag"></i>WAL</p>
+        </a>
+        
+    </div>
+</div>
+
+
+
+<div class="px-2 mb-2">
+  
+  <script src="https://giscus.app/client.js"
+    data-repo="SarthakMakhija/tech-lessons-comments"
+    data-repo-id="R_kgDOJHu3mA"
+    data-category="Announcements"
+    data-category-id="DIC_kwDOJHu3mM4CUxhS"
+    data-mapping="og:title"
+    data-strict="0"
+    data-reactions-enabled="1"
+    data-emit-metadata="0"
+    data-input-position="bottom"
+    data-theme="light"
+    data-lang="en"
+    crossorigin="anonymous"
+    async>
+  </script>
+  
+</div>
+
+
+
+    </main><footer class="container p-6 mx-auto flex justify-between items-center">
+  <span></span>
+
+  <span class="text-base font-thin">
+    
+    tech-lessons.in © 2020 / Powered by  <a class="font-bold" target="_blank" href="https://gohugo.io/">Hugo</a>
+    
+  </span>
+
+  <span onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="p-1 cursor-pointer">
+    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" stroke-width="1.5"
+      stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M18 15l-6 -6l-6 6h12" />
+    </svg>
+  </span>
+</footer>
+
+<div class="search-ui absolute top-0 left-0 w-full h-full bg-white dark:bg-gray-800 hidden">
+  <div class="container max-w-3xl mx-auto p-12">
+    <div class="relative">
+      <div class="my-4 text-center text-2xl font-bold">Search</div>
+
+      <span class="p-2 absolute right-0 top-0 cursor-pointer close-search">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5"
+          stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </span>
+    </div>
+
+    <input type="search" class="py-2 px-3 w-full dark:text-black border dark:border-transparent"
+      placeholder="Enter search query" />
+
+    <div class="search-results text-lg font-medium my-4 hidden">Results</div>
+    <ul class="search-list my-2">
+
+    </ul>
+
+    <div class="no-results text-center my-8 hidden">
+      <div class="text-xl font-semibold mb-2">No results found</div>
+      <p class="font-light text-sm">Try adjusting your search query</p>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+<script src="//localhost:1313/js/scripts.min.js"></script>
+
+
+      <script async src="https://www.googletagmanager.com/gtag/js?id=G-9KKTKFQ2CM"></script>
+      <script>
+        var doNotTrack = false;
+        if ( false ) {
+          var dnt = (navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack);
+          var doNotTrack = (dnt == "1" || dnt == "yes");
+        }
+        if (!doNotTrack) {
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-9KKTKFQ2CM');
+        }
+      </script>
+
+
+
+
+
+<script>
+  const mobileMenuButton = document.querySelector('.mobile-menu-button')
+  const mobileMenu = document.querySelector('.mobile-menu')
+  function toggleMenu() {
+    mobileMenu.classList.toggle('hidden');
+    mobileMenu.classList.toggle('flex');
+  }
+  if(mobileMenu && mobileMenuButton){
+    mobileMenuButton.addEventListener('click', toggleMenu)
+  }
+</script>
+</body>
+</html>

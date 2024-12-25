@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en" itemscope itemtype="http://schema.org/WebPage"><head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <link rel="icon" href="/favicon.png">
+
+  <title>
+  Flips: Feature Flipping for Java - tech-lessons.in
+  </title>
+  <meta name="description" content="Flips is an implementation of the Feature Toggles pattern for Java and Spring (Spring Core / Spring MVC/ Spring Boot) based application. Feature Toggle is a powerful technique that allows teams to modify the system behavior and deliver new functionality to end-users rapidly and safely. Let&#39;s understand what &#34;Flips&#34; is all about" />
+  <meta name="author" content="Sarthak Makhija" />
+  
+     <meta property="og:image" content="/flips-feature-title-image.webp" />
+  <meta name="generator" content="Hugo 0.140.1"><link rel="stylesheet" href="/css/styles.css" />
+
+  
+  
+
+  <meta property="og:url" content="//localhost:1313/en/blog/flips_feature_flipping_for_java/">
+  <meta property="og:site_name" content="tech-lessons.in">
+  <meta property="og:title" content="Flips: Feature Flipping for Java">
+  <meta property="og:description" content="Flips is an implementation of the Feature Toggles pattern for Java and Spring (Spring Core / Spring MVC/ Spring Boot) based application. Feature Toggle is a powerful technique that allows teams to modify the system behavior and deliver new functionality to end-users rapidly and safely. Let&#39;s understand what &#34;Flips&#34; is all about">
+  <meta property="og:locale" content="en">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="blog">
+    <meta property="article:published_time" content="2017-10-07T00:00:00+00:00">
+    <meta property="article:modified_time" content="2017-10-07T00:00:00+00:00">
+    <meta property="article:tag" content="Flips">
+    <meta property="article:tag" content="Feature Toggles">
+    <meta property="article:tag" content="Spring">
+    <meta property="article:tag" content="Spring MVC">
+
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Flips: Feature Flipping for Java">
+  <meta name="twitter:description" content="Flips is an implementation of the Feature Toggles pattern for Java and Spring (Spring Core / Spring MVC/ Spring Boot) based application. Feature Toggle is a powerful technique that allows teams to modify the system behavior and deliver new functionality to end-users rapidly and safely. Let&#39;s understand what &#34;Flips&#34; is all about">
+
+  
+  <meta itemprop="name" content="Flips: Feature Flipping for Java">
+  <meta itemprop="description" content="Flips is an implementation of the Feature Toggles pattern for Java and Spring (Spring Core / Spring MVC/ Spring Boot) based application. Feature Toggle is a powerful technique that allows teams to modify the system behavior and deliver new functionality to end-users rapidly and safely. Let&#39;s understand what &#34;Flips&#34; is all about">
+  <meta itemprop="datePublished" content="2017-10-07T00:00:00+00:00">
+  <meta itemprop="dateModified" content="2017-10-07T00:00:00+00:00">
+  <meta itemprop="wordCount" content="924">
+  <meta itemprop="keywords" content="Flips,Feature Toggles,Spring,Spring MVC">
+
+  
+</head>
+<body class="dark:bg-gray-800 dark:text-white relative flex flex-col min-h-screen"><header class="container flex justify-between md:justify-between gap-4 flex-wrap p-6 mx-auto relative">
+  <a href="//localhost:1313/en/" class="capitalize font-extrabold text-2xl">
+    
+    <img src="/logo.png" alt="tech-lessons.in" class="h-8 max-w-full" />
+    
+  </a>
+  <button class="mobile-menu-button md:hidden">
+    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <line x1="4" y1="8" x2="20" y2="8" />
+      <line x1="4" y1="16" x2="20" y2="16" />
+    </svg>
+  </button>
+  <ul class="mobile-menu absolute z-10 px-6 pb-6 md:p-0 top-full left-0 w-full md:w-auto md:relative hidden md:flex flex-col md:flex-row items-end md:items-center gap-4 lg:gap-6 bg-white dark:bg-gray-800">
+
+    
+    <li><a href="/en/">Home</a></li>
+    
+    <li><a href="/en/blog">Blogs</a></li>
+    
+    <li><a href="/en/page/about/">About Me</a></li>
+    
+    <li><a href="/en/page/projects/">My projects</a></li>
+    
+
+    
+
+    
+    <li class="grid place-items-center">
+      <span class="open-search inline-block cursor-pointer">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5"
+          stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+          <circle cx="10" cy="10" r="7" />
+          <line x1="21" y1="21" x2="15" y2="15" />
+        </svg>
+      </span>
+    </li>
+    
+
+    
+  </ul>
+</header>
+<main class="flex-1">
+  
+  
+
+  
+  <div class="relative max-w-5xl mx-auto px-4">
+    <img src="/flips-feature-title-image.webp" class="rounded-lg shadow-sm w-full object-contain" />
+    
+    <figcaption class="font-extralight text-xs"><i>Background by Martin Adams on Unsplash</i></figcaption>
+    
+    
+    <div class="absolute top-4 right-8 rounded shadow bg-white text-gray-900 dark:bg-gray-900 dark:text-white px-2 py-0.5">
+      
+  
+    October 7, 2017
+  
+
+
+    </div>
+    
+  </div>
+  
+
+  <article class="prose lg:prose-lg mx-auto my-8 dark:prose-dark px-4 max-w-5xl">
+
+    <h1 class="text-2xl font-bold mb-2">Flips: Feature Flipping for Java</h1>
+    
+    <h5 class="text-sm flex items-center flex-wrap">
+      <svg xmlns="http://www.w3.org/2000/svg" class="mr-1" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+        <rect x="4" y="5" width="16" height="16" rx="2" />
+        <line x1="16" y1="3" x2="16" y2="7" />
+        <line x1="8" y1="3" x2="8" y2="7" />
+        <line x1="4" y1="11" x2="20" y2="11" />
+        <rect x="8" y="15" width="2" height="2" />
+      </svg>
+      Posted on 
+  
+    October 7, 2017
+  
+
+
+      
+        &nbsp;&bull;&nbsp;
+      
+      <svg xmlns="http://www.w3.org/2000/svg" class="mr-1" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+        <circle cx="12" cy="12" r="9" />
+        <polyline points="12 7 12 12 15 15" />
+      </svg>
+      5&nbsp;minutes
+      &nbsp;&bull;
+      <svg xmlns="http://www.w3.org/2000/svg" class="mx-1" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+        <path d="M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0" />
+        <path d="M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0" />
+        <line x1="3" y1="6" x2="3" y2="19" />
+        <line x1="12" y1="6" x2="12" y2="19" />
+        <line x1="21" y1="6" x2="21" y2="19" />
+      </svg>
+      924&nbsp;words
+      
+    </h5>
+    
+
+    <details id="TableOfContents" class="px-4 mt-4 bg-gray-100 dark:bg-gray-700 rounded toc">
+    <summary class="flex items-center font-bold py-2 px-4 cursor-pointer justify-between select-none text-black dark:text-white">
+      <span>Table of contents</span>
+      <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-down" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+        <polyline points="6 9 12 15 18 9"></polyline>
+     </svg>
+    </summary>
+
+    <ul class="mt-2 pb-4">
+        
+
+        
+        <li>
+        <a href="#why-another-library-for-feature-toggles">Why Another Library for Feature Toggles?</a>
+        
+
+        
+        </li><li>
+        <a href="#what-does-flips-offer">What Does Flips Offer?</a>
+        
+
+        
+        </li><li>
+        <a href="#getting-started">Getting Started</a>
+        
+
+        
+        </li><li>
+        <a href="#detailed-description-of-all-the-annotations">Detailed Description of all the annotations</a>
+        
+
+        
+        </li><li>
+        <a href="#import-flip-context-configuration">Import Flip Context Configuration</a>
+        
+
+        
+        </li><li>
+        <a href="#creating-custom-annotations">Creating Custom Annotations</a>
+        
+
+        
+        </li><li>
+        <a href="#what-is-featurenotenabledexception">What is FeatureNotEnabledException</a>
+        
+
+        
+        </li><li>
+        <a href="#wrap-up">Wrap Up</a>
+        </li></ul>
+  </details>
+
+    <img title="Flips" src="/flips.jpg" alt="Flips" />
+<p><a href="https://github.com/Feature-Flip/flips" target="_blank" rel="noopener">Flips</a>
+ is an implementation of the Feature Toggles pattern for Java and Spring (Spring Core / Spring MVC/ Spring Boot) based application.
+<a href="https://martinfowler.com/articles/feature-toggles.html" target="_blank" rel="noopener">Feature Toggle</a>
+ is a powerful technique that allows teams to modify the system behavior and deliver new functionality to end-users rapidly and safely.</p>
+<h3 id="why-another-library-for-feature-toggles">Why Another Library for Feature Toggles?</h3>
+<p>The idea behind <strong>Flips</strong> is to let the clients implement toggles with <em>minimum configuration and coding</em>.</p>
+<p>The main motivations behind implementing this library were:</p>
+<ul>
+<li>Should be simple to use</li>
+<li>Should require minimal configuration and code</li>
+<li>Should be able to flip a feature based on various conditions</li>
+<li>Should be able to flip a feature based on a combination of different conditions</li>
+<li>Should be possible for the clients to create custom conditions to suit their requirements</li>
+</ul>
+<p>The library <strong>Flips</strong> works with Java 8 and Spring Core/Spring MVC/Spring Boot, and is available for web and non-web applications.</p>
+<h3 id="what-does-flips-offer">What Does Flips Offer?</h3>
+<p>The library <strong>Flips</strong> provides various conditions to flip a feature. The image below summarizes the features:
+<img src="/flips-features.png"/></p>
+<p>Any feature can be flipped ON or OFF based on different conditions that can be value of a property, current active profiles, days of the week, or a combination of these, etc.
+Let’s get started with in-depth understanding of these features.</p>
+<h3 id="getting-started">Getting Started</h3>
+<p>Include the necessary dependency:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-gradle" data-lang="gradle"><span style="display:flex;"><span><span style="color:#ff79c6">&lt;</span>dependency<span style="color:#ff79c6">&gt;</span>
+</span></span><span style="display:flex;"><span>   <span style="color:#ff79c6">&lt;</span>groupId<span style="color:#ff79c6">&gt;</span>com<span style="color:#ff79c6">.</span><span style="color:#50fa7b">github</span><span style="color:#ff79c6">.</span><span style="color:#50fa7b">feature</span><span style="color:#ff79c6">-</span>flip<span style="color:#ff79c6">&lt;</span><span style="color:#f1fa8c">/groupId&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#f1fa8c">   &lt;artifactId&gt;flips-web&lt;/</span>artifactId<span style="color:#ff79c6">&gt;</span>
+</span></span><span style="display:flex;"><span>   <span style="color:#ff79c6">&lt;</span>version<span style="color:#ff79c6">&gt;</span><span style="color:#bd93f9">1.0</span><span style="color:#ff79c6">.</span><span style="color:#bd93f9">1</span><span style="color:#ff79c6">&lt;</span><span style="color:#f1fa8c">/version&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#f1fa8c">&lt;/</span>dependency<span style="color:#ff79c6">&gt;</span>
+</span></span></code></pre></div><p>Or,</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-gradle" data-lang="gradle"><span style="display:flex;"><span><span style="color:#ff79c6">&lt;</span>dependency<span style="color:#ff79c6">&gt;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#ff79c6">&lt;</span>groupId<span style="color:#ff79c6">&gt;</span>com<span style="color:#ff79c6">.</span><span style="color:#50fa7b">github</span><span style="color:#ff79c6">.</span><span style="color:#50fa7b">feature</span><span style="color:#ff79c6">-</span>flip<span style="color:#ff79c6">&lt;</span><span style="color:#f1fa8c">/groupId&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#f1fa8c">  &lt;artifactId&gt;flips-core&lt;/</span>artifactId<span style="color:#ff79c6">&gt;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#ff79c6">&lt;</span>version<span style="color:#ff79c6">&gt;</span><span style="color:#bd93f9">1.0</span><span style="color:#ff79c6">.</span><span style="color:#bd93f9">1</span><span style="color:#ff79c6">&lt;</span><span style="color:#f1fa8c">/version&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#f1fa8c">&lt;/</span>dependency<span style="color:#ff79c6">&gt;</span>
+</span></span></code></pre></div><h3 id="detailed-description-of-all-the-annotations">Detailed Description of all the annotations</h3>
+<p>The library <strong>Flips</strong> provides various annotations to flip a feature. Let’s have a detailed walk-through of all the annotations:</p>
+<p><strong>@FlipOnEnvironmentProperty</strong></p>
+<p><code>@FlipOnEnvironmentProperty</code> is used to flip a feature based on the value of an environment property.</p></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>@Component
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">class</span> <span style="color:#50fa7b">EmailSender</span> {
+</span></span><span style="display:flex;"><span>    @FlipOnEnvironmentProperty(property <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">&#34;feature.send.email&#34;</span>, 
+</span></span><span style="display:flex;"><span>                               expectedValue <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">&#34;true&#34;</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">public</span> <span style="color:#8be9fd">void</span> <span style="color:#50fa7b">sendEmail</span>(EmailMessage emailMessage) {
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><strong>@FlipOnProfiles</strong></p>
+<p><code>@FlipOnProfiles</code> is used to flip a feature based on the environment in which the application is running.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>@Component
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">class</span> <span style="color:#50fa7b">EmailSender</span> {
+</span></span><span style="display:flex;"><span>    @FlipOnProfiles(activeProfiles <span style="color:#ff79c6">=</span> {<span style="color:#f1fa8c">&#34;dev&#34;</span>, <span style="color:#f1fa8c">&#34;qa&#34;</span>})
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">public</span> <span style="color:#8be9fd">void</span> <span style="color:#50fa7b">sendEmail</span>(EmailMessage emailMessage) {
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>The feature <code>sendEmail</code> is enabled if the current profile (or the environment) is either <em>dev</em> or <em>qa</em>.</p>
+<p><strong>@FlipOnDaysOfWeek</strong></p>
+<p><code>@FlipOnDaysOfWeek</code> is used to flip a feature based on the day of the week.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>@Component
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">class</span> <span style="color:#50fa7b">EmailSender</span> {
+</span></span><span style="display:flex;"><span>    @FlipOnDaysOfWeek(daysOfWeek <span style="color:#ff79c6">=</span> {DayOfWeek.<span style="color:#50fa7b">MONDAY</span>})
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">public</span> <span style="color:#8be9fd">void</span> <span style="color:#50fa7b">sendEmail</span>(EmailMessage emailMessage) {
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>The feature <code>sendEmail</code> is enabled if the current day is MONDAY.</p>
+<p><strong>@FlipOnDateTime</strong></p>
+<p><code>@FlipOnDateTime</code> is used to flip a feature based on date and time.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>@Component
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">class</span> <span style="color:#50fa7b">EmailSender</span> {
+</span></span><span style="display:flex;"><span>    @FlipOnDateTime(cutoffDateTimeProperty <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">&#34;default.date.enabled&#34;</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">public</span> <span style="color:#8be9fd">void</span> <span style="color:#50fa7b">sendEmail</span>(EmailMessage emailMessage) {
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>The feature <code>sendEmail</code> is enabled if the current datetime is equal to or greater than the value (in <code>ISO-8601</code> format) defined by the <code>default.date.enabled</code> property.</p>
+<p><strong>@FlipOnSpringExpression</strong></p>
+<p><code>@FlipOnSpringExpression</code> is used to flip a feature based on the evaluation of a Spring expression.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>@Component
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">class</span> <span style="color:#50fa7b">EmailSender</span> {
+</span></span><span style="display:flex;"><span>    @FlipOnSpringExpression(expression <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">&#34;T(java.lang.Math).sqrt(4) * 100.0 
+</span></span></span><span style="display:flex;"><span><span style="color:#f1fa8c">                                          &lt; T(java.lang.Math).sqrt(4) * 10.0&#34;</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">public</span> <span style="color:#8be9fd">void</span> <span style="color:#50fa7b">sendEmail</span>(EmailMessage emailMessage) {
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>The feature <code>sendEmail</code> is enabled if the expression evaluates to TRUE. This annotation happens to be one of the most powerful annotations in the Flips library. Why so?
+One could always write a custom spring component and use the same in <code>@FlipOnSpringExpression</code> to flip a feature.</p>
+<p><strong>@FlipBean</strong></p>
+<p><code>@FlipBean</code> is used to flip the invocation of a method with another method defined in a different bean.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>@Component
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">class</span> <span style="color:#50fa7b">EmailSender</span> {
+</span></span><span style="display:flex;"><span>    @FlipBean(with <span style="color:#ff79c6">=</span> SendGridEmailSender.<span style="color:#50fa7b">class</span>)
+</span></span><span style="display:flex;"><span>    @FlipOnProfiles(activeProfiles <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">&#34;DEV&#34;</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">public</span> <span style="color:#8be9fd">void</span> <span style="color:#50fa7b">sendEmail</span>(EmailMessage emailMessage) {
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>This will flip the invocation of the <code>sendEmail</code> method with a method (having same signature) defined in the <code>SendGridEmailSender</code> Spring component if the current profile is DEV.</p>
+<p><strong>@FlipOff</strong></p>
+<p><code>@FlipOff</code> is used to flip a feature off.</p></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>@Component
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">class</span> <span style="color:#50fa7b">EmailSender</span> {
+</span></span><span style="display:flex;"><span>    @FlipOff
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">public</span> <span style="color:#8be9fd">void</span> <span style="color:#50fa7b">sendEmail</span>(EmailMessage emailMessage) {
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>The feature <code>sendEmail</code> is always DISABLED.</p>
+<p><strong>Combining annotations</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>@Component
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">class</span> <span style="color:#50fa7b">EmailSender</span> {
+</span></span><span style="display:flex;"><span>    @FlipOnProfiles(activeProfiles <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">&#34;dev&#34;</span>)
+</span></span><span style="display:flex;"><span>    @FlipOnDaysOfWeek(daysOfWeek<span style="color:#ff79c6">=</span>{DayOfWeek.<span style="color:#50fa7b">MONDAY</span>})
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">public</span> <span style="color:#8be9fd">void</span> <span style="color:#50fa7b">sendEmail</span>(EmailMessage emailMessage) {
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>The feature <code>sendEmail</code> is enabled if the current profile is dev <strong>AND</strong> the current day of the week is MONDAY.</p>
+<h3 id="import-flip-context-configuration">Import Flip Context Configuration</h3>
+<p>To bring all Flips-related annotations into effect, one needs to import <code>FlipContextConfiguration</code> or <code>FlipWebContextConfiguration</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>@SpringBootApplication
+</span></span><span style="display:flex;"><span>@Import(FlipWebContextConfiguration.<span style="color:#50fa7b">class</span>)
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">class</span> <span style="color:#50fa7b">ApplicationConfig</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">public</span> <span style="color:#8be9fd;font-style:italic">static</span> <span style="color:#8be9fd">void</span> <span style="color:#50fa7b">main</span>(String<span style="color:#ff79c6">[]</span> args) {
+</span></span><span style="display:flex;"><span>        SpringApplication.<span style="color:#50fa7b">run</span>(ApplicationConfig.<span style="color:#50fa7b">class</span>, args);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Please refer to the sample application config <a href="https://github.com/SarthakMakhija/flips-samples/blob/master/flips-sample-spring-boot/src/main/java/com/finder/article/ApplicationConfig.java" target="_blank" rel="noopener">here</a>
+.</p>
+<h3 id="creating-custom-annotations">Creating Custom Annotations</h3>
+<p>All the annotations provided by the library are of type <code>@FlipOnOff</code>, that is essentially a meta-annotation. So, it is possible to create a custom annotation annotated with <code>@FlipOnOff</code> at the method level:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>@Target({ElementType.<span style="color:#50fa7b">METHOD</span>})
+</span></span><span style="display:flex;"><span>@Retention(RetentionPolicy.<span style="color:#50fa7b">RUNTIME</span>) 
+</span></span><span style="display:flex;"><span>@FlipOnOff(value <span style="color:#ff79c6">=</span> MyCustomCondition.<span style="color:#50fa7b">class</span>) <span style="color:#ff79c6">!!</span>Important
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">public</span> @interface MyCustomAnnotation {
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>As a part of this annotation, specify the custom condition that will evaluate this annotation.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>@Component
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">public</span> <span style="color:#8be9fd;font-style:italic">class</span> <span style="color:#50fa7b">MyCustomCondition</span> <span style="color:#8be9fd;font-style:italic">implements</span> FlipCondition {
+</span></span><span style="display:flex;"><span>    @Override
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">public</span> <span style="color:#8be9fd">boolean</span> <span style="color:#50fa7b">evaluateCondition</span>(FeatureContext fContext,
+</span></span><span style="display:flex;"><span>                                     FlipAnnotationAttributes attributes){
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#6272a4">//code to evaluate flip condition</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">return</span> <span style="color:#ff79c6">false</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>This Condition class needs to implement <code>FlipCondition</code> and MUST be a Spring Component.
+That is it! You can use your custom annotation to any method to flip it ON or OFF based on your condition.</p>
+<h3 id="what-is-featurenotenabledexception">What is FeatureNotEnabledException</h3>
+<p>The exception <code>FeatureNotEnabledException</code> is thrown if a disabled feature is invoked. In case of a web application, one could the use <a href="https://mvnrepository.com/artifact/com.github.feature-flip/flips-web/1.0.1" target="_blank" rel="noopener">flips-web</a>
+ dependency, that also provides a <code>ControllerAdvice</code> to handle this exception.
+It returns a default response and a status code of 501, which can be overridden. Please refer to the <a href="https://github.com/SarthakMakhija/flips-samples/tree/master/flips-sample-spring-boot/src/main/java/com/finder/article/advice" target="_blank" rel="noopener">sample project</a>
+ for more information.</p>
+<h3 id="wrap-up">Wrap Up</h3>
+<p>We believe the MVP is done and features like flipping at runtime and supporting database-driven feature flips are in the pipeline.
+For any custom flip condition, one could go ahead and use <code>@FlipOnSpringExpression</code> with your custom spring bean to determine the flip condition.
+If you want to have a look at the code or even want to contribute, you can check out <a href="https://github.com/Feature-Flip/flips" target="_blank" rel="noopener">Flips</a>
+.</p>
+<p>Feel free to share any feedback.</p>
+
+  </article>
+<div class="tag-list-container">
+    <div class="tag-list">
+        
+        <a class="button" href="">
+            <p class="tag"><i class="fa fa-fw fa-tag"></i>Flips</p>
+        </a>
+        
+        <a class="button" href="">
+            <p class="tag"><i class="fa fa-fw fa-tag"></i>Feature toggles</p>
+        </a>
+        
+        <a class="button" href="">
+            <p class="tag"><i class="fa fa-fw fa-tag"></i>Spring</p>
+        </a>
+        
+        <a class="button" href="">
+            <p class="tag"><i class="fa fa-fw fa-tag"></i>Spring MVC</p>
+        </a>
+        
+    </div>
+</div>
+
+
+
+<div class="px-2 mb-2">
+  
+  <script src="https://giscus.app/client.js"
+    data-repo="SarthakMakhija/tech-lessons-comments"
+    data-repo-id="R_kgDOJHu3mA"
+    data-category="Announcements"
+    data-category-id="DIC_kwDOJHu3mM4CUxhS"
+    data-mapping="og:title"
+    data-strict="0"
+    data-reactions-enabled="1"
+    data-emit-metadata="0"
+    data-input-position="bottom"
+    data-theme="light"
+    data-lang="en"
+    crossorigin="anonymous"
+    async>
+  </script>
+  
+</div>
+
+
+
+    </main><footer class="container p-6 mx-auto flex justify-between items-center">
+  <span></span>
+
+  <span class="text-base font-thin">
+    
+    tech-lessons.in © 2020 / Powered by  <a class="font-bold" target="_blank" href="https://gohugo.io/">Hugo</a>
+    
+  </span>
+
+  <span onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="p-1 cursor-pointer">
+    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" stroke-width="1.5"
+      stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M18 15l-6 -6l-6 6h12" />
+    </svg>
+  </span>
+</footer>
+
+<div class="search-ui absolute top-0 left-0 w-full h-full bg-white dark:bg-gray-800 hidden">
+  <div class="container max-w-3xl mx-auto p-12">
+    <div class="relative">
+      <div class="my-4 text-center text-2xl font-bold">Search</div>
+
+      <span class="p-2 absolute right-0 top-0 cursor-pointer close-search">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5"
+          stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </span>
+    </div>
+
+    <input type="search" class="py-2 px-3 w-full dark:text-black border dark:border-transparent"
+      placeholder="Enter search query" />
+
+    <div class="search-results text-lg font-medium my-4 hidden">Results</div>
+    <ul class="search-list my-2">
+
+    </ul>
+
+    <div class="no-results text-center my-8 hidden">
+      <div class="text-xl font-semibold mb-2">No results found</div>
+      <p class="font-light text-sm">Try adjusting your search query</p>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+<script src="//localhost:1313/js/scripts.min.js"></script>
+
+
+      <script async src="https://www.googletagmanager.com/gtag/js?id=G-9KKTKFQ2CM"></script>
+      <script>
+        var doNotTrack = false;
+        if ( false ) {
+          var dnt = (navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack);
+          var doNotTrack = (dnt == "1" || dnt == "yes");
+        }
+        if (!doNotTrack) {
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-9KKTKFQ2CM');
+        }
+      </script>
+
+
+
+
+
+<script>
+  const mobileMenuButton = document.querySelector('.mobile-menu-button')
+  const mobileMenu = document.querySelector('.mobile-menu')
+  function toggleMenu() {
+    mobileMenu.classList.toggle('hidden');
+    mobileMenu.classList.toggle('flex');
+  }
+  if(mobileMenu && mobileMenuButton){
+    mobileMenuButton.addEventListener('click', toggleMenu)
+  }
+</script>
+</body>
+</html>

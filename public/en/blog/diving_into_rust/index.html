@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="en" itemscope itemtype="http://schema.org/WebPage"><head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <link rel="icon" href="/favicon.png">
+
+  <title>
+  Diving into Rust by building an assertions crate - tech-lessons.in
+  </title>
+  <meta name="description" content=" As Rust projects grow in size and complexity, the need for sophisticated error handling tools becomes ever more pressing. Traditional methods like panics and asserts, while useful, can be limited and cumbersome. Let&#39;s build an assertions crate that offers elegant and powerful assertions, while simultaneously diving into the diverse landscape of Rust features. " />
+  <meta name="author" content="Sarthak Makhija" />
+  
+     <meta property="og:image" content="/diving-into-rust.webp" />
+  <meta name="generator" content="Hugo 0.140.1"><link rel="stylesheet" href="/css/styles.css" />
+
+  
+  
+
+  <meta property="og:url" content="//localhost:1313/en/blog/diving_into_rust/">
+  <meta property="og:site_name" content="tech-lessons.in">
+  <meta property="og:title" content="Diving into Rust by building an assertions crate">
+  <meta property="og:description" content="As Rust projects grow in size and complexity, the need for sophisticated error handling tools becomes ever more pressing. Traditional methods like panics and asserts, while useful, can be limited and cumbersome. Let&#39;s build an assertions crate that offers elegant and powerful assertions, while simultaneously diving into the diverse landscape of Rust features.">
+  <meta property="og:locale" content="en">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="blog">
+    <meta property="article:published_time" content="2024-01-24T00:00:00+00:00">
+    <meta property="article:modified_time" content="2024-01-24T00:00:00+00:00">
+    <meta property="article:tag" content="Rust">
+    <meta property="article:tag" content="Assertions">
+    <meta property="article:tag" content="Elegant-Assertions">
+    <meta property="article:tag" content="Clearcheck">
+
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Diving into Rust by building an assertions crate">
+  <meta name="twitter:description" content="As Rust projects grow in size and complexity, the need for sophisticated error handling tools becomes ever more pressing. Traditional methods like panics and asserts, while useful, can be limited and cumbersome. Let&#39;s build an assertions crate that offers elegant and powerful assertions, while simultaneously diving into the diverse landscape of Rust features.">
+
+  
+  <meta itemprop="name" content="Diving into Rust by building an assertions crate">
+  <meta itemprop="description" content="As Rust projects grow in size and complexity, the need for sophisticated error handling tools becomes ever more pressing. Traditional methods like panics and asserts, while useful, can be limited and cumbersome. Let&#39;s build an assertions crate that offers elegant and powerful assertions, while simultaneously diving into the diverse landscape of Rust features.">
+  <meta itemprop="datePublished" content="2024-01-24T00:00:00+00:00">
+  <meta itemprop="dateModified" content="2024-01-24T00:00:00+00:00">
+  <meta itemprop="wordCount" content="4501">
+  <meta itemprop="keywords" content="Rust,Assertions,Elegant-Assertions,Clearcheck">
+
+  
+</head>
+<body class="dark:bg-gray-800 dark:text-white relative flex flex-col min-h-screen"><header class="container flex justify-between md:justify-between gap-4 flex-wrap p-6 mx-auto relative">
+  <a href="//localhost:1313/en/" class="capitalize font-extrabold text-2xl">
+    
+    <img src="/logo.png" alt="tech-lessons.in" class="h-8 max-w-full" />
+    
+  </a>
+  <button class="mobile-menu-button md:hidden">
+    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <line x1="4" y1="8" x2="20" y2="8" />
+      <line x1="4" y1="16" x2="20" y2="16" />
+    </svg>
+  </button>
+  <ul class="mobile-menu absolute z-10 px-6 pb-6 md:p-0 top-full left-0 w-full md:w-auto md:relative hidden md:flex flex-col md:flex-row items-end md:items-center gap-4 lg:gap-6 bg-white dark:bg-gray-800">
+
+    
+    <li><a href="/en/">Home</a></li>
+    
+    <li><a href="/en/blog">Blogs</a></li>
+    
+    <li><a href="/en/page/about/">About Me</a></li>
+    
+    <li><a href="/en/page/projects/">My projects</a></li>
+    
+
+    
+
+    
+    <li class="grid place-items-center">
+      <span class="open-search inline-block cursor-pointer">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5"
+          stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+          <circle cx="10" cy="10" r="7" />
+          <line x1="21" y1="21" x2="15" y2="15" />
+        </svg>
+      </span>
+    </li>
+    
+
+    
+  </ul>
+</header>
+<main class="flex-1">
+  
+  
+
+  
+  <div class="relative max-w-5xl mx-auto px-4">
+    <img src="/diving-into-rust.webp" class="rounded-lg shadow-sm w-full object-contain" />
+    
+    <figcaption class="font-extralight text-xs"><i>Background by Dana Tentis on Pexels</i></figcaption>
+    
+    
+    <div class="absolute top-4 right-8 rounded shadow bg-white text-gray-900 dark:bg-gray-900 dark:text-white px-2 py-0.5">
+      
+  
+    January 24, 2024
+  
+
+
+    </div>
+    
+  </div>
+  
+
+  <article class="prose lg:prose-lg mx-auto my-8 dark:prose-dark px-4 max-w-5xl">
+
+    <h1 class="text-2xl font-bold mb-2">Diving into Rust by building an assertions crate</h1>
+    
+    <h5 class="text-sm flex items-center flex-wrap">
+      <svg xmlns="http://www.w3.org/2000/svg" class="mr-1" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+        <rect x="4" y="5" width="16" height="16" rx="2" />
+        <line x1="16" y1="3" x2="16" y2="7" />
+        <line x1="8" y1="3" x2="8" y2="7" />
+        <line x1="4" y1="11" x2="20" y2="11" />
+        <rect x="8" y="15" width="2" height="2" />
+      </svg>
+      Posted on 
+  
+    January 24, 2024
+  
+
+
+      
+        &nbsp;&bull;&nbsp;
+      
+      <svg xmlns="http://www.w3.org/2000/svg" class="mr-1" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+        <circle cx="12" cy="12" r="9" />
+        <polyline points="12 7 12 12 15 15" />
+      </svg>
+      22&nbsp;minutes
+      &nbsp;&bull;
+      <svg xmlns="http://www.w3.org/2000/svg" class="mx-1" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+        <path d="M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0" />
+        <path d="M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0" />
+        <line x1="3" y1="6" x2="3" y2="19" />
+        <line x1="12" y1="6" x2="12" y2="19" />
+        <line x1="21" y1="6" x2="21" y2="19" />
+      </svg>
+      4501&nbsp;words
+      
+    </h5>
+    
+
+    <details id="TableOfContents" class="px-4 mt-4 bg-gray-100 dark:bg-gray-700 rounded toc">
+    <summary class="flex items-center font-bold py-2 px-4 cursor-pointer justify-between select-none text-black dark:text-white">
+      <span>Table of contents</span>
+      <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-down" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+        <polyline points="6 9 12 15 18 9"></polyline>
+     </svg>
+    </summary>
+
+    <ul class="mt-2 pb-4">
+        
+
+        
+        <li>
+        <a href="#introduction">Introduction</a>
+        
+
+        
+        </li><li>
+        <a href="#understanding-string-str-and-str-types">Understanding String, &amp;str and str types</a>
+        
+
+        
+        </li><li>
+        <a href="#beginning-with-extension-methods">Beginning with extension methods</a>
+        
+
+        
+        </li><li>
+        <a href="#understanding-asref">Understanding AsRef</a>
+        
+
+        
+        </li><li>
+        <a href="#leveraging-blanket-trait-implementation">Leveraging blanket trait implementation</a>
+        
+
+        
+        </li><li>
+        <a href="#introducing-matchers">Introducing Matchers</a>
+        
+
+        
+        <ul>
+            <li>
+        <a href="#subtle-duplication">Subtle duplication</a>
+        
+
+        
+        </li><li>
+        <a href="#the-lack-of-ability-to-compose-assertions">The lack of ability to compose assertions</a>
+        
+
+        
+        </li></ul>
+      </li><li>
+        <a href="#connecting-assertions-and-matchers---using-blanket-trait-and-trait-object">Connecting assertions and matchers - using blanket trait and trait object</a>
+        
+
+        
+        </li><li>
+        <a href="#matchers-and-lifetimes">Matchers and lifetimes</a>
+        
+
+        
+        </li><li>
+        <a href="#matcher-composition--using-trait-objects">Matcher composition : using trait objects</a>
+        
+
+        
+        </li><li>
+        <a href="#references">References</a>
+        </li></ul>
+  </details>
+
+    <p>As Rust projects grow in size and complexity, the need for sophisticated error handling tools becomes ever more pressing.
+Traditional methods like panics and asserts, while useful, can be limited and cumbersome.</p>
+<p>Let&rsquo;s build an assertions crate that offers elegant and powerful assertions, while simultaneously diving into the diverse landscape of Rust features.</p>
+<h3 id="introduction">Introduction</h3>
+<p>Let&rsquo;s define some requirements for our crate. The assertions crate should:</p>
+<ol>
+<li><strong>Offer Fluent API</strong>: chain assertions for a natural and readable experience.</li>
+<li><strong>Have extensive assertions</strong>: variety of assertions covering common validation needs.</li>
+<li><strong>Be customizable</strong>: extend with custom assertions for specific domain requirements.</li>
+<li><strong>Be type-safe</strong>: leverage Rust&rsquo;s type system for reliable assertions.</li>
+</ol>
+<p>Consider this password validation example as a glimpse into the crate&rsquo;s ability to create meaningful and expressive assertions.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">let</span> pass_phrase <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">&#34;P@@sw0rd1 zebra alpha&#34;</span>;
+</span></span><span style="display:flex;"><span>pass_phrase.should_not_be_empty()
+</span></span><span style="display:flex;"><span>    .should_have_at_least_length(<span style="color:#bd93f9">10</span>)
+</span></span><span style="display:flex;"><span>    .should_contain_all_characters(vec![<span style="color:#f1fa8c">&#39;@&#39;</span>, <span style="color:#f1fa8c">&#39; &#39;</span>])
+</span></span><span style="display:flex;"><span>    .should_contain_a_digit()
+</span></span><span style="display:flex;"><span>    .should_not_contain_ignoring_case(<span style="color:#f1fa8c">&#34;pass&#34;</span>)
+</span></span><span style="display:flex;"><span>    .should_not_contain_ignoring_case(<span style="color:#f1fa8c">&#34;word&#34;</span>);
+</span></span></code></pre></div><h3 id="understanding-string-str-and-str-types">Understanding String, &amp;str and str types</h3>
+<p>It is important to understand various string types in Rust before we get started.</p>
+<ul>
+<li><strong>String</strong>: is a mutable and resizable buffer holding UTF-8 text. The buffer is allocated on heap. It can be treated as a collection of u8, <code>vec&lt;u8&gt;</code>.</li>
+<li><strong>&amp;str</strong>: is an immutable reference to a run of UTF-8 text owned by someone else. <code>&amp;str</code> is a fat pointer, it contains both
+the address of the actual string and its length.</li>
+<li><strong>str</strong>: is an immutable sequence of UTF-8 bytes of dynamic length somewhere in memory. It&rsquo;s size in unknown, which means <code>str</code> almost always
+appears as <code>&amp;str</code> in the code.</li>
+</ul>
+<p>The below code and the visual highlights the types: <code>String</code>, and <code>&amp;str</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">let</span> value: <span style="color:#8be9fd;font-style:italic">String</span> <span style="color:#ff79c6">=</span> <span style="color:#8be9fd;font-style:italic">String</span>::from(<span style="color:#f1fa8c">&#34;RUST&#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">let</span> value_ref: <span style="color:#ff79c6">&amp;</span><span style="color:#8be9fd">str</span> <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">&amp;</span>value[<span style="color:#bd93f9">1</span><span style="color:#ff79c6">..</span>];
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">let</span> literal: <span style="color:#ff79c6">&amp;</span><span style="color:#8be9fd">str</span> <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">&#34;TRUST&#34;</span>;
+</span></span></code></pre></div><div class="align-center-exclude-width-change">
+    <img src="/string-vs-str.webp" alt="String vs &str"/>
+    <figcaption class="figcaption">Visual from the book: Programming Rust</figcaption>
+</div>
+<blockquote>
+<p>In Rust, the string literals are of type &amp;str and the actual literals are allocated on pre-allocated read-only
+memory.</p>
+</blockquote>
+<h3 id="beginning-with-extension-methods">Beginning with extension methods</h3>
+<p>The first thing that we need is the ability to invoke custom methods like <code>should_contain_all_characters</code> and <code>should_be_empty</code> on the built-in
+types. In the password validation example, we have methods like <code>should_contain_all_characters</code> and <code>should_contain_a_digit</code>
+over <code>string</code> (or <code>&amp;str</code>) types.</p>
+<p>Such methods are called &ldquo;extension&rdquo; methods and <a href="https://en.wikipedia.org/wiki/Extension_method#:~:text=Extension%20methods%20are%20features%20of,an%20equally%20safe%20manner%2C%20however." target="_blank" rel="noopener">Wikipedia</a>
+ defines extension method as
+&ldquo;a method added to an object after the original object was compiled&rdquo;. <strong>In Rust, extension methods are added using traits.</strong></p>
+<p>Let&rsquo;s start by defining a trait.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#ff79c6">pub</span> <span style="color:#ff79c6">trait</span> MembershipAssertion {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">should_contain_a_digit</span>(<span style="color:#ff79c6">&amp;</span>self) -&gt; <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">Self</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">should_not_contain_a_digit</span>(<span style="color:#ff79c6">&amp;</span>self) -&gt; <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">Self</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">should_not_be_empty</span>(<span style="color:#ff79c6">&amp;</span>self) -&gt; <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">Self</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><code>MembershipAssertion</code> defines methods: <code>should_contain_a_digit</code>, <code>should_not_contain_a_digit</code> and <code>should_not_be_empty</code>, all of which returns reference to <code>Self</code> to allow chaining.</p>
+<p>Let&rsquo;s implement the trait for a string slice (<code>&amp;str</code>). <em>(I will only implement should_contain_a_digit at this stage).</em></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#ff79c6">impl</span> MembershipAssertion <span style="color:#ff79c6">for</span> <span style="color:#ff79c6">&amp;</span><span style="color:#8be9fd">str</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">should_contain_a_digit</span>(<span style="color:#ff79c6">&amp;</span>self) -&gt; <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">Self</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">let</span> contains_a_digit <span style="color:#ff79c6">=</span> self.chars().any(<span style="color:#ff79c6">|</span>ch<span style="color:#ff79c6">|</span> ch.is_numeric());
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">if</span> <span style="color:#ff79c6">!</span>contains_a_digit {
+</span></span><span style="display:flex;"><span>            panic!(<span style="color:#f1fa8c">&#34;assertion failed: </span><span style="color:#f1fa8c">{:?}</span><span style="color:#f1fa8c"> should contain a digit&#34;</span>, self);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        self
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Time to add a few tests. <em>(I will only show a couple of tests.).</em></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#ff79c6">#[cfg(test)]</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">mod</span> tests {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">use</span> <span style="color:#ff79c6">crate</span>::MembershipAssertion;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">#[test]</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">should_contain_a_digit</span>() {
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">let</span> password <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">&#34;P@@sw0rd1 zebra alpha&#34;</span>;
+</span></span><span style="display:flex;"><span>        password.should_contain_a_digit();
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">#[test]</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">should_not_be_empty_and_contain_a_digit</span>() {
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">let</span> password <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">&#34;P@@sw0rd1 zebra alpha&#34;</span>;
+</span></span><span style="display:flex;"><span>        password.should_not_be_empty()
+</span></span><span style="display:flex;"><span>                .should_contain_a_digit();
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>It is a decent start, and we can make our first commit.</p>
+<p>We have implemented the <code>MembershipAssertion</code> trait for the <code>&amp;str</code> type. We also need the methods of the <code>MembershipAssertion</code> trait for the <code>String</code> type.</p>
+<p>Let&rsquo;s implement the trait for the <code>String</code> type.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#ff79c6">impl</span> MembershipAssertion <span style="color:#ff79c6">for</span> <span style="color:#8be9fd;font-style:italic">String</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">should_contain_a_digit</span>(<span style="color:#ff79c6">&amp;</span>self) -&gt; <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">Self</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">let</span> contains_a_digit <span style="color:#ff79c6">=</span> self.chars().any(<span style="color:#ff79c6">|</span>ch<span style="color:#ff79c6">|</span> ch.is_numeric());
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">if</span> <span style="color:#ff79c6">!</span>contains_a_digit {
+</span></span><span style="display:flex;"><span>            panic!(<span style="color:#f1fa8c">&#34;assertion failed: </span><span style="color:#f1fa8c">{:?}</span><span style="color:#f1fa8c"> should contain a digit&#34;</span>, self);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        self
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">#[cfg(test)]</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">mod</span> string_tests {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">use</span> <span style="color:#ff79c6">crate</span>::MembershipAssertion;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">#[test]</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">should_contain_a_digit</span>() {
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">let</span> password <span style="color:#ff79c6">=</span> <span style="color:#8be9fd;font-style:italic">String</span>::from(<span style="color:#f1fa8c">&#34;P@@sw0rd1 zebra alpha&#34;</span>);
+</span></span><span style="display:flex;"><span>        password.should_contain_a_digit();
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">#[test]</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">should_not_be_empty_and_contain_a_digit</span>() {
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">let</span> password <span style="color:#ff79c6">=</span> <span style="color:#8be9fd;font-style:italic">String</span>::from(<span style="color:#f1fa8c">&#34;P@@sw0rd1 zebra alpha&#34;</span>);
+</span></span><span style="display:flex;"><span>        password.should_not_be_empty().should_contain_a_digit();
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>We have simply duplicated the method <code>should_contain_a_digit</code> for <code>&amp;str</code> and <code>String</code> types and verified that duplicated code works for both the types.</p>
+<p>Let&rsquo;s make an attempt to remove the duplication.</p>
+<p>We can convert the <code>String</code> type to a <code>string slice -&gt; &amp;str</code> and invoke the respective methods on <code>&amp;str</code> type. With this approach, the implementation
+of <code>MembershipAssertion</code> on <code>String</code> looks like the following:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#ff79c6">impl</span> MembershipAssertion <span style="color:#ff79c6">for</span> <span style="color:#8be9fd;font-style:italic">String</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">should_contain_a_digit</span>(<span style="color:#ff79c6">&amp;</span>self) -&gt; <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">Self</span> {
+</span></span><span style="display:flex;"><span>        (self <span style="color:#ff79c6">as</span> <span style="color:#ff79c6">&amp;</span><span style="color:#8be9fd">str</span>).should_contain_a_digit();
+</span></span><span style="display:flex;"><span>        self
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">should_not_be_empty</span>(<span style="color:#ff79c6">&amp;</span>self) -&gt; <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">Self</span> {
+</span></span><span style="display:flex;"><span>        (self <span style="color:#ff79c6">as</span> <span style="color:#ff79c6">&amp;</span><span style="color:#8be9fd">str</span>).should_not_be_empty();
+</span></span><span style="display:flex;"><span>        self
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>This approach removes the duplication, but it is still unnecessary delegation - all the methods in the <code>String</code> implementation delegate
+to the respective implementation in the <code>&amp;str</code> type. This might not look like a huge thing but if we add a few more methods in the <code>MembershipAssertion</code>
+trait, the delegation will become obvious. So the question is, can we do better?</p>
+<h3 id="understanding-asref">Understanding AsRef</h3>
+<p>Let&rsquo;s revisit our <code>MembershipAssertion</code> trait.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#ff79c6">pub</span> <span style="color:#ff79c6">trait</span> MembershipAssertion {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">should_contain_a_digit</span>(<span style="color:#ff79c6">&amp;</span>self) -&gt; <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">Self</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">should_not_contain_a_digit</span>(<span style="color:#ff79c6">&amp;</span>self) -&gt; <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">Self</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">should_not_be_empty</span>(<span style="color:#ff79c6">&amp;</span>self) -&gt; <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">Self</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>The idea is to provide an implementation of <code>MembershipAssertion</code> for all the types which can be represented as string.</p>
+<p>It will be great to implement <code>MembershipAssertion</code> for any generic type <code>T</code>, where <code>T</code> that it can be represented as <code>String</code> (or <code>&amp;str</code>).
+The article explains how generics are processed in Rust <a href="#matcher-composition--using-trait-objects">here</a>
+.</p>
+<p>Let&rsquo;s give this concept a try.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#ff79c6">impl</span><span style="color:#ff79c6">&lt;</span>T<span style="color:#ff79c6">&gt;</span> MembershipAssertion <span style="color:#ff79c6">for</span> T
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">where</span> T: <span style="color:#8be9fd;font-style:italic">AsRef</span><span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">str</span><span style="color:#ff79c6">&gt;</span> <span style="color:#ff79c6">+</span> Debug {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">should_contain_a_digit</span>(<span style="color:#ff79c6">&amp;</span>self) -&gt; <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">Self</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">let</span> contains_a_digit <span style="color:#ff79c6">=</span> self.as_ref().chars().any(<span style="color:#ff79c6">|</span>ch<span style="color:#ff79c6">|</span> ch.is_numeric());
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">if</span> <span style="color:#ff79c6">!</span>contains_a_digit {
+</span></span><span style="display:flex;"><span>            panic!(<span style="color:#f1fa8c">&#34;assertion failed: </span><span style="color:#f1fa8c">{:?}</span><span style="color:#f1fa8c"> should contain a digit&#34;</span>, self);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        self
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>We are implementing <code>MembershipAssertion</code> for any <code>T</code> where T implements <a href="https://doc.rust-lang.org/std/convert/trait.AsRef.html" target="_blank" rel="noopener">AsRef<str></a>
+ and <a href="https://doc.rust-lang.org/std/fmt/trait.Debug.html" target="_blank" rel="noopener">Debug</a>
+ trait.</p>
+<p>Jim Blandy, Jason Orendorff and Leonora F.S Tindall in the book <a href="https://www.oreilly.com/library/view/programming-rust-2nd/9781492052586/" target="_blank" rel="noopener">Programming Rust</a>
+ says: when a type implements <code>AsRef&lt;U&gt;</code>, it means we can borrow a <code>reference of U</code> from the type.
+This means, if a type implements <code>AsRef&lt;str&gt;</code> we can borrow a <code>reference of str</code> from that type.</p>
+<p>In Rust, both <code>String</code> and <code>&amp;str</code> type implements <code>AsRef&lt;str&gt;</code> which means all the methods of <code>MembershipAssertion</code> are now available on <code>String</code>
+and <code>&amp;str</code>. Please find the reference <a href="https://doc.rust-lang.org/std/convert/trait.AsRef.html#:~:text=Since%20both%20String%20and%20%26str,accept%20both%20as%20input%20argument" target="_blank" rel="noopener">here</a>
+.</p>
+<p>We need the <code>T</code> to implement <code>Debug</code> trait because we are formatting it in the <code>panic</code> macro.</p>
+<p>Quick revisit:</p>
+<ul>
+<li>Rust allows implementing a trait for any <code>T</code>. This is called <em>blanket trait implementation</em>. In our case, we are implementing <code>MembershipAssertion</code>
+for a constrained <code>T</code>.</li>
+<li>The trait <code>AsRef</code> provides a lot of flexibility in the function signature. The method <a href="https://doc.rust-lang.org/std/fs/struct.File.html#method.open" target="_blank" rel="noopener">open</a>
+ in
+Rust <a href="https://doc.rust-lang.org/std/fs/struct.File.html" target="_blank" rel="noopener">File</a>
+ type takes a parameter <code>P</code> of type <code>AsRef&lt;Path&gt;</code>, which means any <code>P</code> that can be represented as a <a href="https://doc.rust-lang.org/std/path/struct.Path.html" target="_blank" rel="noopener">Path</a>
+
+can be passed as an argument.</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#6272a4">// open method from Rust&#39;s file type.
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span><span style="color:#ff79c6">pub</span> <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">open</span><span style="color:#ff79c6">&lt;</span>P: <span style="color:#8be9fd;font-style:italic">AsRef</span><span style="color:#ff79c6">&lt;</span>Path<span style="color:#ff79c6">&gt;&gt;</span>(path: <span style="color:#50fa7b">P</span>) -&gt; <span style="color:#8be9fd;font-style:italic">Result</span><span style="color:#ff79c6">&lt;</span>File<span style="color:#ff79c6">&gt;</span> {<span style="color:#ff79c6">..</span>}
+</span></span></code></pre></div><p>With the introduction of <code>AsRef&lt;str&gt;</code> change, we have taken care of the duplication in the implementation of <code>MembershipAssertion</code>, and we can
+now remove our original implementation of <code>MembershipAssertion</code> for <code>String</code> and <code>&amp;str</code> types.</p>
+<h3 id="leveraging-blanket-trait-implementation">Leveraging blanket trait implementation</h3>
+<p>Rust allows implementing a trait for any generic type <code>T</code>. Consider a trait <code>BoxWrap</code> as shown below:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#ff79c6">pub</span> <span style="color:#ff79c6">trait</span> BoxWrap {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">boxed</span>(self) -&gt; <span style="color:#8be9fd;font-style:italic">Box</span><span style="color:#ff79c6">&lt;</span>Self<span style="color:#ff79c6">&gt;</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>This trait provides <code>boxed</code> method to create a <a href="https://doc.rust-lang.org/std/boxed/struct.Box.html" target="_blank" rel="noopener">Box</a>
+ representation of self. <em>Please note
+the boxed method takes the ownership of <code>self</code></em>.</p>
+<blockquote>
+<p>In Rust, <a href="https://doc.rust-lang.org/std/boxed/struct.Box.html" target="_blank" rel="noopener">Box</a>
+ is a pointer type that uniquely owns a heap allocation of type T.
+<code>Box::new(x: T)</code> allocates memory on heap and then places <code>x</code> into it.</p>
+</blockquote>
+<p>We can use blanket trait implementation to implement the method <code>boxed</code> over any generic type <code>T</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#ff79c6">impl</span><span style="color:#ff79c6">&lt;</span>T<span style="color:#ff79c6">&gt;</span> BoxWrap <span style="color:#ff79c6">for</span> T {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">boxed</span>(self) -&gt; <span style="color:#8be9fd;font-style:italic">Box</span><span style="color:#ff79c6">&lt;</span>Self<span style="color:#ff79c6">&gt;</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">Box</span>::new(self)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>That&rsquo;s it, the method <code>boxed</code> is now available on all the types <code>T</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">main</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> value: <span style="color:#ff79c6">&amp;</span><span style="color:#8be9fd">str</span> <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">&#34;clearcheck&#34;</span>;
+</span></span><span style="display:flex;"><span>    println!(<span style="color:#f1fa8c">&#34;</span><span style="color:#f1fa8c">{:?}</span><span style="color:#f1fa8c">&#34;</span>, value.boxed());
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> id: <span style="color:#8be9fd">i32</span> <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">120</span>;
+</span></span><span style="display:flex;"><span>    println!(<span style="color:#f1fa8c">&#34;</span><span style="color:#f1fa8c">{:?}</span><span style="color:#f1fa8c">&#34;</span>, id.boxed());
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>This concept is very useful for our crate. Let&rsquo;s see how.</p>
+<p>Our crate will also offer assertions related to ordered comparisons (greater than, less than, greater than equal to, less than equal to) for various types. Let&rsquo;s
+provide such a trait.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#ff79c6">pub</span> <span style="color:#ff79c6">trait</span> OrderedAssertion<span style="color:#ff79c6">&lt;</span>T: <span style="color:#8be9fd;font-style:italic">PartialOrd</span><span style="color:#ff79c6">&gt;</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">should_be_greater_than</span>(<span style="color:#ff79c6">&amp;</span>self, other: <span style="color:#50fa7b">T</span>) -&gt; <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">Self</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">should_not_be_greater_than</span>(<span style="color:#ff79c6">&amp;</span>self, other: <span style="color:#50fa7b">T</span>) -&gt; <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">Self</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#6272a4">// other methods
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>}
+</span></span></code></pre></div><p>The trait <code>OrderedAssertion</code> is generic over <code>T: PartialOrd</code>. <a href="https://doc.rust-lang.org/std/cmp/trait.PartialOrd.html" target="_blank" rel="noopener">PartialOrd</a>
+ trait allows ordered comparisons (&gt;, &lt;, &gt;=, &lt;=) between types.</p>
+<p>We have an option of implementing <code>OrderedAssertion</code> for various types like <code>i8</code>, <code>i16</code>, <code>i32</code>, <code>&amp;str</code> etc. or we can implement <code>OrderedAssertion</code>
+for a constrained <code>T</code>.</p>
+<p>Let&rsquo;s make an attempt to implement <code>OrderedAssertion</code> for any type <code>T</code> that implements <code>PartialOrd</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#ff79c6">impl</span><span style="color:#ff79c6">&lt;</span>T<span style="color:#ff79c6">&gt;</span> OrderedAssertion<span style="color:#ff79c6">&lt;</span>T<span style="color:#ff79c6">&gt;</span> <span style="color:#ff79c6">for</span> T
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">where</span> T: <span style="color:#8be9fd;font-style:italic">PartialOrd</span> <span style="color:#ff79c6">+</span> Debug {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">should_be_greater_than</span>(<span style="color:#ff79c6">&amp;</span>self, other: <span style="color:#50fa7b">T</span>) -&gt; <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">Self</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">if</span> self <span style="color:#ff79c6">&lt;=</span> <span style="color:#ff79c6">&amp;</span>other {
+</span></span><span style="display:flex;"><span>            panic!(<span style="color:#f1fa8c">&#34;</span><span style="color:#f1fa8c">{:?}</span><span style="color:#f1fa8c"> should be greater than </span><span style="color:#f1fa8c">{:?}</span><span style="color:#f1fa8c">&#34;</span>, self, other)
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        self
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">should_not_be_greater_than</span>(<span style="color:#ff79c6">&amp;</span>self, other: <span style="color:#50fa7b">T</span>) -&gt; <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">Self</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">if</span> self <span style="color:#ff79c6">&gt;</span> <span style="color:#ff79c6">&amp;</span>other {
+</span></span><span style="display:flex;"><span>            panic!(<span style="color:#f1fa8c">&#34;</span><span style="color:#f1fa8c">{:?}</span><span style="color:#f1fa8c"> should not be greater than </span><span style="color:#f1fa8c">{:?}</span><span style="color:#f1fa8c">&#34;</span>, self, other)
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        self
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>The methods <code>should_be_greater_than</code> and <code>should_not_be_greater_than</code> are now available on any <code>T</code> that implements <code>PartialOrd</code> trait.</p>
+<p>Note, the operators (&gt;=, &lt;) translate to a method call <a href="https://doc.rust-lang.org/std/cmp/trait.PartialOrd.html#tymethod.partial_cmp" target="_blank" rel="noopener">partial_cmp</a>
+ inside the <code>PartialOrd</code> trait.
+The method <code>partial_cmp</code> takes parameters by reference for comparison. Hence, we are doing the comparisons using references <code>(self &lt;= &amp;other)</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#ff79c6">#[cfg(test)]</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">mod</span> ordering_tests {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">use</span> <span style="color:#ff79c6">crate</span>::OrderedAssertion;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">#[test]</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">should_be_greater_than_other</span>() {
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">let</span> rank <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">12.90</span>;
+</span></span><span style="display:flex;"><span>        rank.should_be_greater_than(<span style="color:#bd93f9">10.23</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">#[test]</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">should_be_greater_than_other_with_string</span>() {
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">let</span> name <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">&#34;junit&#34;</span>;
+</span></span><span style="display:flex;"><span>        name.should_be_greater_than(<span style="color:#f1fa8c">&#34;assert&#34;</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>The advantage of implementing a trait for any <code>T</code> (with or without constraint) is obvious. It removes duplication!!!</p>
+<p>Time to revisit the implementation of our assertion.</p>
+<h3 id="introducing-matchers">Introducing Matchers</h3>
+<p>Let&rsquo;s take a look at the implementation of <code>OrderedAssertion</code> again.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#ff79c6">impl</span><span style="color:#ff79c6">&lt;</span>T<span style="color:#ff79c6">&gt;</span> OrderedAssertion<span style="color:#ff79c6">&lt;</span>T<span style="color:#ff79c6">&gt;</span> <span style="color:#ff79c6">for</span> T
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">where</span> T: <span style="color:#8be9fd;font-style:italic">PartialOrd</span> <span style="color:#ff79c6">+</span> Debug {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">should_be_greater_than</span>(<span style="color:#ff79c6">&amp;</span>self, other: <span style="color:#50fa7b">T</span>) -&gt; <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">Self</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">if</span> self <span style="color:#ff79c6">&lt;=</span> <span style="color:#ff79c6">&amp;</span>other {
+</span></span><span style="display:flex;"><span>            panic!(<span style="color:#f1fa8c">&#34;</span><span style="color:#f1fa8c">{:?}</span><span style="color:#f1fa8c"> should be greater than </span><span style="color:#f1fa8c">{:?}</span><span style="color:#f1fa8c">&#34;</span>, self, other)
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        self
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">should_not_be_greater_than</span>(<span style="color:#ff79c6">&amp;</span>self, other: <span style="color:#50fa7b">T</span>) -&gt; <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">Self</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">if</span> self <span style="color:#ff79c6">&gt;</span> <span style="color:#ff79c6">&amp;</span>other {
+</span></span><span style="display:flex;"><span>            panic!(<span style="color:#f1fa8c">&#34;</span><span style="color:#f1fa8c">{:?}</span><span style="color:#f1fa8c"> should not be greater than </span><span style="color:#f1fa8c">{:?}</span><span style="color:#f1fa8c">&#34;</span>, self, other)
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        self
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>There are two issues with this implementation.</p>
+<h4 id="subtle-duplication">Subtle duplication</h4>
+<p>There is still subtle duplication between the implementations of <code>should_be_greater_than</code> and <code>should_not_be_greater_than</code>.</p>
+<p>Let&rsquo;s take a closer look to understand the duplication:</p>
+<ul>
+<li>In comparison: <code>self &lt;= &amp;other</code> and <code>self &gt; &amp;other</code>, both the methods are doing comparisons which are inverted.</li>
+<li>In the panic message: <code>panic!(&quot;{:?} should be greater than {:?}&quot;, self, other)</code> and <code>panic!(&quot;{:?} should not be greater than {:?}&quot;, self, other)</code>,
+both the methods are causing panic with messages which are inverted.</li>
+</ul>
+<p>The same form of duplication will be observed between method pairs like:</p>
+<ul>
+<li><code>should_be_empty</code>, <code>should_not_be_empty</code></li>
+<li><code>should_be_greater_than</code>, <code>should_not_be_greater_than</code></li>
+<li>etc</li>
+</ul>
+<p>This duplication is caused because of the change in the condition for examining the data: <em>self must be <strong>less than</strong> other</em>, <em>self must be <strong>greater than</strong> other</em>.</p>
+<h4 id="the-lack-of-ability-to-compose-assertions">The lack of ability to compose assertions</h4>
+<p>Assertions are defining the contract, ensuring that each data type (/data structure) adheres to its intended behavior. They don&rsquo;t provide us
+with an ability to <a href="#matcher-composition--using-trait-objects">compose them</a>
+ using operators like <strong>and</strong>, <strong>or</strong>.</p>
+<p>We can deal with both these issues by introducing an abstraction that:</p>
+<ul>
+<li><strong>Examines the data</strong> and <strong>verifies</strong> that the data conforms to <strong>specific criteria</strong>.</li>
+<li><strong>Inverts</strong> its behavior so that we <strong>won&rsquo;t</strong> be required to write any <strong>additional code</strong> for implementing <strong>negative assertions</strong>.</li>
+<li>Allows <strong>composition</strong></li>
+</ul>
+<p>The question is what would be the name of such an abstraction? In the world of assertions, such an object is called matcher. I asked <a href="https://bard.google.com/chat" target="_blank" rel="noopener">bard</a>
+ to define <em>Matcher</em>? It gave me the following definition:</p>
+<blockquote>
+<p>Matchers provide the granular tools for carrying out the assertions. They examine the data and verify that the data conforms to specific criteria.</p>
+</blockquote>
+<p>Let&rsquo;s introduce matchers in the code. We can introduce a set of diverse matchers, each implementing the <code>Matcher</code> trait to work with specific data types.
+The important part is that we will only be implementing matchers to deal with positive assertions.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#ff79c6">pub</span> <span style="color:#ff79c6">trait</span> Matcher<span style="color:#ff79c6">&lt;</span>T<span style="color:#ff79c6">&gt;</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">test</span>(<span style="color:#ff79c6">&amp;</span>self, value: <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">T</span>) -&gt; <span style="color:#50fa7b">MatcherResult</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><code>Matcher</code> is the base trait that works on any generic type <code>T</code>. It defines a method <code>test</code> that returns an instance of <code>MatcherResult</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#ff79c6">pub</span> <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">MatcherResult</span> {
+</span></span><span style="display:flex;"><span>    passed: <span style="color:#8be9fd">bool</span>,
+</span></span><span style="display:flex;"><span>    failure_message: <span style="color:#8be9fd;font-style:italic">String</span>,
+</span></span><span style="display:flex;"><span>    inverted_failure_message: <span style="color:#8be9fd;font-style:italic">String</span>,
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><code>MatcherResult</code> which will play a crucial role in inverting a matcher.</p>
+<p>Let&rsquo;s implement <code>MembershipMatcher</code> for the <code>String</code> type. It should be capable of asserting:</p>
+<ul>
+<li>if the given string contains a digit.</li>
+<li>if the given string contains the specified character.</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#ff79c6">pub</span> <span style="color:#ff79c6">enum</span> <span style="color:#50fa7b">MembershipMatcher</span> {
+</span></span><span style="display:flex;"><span>    ADigit,
+</span></span><span style="display:flex;"><span>    Char(<span style="color:#8be9fd">char</span>),
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">impl</span><span style="color:#ff79c6">&lt;</span>T<span style="color:#ff79c6">&gt;</span> Matcher<span style="color:#ff79c6">&lt;</span>T<span style="color:#ff79c6">&gt;</span> <span style="color:#ff79c6">for</span> MembershipMatcher
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">where</span> T: <span style="color:#8be9fd;font-style:italic">AsRef</span><span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">str</span><span style="color:#ff79c6">&gt;</span>
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">test</span>(<span style="color:#ff79c6">&amp;</span>self, value: <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">T</span>) -&gt; <span style="color:#50fa7b">MatcherResult</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">match</span> self {
+</span></span><span style="display:flex;"><span>            MembershipMatcher::ADigit <span style="color:#ff79c6">=&gt;</span> MatcherResult::formatted(
+</span></span><span style="display:flex;"><span>                value.as_ref().chars().any(<span style="color:#ff79c6">|</span>ch<span style="color:#ff79c6">|</span> ch.is_numeric()),
+</span></span><span style="display:flex;"><span>                format!(<span style="color:#f1fa8c">&#34;</span><span style="color:#f1fa8c">{:?}</span><span style="color:#f1fa8c"> should contain a digit&#34;</span>, value.as_ref()),
+</span></span><span style="display:flex;"><span>                format!(<span style="color:#f1fa8c">&#34;</span><span style="color:#f1fa8c">{:?}</span><span style="color:#f1fa8c"> should not contain a digit&#34;</span>, value.as_ref()),
+</span></span><span style="display:flex;"><span>            ),
+</span></span><span style="display:flex;"><span>            MembershipMatcher::Char(ch) <span style="color:#ff79c6">=&gt;</span> MatcherResult::formatted(
+</span></span><span style="display:flex;"><span>                value.as_ref().chars().any(<span style="color:#ff79c6">|</span>source<span style="color:#ff79c6">|</span> <span style="color:#ff79c6">&amp;</span>source <span style="color:#ff79c6">==</span> ch),
+</span></span><span style="display:flex;"><span>                format!(<span style="color:#f1fa8c">&#34;</span><span style="color:#f1fa8c">{:?}</span><span style="color:#f1fa8c"> should contain the character </span><span style="color:#f1fa8c">{:?}</span><span style="color:#f1fa8c">&#34;</span>, value.as_ref(), ch),
+</span></span><span style="display:flex;"><span>                format!(<span style="color:#f1fa8c">&#34;</span><span style="color:#f1fa8c">{:?}</span><span style="color:#f1fa8c"> should not contain the character </span><span style="color:#f1fa8c">{:?}</span><span style="color:#f1fa8c">&#34;</span>, value.as_ref(), ch),
+</span></span><span style="display:flex;"><span>            ),
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">pub</span> <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">contain_a_digit</span>() -&gt; <span style="color:#50fa7b">MembershipMatcher</span> {
+</span></span><span style="display:flex;"><span>    MembershipMatcher::ADigit
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">pub</span> <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">contain_a_character</span>(ch: <span style="color:#8be9fd">char</span>) -&gt; <span style="color:#50fa7b">MembershipMatcher</span> {
+</span></span><span style="display:flex;"><span>    MembershipMatcher::Char(ch)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>A few things to observe:</p>
+<ul>
+<li><code>MembershipMatcher</code> implements the trait <code>Matcher&lt;T&gt;</code> for any <code>T</code> which can be represented as string.</li>
+<li>We use enum to represent <code>MembershipMatcher</code> because it allows logical grouping of matchers and each enum variant can hold its own data.</li>
+<li>Each arm of the <code>match</code> expression returns an appropriate instance of <code>MatcherResult</code>.</li>
+<li>We also provide public functions to get appropriate instances of <code>MembershipMatcher</code>.</li>
+<li><code>MembershipMatcher</code> only implements positive assertions.</li>
+<li><code>MembershipMatcher</code> also knows about the error messages that should be returned if the assertion(s) using this matcher fails.</li>
+</ul>
+<p>Time to add a few tests.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#ff79c6">#[cfg(test)]</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">mod</span> tests {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">use</span> <span style="color:#ff79c6">crate</span>::{contain_a_character, contain_a_digit, Matcher};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">#[test]</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">should_contain_a_digit</span>() {
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">let</span> matcher <span style="color:#ff79c6">=</span> contain_a_digit();
+</span></span><span style="display:flex;"><span>        assert!(matcher.test(<span style="color:#ff79c6">&amp;</span><span style="color:#f1fa8c">&#34;password@1&#34;</span>).passed);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">#[test]</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">should_contain_a_char</span>() {
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">let</span> matcher <span style="color:#ff79c6">=</span> contain_a_character(<span style="color:#f1fa8c">&#39;@&#39;</span>);
+</span></span><span style="display:flex;"><span>        assert!(matcher.test(<span style="color:#ff79c6">&amp;</span><span style="color:#f1fa8c">&#34;password@1&#34;</span>).passed);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>It is a decent start to matchers but we still need to answer a few questions:</p>
+<ul>
+<li>How to connect assertions and matchers?</li>
+<li>How to invert a matcher?</li>
+<li>How to compose matchers?</li>
+</ul>
+<h3 id="connecting-assertions-and-matchers---using-blanket-trait-and-trait-object">Connecting assertions and matchers - using blanket trait and trait object</h3>
+<p>We have <strong>assertions</strong> which serve as the cornerstone of the test cases, defining the exact expectations the code must fulfill.
+They act as a contract, ensuring that each data type (/data structure) adheres to its intended behavior.</p>
+<p>We also have <strong>matchers</strong> which provide the granular tools for carrying out the assertions. They examine the data and
+verify that the data conforms to specific criteria.</p>
+<p>Let&rsquo;s take a look at the relationship between assertions and matchers.</p>
+<div class="align-center-exclude-width-change">
+    <img src="/assertions-matchers.webp" alt="relationship between assertions and matchers"/>
+</div>
+<p>We will have positive and negative assertions both of which use positive matchers. The bridge (<em>which is yet to be built</em>) will connect matchers with assertions
+and invert the matcher if a negative assertion like <code>should_not_contain_a_digit</code> is invoked.</p>
+<p>Let&rsquo;s build the bridge using <a href="#leveraging-blanket-trait-implementation">blanket trait</a>
+.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#ff79c6">pub</span> <span style="color:#ff79c6">trait</span> Should<span style="color:#ff79c6">&lt;</span>T<span style="color:#ff79c6">&gt;</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">should</span>(<span style="color:#ff79c6">&amp;</span>self, matcher: <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">dyn</span> Matcher<span style="color:#ff79c6">&lt;</span>T<span style="color:#ff79c6">&gt;</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">impl</span><span style="color:#ff79c6">&lt;</span>T<span style="color:#ff79c6">&gt;</span> Should<span style="color:#ff79c6">&lt;</span>T<span style="color:#ff79c6">&gt;</span> <span style="color:#ff79c6">for</span> T {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">should</span>(<span style="color:#ff79c6">&amp;</span>self, matcher: <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">dyn</span> Matcher<span style="color:#ff79c6">&lt;</span>T<span style="color:#ff79c6">&gt;</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">let</span> matcher_result <span style="color:#ff79c6">=</span> matcher.test(self);
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">if</span> <span style="color:#ff79c6">!</span>matcher_result.passed {
+</span></span><span style="display:flex;"><span>            panic!(<span style="color:#f1fa8c">&#34;assertion failed: </span><span style="color:#f1fa8c">{}</span><span style="color:#f1fa8c">&#34;</span>, matcher_result.failure_message);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>We provide a trait <code>Should</code> which is implemented for any <code>T</code>.</p>
+<blockquote>
+<p>We can also implement the trait <code>Should</code> for any <code>T: Assertion</code> where <code>Assertion</code> can be a base marker trait for all the assertions.</p>
+</blockquote>
+<p>The method <code>should</code> takes a matcher as a parameter, invokes the test method passing <code>self</code> as the argument and panics if the matcher fails.</p>
+<p>The method <code>should</code> takes a parameter <code>matcher: &amp;dyn Matcher&lt;T&gt;</code> which is a trait object in Rust. The <a href="https://doc.rust-lang.org/book/ch17-02-trait-objects.html" target="_blank" rel="noopener">trait object</a>
+
+points to both an instance of a type implementing a trait and a table that is used to look up trait methods on that type at runtime.
+We create a trait object by specifying either <code>&amp;</code> reference or a <code>Box&lt;T&gt;</code> smart pointer, then the <code>dyn</code> keyword, and then specifying the relevant trait.</p>
+<blockquote>
+<p>When we use trait objects, Rust must use <a href="https://doc.rust-lang.org/book/ch17-02-trait-objects.html" target="_blank" rel="noopener">dynamic dispatch</a>
+.</p>
+</blockquote>
+<p>The expression <code>dyn Matcher&lt;T&gt;</code> refers to any <code>Matcher</code> of type <code>T</code> and is unsized. Rust compiler needs all the method parameters to have a fixed size,
+hence we use <code>reference to any Matcher&lt;T&gt; -&gt; matcher: &amp;dyn Matcher&lt;T&gt;</code>.</p>
+<p>Similarly, we can define a trait that inverts the given matcher.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#ff79c6">pub</span> <span style="color:#ff79c6">trait</span> ShouldNot<span style="color:#ff79c6">&lt;</span>T<span style="color:#ff79c6">&gt;</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">should_not</span>(<span style="color:#ff79c6">&amp;</span>self, matcher: <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">dyn</span> Matcher<span style="color:#ff79c6">&lt;</span>T<span style="color:#ff79c6">&gt;</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">impl</span><span style="color:#ff79c6">&lt;</span>T<span style="color:#ff79c6">&gt;</span> ShouldNot<span style="color:#ff79c6">&lt;</span>T<span style="color:#ff79c6">&gt;</span> <span style="color:#ff79c6">for</span> T {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">should_not</span>(<span style="color:#ff79c6">&amp;</span>self, matcher: <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">dyn</span> Matcher<span style="color:#ff79c6">&lt;</span>T<span style="color:#ff79c6">&gt;</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">let</span> matcher_result <span style="color:#ff79c6">=</span> matcher.test(self);
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">let</span> passed <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">!</span>matcher_result.passed;
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">if</span> <span style="color:#ff79c6">!</span>passed {
+</span></span><span style="display:flex;"><span>            panic!(
+</span></span><span style="display:flex;"><span>                <span style="color:#f1fa8c">&#34;assertion failed: </span><span style="color:#f1fa8c">{}</span><span style="color:#f1fa8c">&#34;</span>,
+</span></span><span style="display:flex;"><span>                matcher_result.inverted_failure_message
+</span></span><span style="display:flex;"><span>            );
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>We can now refactor the methods <code>should_contain_a_digit</code> and <code>should_not_contain_a_digit</code> of the <code>MembershipAssertion</code> to use the <code>MembershipMatcher</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#ff79c6">impl</span><span style="color:#ff79c6">&lt;</span>T<span style="color:#ff79c6">&gt;</span> MembershipAssertion <span style="color:#ff79c6">for</span> T
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">where</span> T: <span style="color:#8be9fd;font-style:italic">AsRef</span><span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">str</span><span style="color:#ff79c6">&gt;</span> <span style="color:#ff79c6">+</span> Debug {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">should_contain_a_digit</span>(<span style="color:#ff79c6">&amp;</span>self) -&gt; <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">Self</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#6272a4">//the method `should` passes self (which in this case is &amp;str) 
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>        <span style="color:#6272a4">//to the test method of the matcher.
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>        self.should(<span style="color:#ff79c6">&amp;</span>contain_a_digit()); 
+</span></span><span style="display:flex;"><span>        self
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">should_not_contain_a_digit</span>(<span style="color:#ff79c6">&amp;</span>self) -&gt; <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">Self</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#6272a4">//the method `should_not` passes self (which in this case is &amp;str) 
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>        <span style="color:#6272a4">//to the test method of the matcher.
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>        self.should_not(<span style="color:#ff79c6">&amp;</span>contain_a_digit()); 
+</span></span><span style="display:flex;"><span>        self
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>All the tests pass and we can now commit :).</p>
+<p>There is a question on matchers that needs to be answered. Should our matchers take the ownership of the extra data that they may need or should they hold a reference?</p>
+<p>Let&rsquo;s understand this.</p>
+<p>Remember our traits <code>Should</code> and <code>ShouldNot</code> pass <code>&amp;self</code> to the <code>test</code> method of the matcher.
+This means if we invoke the method <code>should_contain_a_digit</code> on the <code>String</code> type, the test method of our <code>MembershipMatcher</code> will receive
+a reference to <code>String</code>.</p>
+<p>Let&rsquo;s consider that our string <code>MembershipMatcher</code> starts providing support for testing whether a string contains any of the given characters.
+Should the matcher now hold a reference to a slice of char or a vector of char?</p>
+<p><strong>Option1</strong>: <code>MembershipMatcher</code> provides an enum variant <code>AnyChars</code> which holds a reference to a slice of char.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#ff79c6">pub</span> <span style="color:#ff79c6">enum</span> <span style="color:#50fa7b">MembershipMatcher</span><span style="color:#ff79c6">&lt;</span><span style="color:#50fa7b">&#39;a</span><span style="color:#ff79c6">&gt;</span> {
+</span></span><span style="display:flex;"><span>    ADigit,
+</span></span><span style="display:flex;"><span>    Char(<span style="color:#8be9fd">char</span>),
+</span></span><span style="display:flex;"><span>    AnyChars(<span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">&#39;a</span> [<span style="color:#8be9fd">char</span>])
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><strong>Option2</strong>: <code>MembershipMatcher</code> provides an enum variant <code>AnyChars</code> which holds a vector of char.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#ff79c6">pub</span> <span style="color:#ff79c6">enum</span> <span style="color:#50fa7b">MembershipMatcher</span> {
+</span></span><span style="display:flex;"><span>    ADigit,
+</span></span><span style="display:flex;"><span>    Char(<span style="color:#8be9fd">char</span>),
+</span></span><span style="display:flex;"><span>    AnyChars(<span style="color:#8be9fd;font-style:italic">Vec</span><span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">char</span><span style="color:#ff79c6">&gt;</span>),
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Time to discuss lifetimes.</p>
+<h3 id="matchers-and-lifetimes">Matchers and lifetimes</h3>
+<p>Every reference in Rust has a lifetime, which is the stretch of the program for which the reference is valid. A <strong>reference</strong> can be treated as a <strong>pointer managed by Rust</strong>.
+We have already seen a reference in the form of <code>&amp;str</code>.</p>
+<blockquote>
+<p>Rust does not have nil or dangling references.</p>
+</blockquote>
+<p>Consider the below code:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">main</span>() { 
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> reference: <span style="color:#ff79c6">&amp;</span><span style="color:#8be9fd">i32</span>;                <span style="color:#ff79c6">|</span> <span style="color:#ff79c6">---</span> <span style="color:#50fa7b">&#39;a</span> starts            
+</span></span><span style="display:flex;"><span>    {                                   <span style="color:#ff79c6">|</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">let</span> value: <span style="color:#8be9fd">i32</span> <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">10</span>;            <span style="color:#ff79c6">|</span>    <span style="color:#ff79c6">|</span> <span style="color:#ff79c6">---</span> <span style="color:#50fa7b">&#39;b</span> starts
+</span></span><span style="display:flex;"><span>        reference <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">&amp;</span>value;             <span style="color:#ff79c6">|</span>    <span style="color:#ff79c6">|</span> <span style="color:#ff79c6">---</span> <span style="color:#50fa7b">&#39;b</span> ends
+</span></span><span style="display:flex;"><span>    }                                   <span style="color:#ff79c6">|</span>
+</span></span><span style="display:flex;"><span>    println!(<span style="color:#f1fa8c">&#34;</span><span style="color:#f1fa8c">{}</span><span style="color:#f1fa8c">&#34;</span>, reference);          <span style="color:#ff79c6">|</span> <span style="color:#ff79c6">---</span> <span style="color:#50fa7b">&#39;a</span> ends      
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>The code above creates a variable <code>reference</code> that refers to an <code>i32</code>. We use the lifetime annotations <code>'a</code> and <code>'b</code> to denote the lifetimes of
+<code>reference</code> and <code>value</code>. Rust does not allow dangling references that means the variable <code>reference</code> can not outlive <code>value</code>. This can also be stated
+as: &ldquo;the lifetime of the variable <code>reference</code> must be less than or equal to the lifetime of the variable <code>value</code>&rdquo;.</p>
+<p>The above code fails with the the following error:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>    reference <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">&amp;</span>value;
+</span></span><span style="display:flex;"><span>                <span style="color:#ff79c6">^^^^^^</span> borrowed value does not live long enough
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    Here, `value` is dropped <span style="color:#ff79c6">as</span> soon <span style="color:#ff79c6">as</span> the inner block ends, but `reference` lives 
+</span></span><span style="display:flex;"><span>    through the scope of the function. If this were permitted, Rust would end up with 
+</span></span><span style="display:flex;"><span>    dangling references.  
+</span></span></code></pre></div><blockquote>
+<p>Lifetimes in Rust ensure that all the references and the container objects holding references are always valid.</p>
+</blockquote>
+<p>Let&rsquo;s get back to our question: Should our matchers hold a reference to the extra data or take the ownership?</p>
+<p>We will an attempt to design matchers using references (<strong>Option1</strong>), which means our <code>MembershipMatcher</code> will now have lifetime annotation.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#ff79c6">pub</span> <span style="color:#ff79c6">enum</span> <span style="color:#50fa7b">MembershipMatcher</span><span style="color:#ff79c6">&lt;</span><span style="color:#50fa7b">&#39;a</span><span style="color:#ff79c6">&gt;</span> {
+</span></span><span style="display:flex;"><span>    ADigit,
+</span></span><span style="display:flex;"><span>    Char(<span style="color:#8be9fd">char</span>),
+</span></span><span style="display:flex;"><span>    AnyChars(<span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">&#39;a</span> [<span style="color:#8be9fd">char</span>])
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>The <code>MembershipMatcher</code> holds a reference to a slice of char for some lifetime <code>'a</code>. This means:</p>
+<ul>
+<li><code>MembershipMatcher</code> must live for the stretch of the program which is <strong>at most</strong> as big as the stretch defined by <code>'a</code>.</li>
+<li><code>MembershipMatcher</code> must not outlive the reference</li>
+</ul>
+<p>This decision requires us to make the following changes:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#ff79c6">impl</span><span style="color:#ff79c6">&lt;</span><span style="color:#50fa7b">&#39;a</span>, T<span style="color:#ff79c6">&gt;</span> Matcher<span style="color:#ff79c6">&lt;</span>T<span style="color:#ff79c6">&gt;</span> <span style="color:#ff79c6">for</span> MembershipMatcher<span style="color:#ff79c6">&lt;</span><span style="color:#50fa7b">&#39;a</span><span style="color:#ff79c6">&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">where</span> T: <span style="color:#8be9fd;font-style:italic">AsRef</span><span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">str</span><span style="color:#ff79c6">&gt;</span>
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">test</span>(<span style="color:#ff79c6">&amp;</span>self, value: <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">T</span>) -&gt; <span style="color:#50fa7b">MatcherResult</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">match</span> self {
+</span></span><span style="display:flex;"><span>            <span style="color:#6272a4">//skipping ADigit and Char variants
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>            MembershipMatcher::AnyChars(chars) <span style="color:#ff79c6">=&gt;</span> MatcherResult::formatted(
+</span></span><span style="display:flex;"><span>                chars.iter().any(<span style="color:#ff79c6">|</span>ch<span style="color:#ff79c6">|</span> value.as_ref().contains(<span style="color:#ff79c6">*</span>ch)),
+</span></span><span style="display:flex;"><span>                format!(<span style="color:#f1fa8c">&#34;</span><span style="color:#f1fa8c">{:?}</span><span style="color:#f1fa8c"> should contain any of the characters </span><span style="color:#f1fa8c">{:?}</span><span style="color:#f1fa8c">&#34;</span>, value.as_ref(), chars),
+</span></span><span style="display:flex;"><span>                format!(<span style="color:#f1fa8c">&#34;</span><span style="color:#f1fa8c">{:?}</span><span style="color:#f1fa8c"> should not contain any of the characters </span><span style="color:#f1fa8c">{:?}</span><span style="color:#f1fa8c">&#34;</span>, value.as_ref(), chars),
+</span></span><span style="display:flex;"><span>            )
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">pub</span> <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">contain_a_digit</span><span style="color:#ff79c6">&lt;</span><span style="color:#50fa7b">&#39;a</span><span style="color:#ff79c6">&gt;</span>() -&gt; <span style="color:#50fa7b">MembershipMatcher</span><span style="color:#ff79c6">&lt;</span><span style="color:#50fa7b">&#39;a</span><span style="color:#ff79c6">&gt;</span> {
+</span></span><span style="display:flex;"><span>    MembershipMatcher::ADigit
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">pub</span> <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">contain_a_character</span><span style="color:#ff79c6">&lt;</span><span style="color:#50fa7b">&#39;a</span><span style="color:#ff79c6">&gt;</span>(ch: <span style="color:#8be9fd">char</span>) -&gt; <span style="color:#50fa7b">MembershipMatcher</span><span style="color:#ff79c6">&lt;</span><span style="color:#50fa7b">&#39;a</span><span style="color:#ff79c6">&gt;</span> {
+</span></span><span style="display:flex;"><span>    MembershipMatcher::Char(ch)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">pub</span> <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">contain_any_characters</span><span style="color:#ff79c6">&lt;</span><span style="color:#50fa7b">&#39;a</span><span style="color:#ff79c6">&gt;</span>(chars: <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">&#39;a</span> [<span style="color:#8be9fd">char</span>]) -&gt; <span style="color:#50fa7b">MembershipMatcher</span><span style="color:#ff79c6">&lt;</span><span style="color:#50fa7b">&#39;a</span><span style="color:#ff79c6">&gt;</span> {
+</span></span><span style="display:flex;"><span>    MembershipMatcher::AnyChars(chars)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>We have introduced lifetime annotation <code>'a</code> in the <code>impl</code>, the public methods <code>contain_a_digit</code>, <code>contain_a_character</code> and  <code>contain_any_characters</code>.
+This lifetime annotation tells the compiler that <code>MembershipMatcher</code> lives for the duration defined by <code>'a</code>, which in turn is the lifetime
+of the character slice.</p>
+<blockquote>
+<p>The lifetime defined in the last method <code>contain_any_characters</code> can be removed. Historically, all the rust methods with reference(s) as
+parameter(s) required the developers to specify lifetime annotation(s). With time, rust developers saw some some common patterns and created
+a set of lifetime elision rules. One of those rules states: if a function accepts a single reference parameter, then the
+lifetime of that reference will be assigned as the lifetime of the return value.</p>
+</blockquote>
+<p>We can now add a test.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#ff79c6">#[cfg(test)]</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">mod</span> matcher_tests {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">#[test]</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">should_contain_any_chars</span>() {
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">let</span> matcher <span style="color:#ff79c6">=</span> contain_any_characters(<span style="color:#ff79c6">&amp;</span>[<span style="color:#f1fa8c">&#39;@&#39;</span>, <span style="color:#f1fa8c">&#39;#&#39;</span>, <span style="color:#f1fa8c">&#39;.&#39;</span>]);
+</span></span><span style="display:flex;"><span>        assert!(matcher.test(<span style="color:#ff79c6">&amp;</span><span style="color:#f1fa8c">&#34;password@1&#34;</span>).passed);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>This works fine.</p>
+<p>Let&rsquo;s play with matchers and lifetimes for a bit by adding a few tests.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#ff79c6">#[cfg(test)]</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">mod</span> tests {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">#[test]</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">should_contain_any_chars</span>() {
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">let</span> matcher;                                            
+</span></span><span style="display:flex;"><span>        {                                                       
+</span></span><span style="display:flex;"><span>            <span style="color:#8be9fd;font-style:italic">let</span> chars <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">&amp;</span>[<span style="color:#f1fa8c">&#39;@&#39;</span>, <span style="color:#f1fa8c">&#39;#&#39;</span>, <span style="color:#f1fa8c">&#39;.&#39;</span>];                       
+</span></span><span style="display:flex;"><span>            matcher <span style="color:#ff79c6">=</span> contain_any_characters(chars);            
+</span></span><span style="display:flex;"><span>        }                                                           
+</span></span><span style="display:flex;"><span>        assert!(matcher.test(<span style="color:#ff79c6">&amp;</span><span style="color:#f1fa8c">&#34;password@1&#34;</span>).passed);            
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>We declare a <code>matcher</code> variable in the outer block, which is initialized in the inner block. We would like the character slice to live at least as long as the matcher,
+otherwise <code>matcher</code> would point to a dropped character slice.</p>
+<p>It might appear that <code>chars</code> will be dropped as soon as the inner block ends, and the above code will not compile.
+However, Rust extends the lifetime of <code>chars</code> to match the lifetime of the variable <code>matcher</code> which is till the end of the function.
+The above code compiles just fine.</p>
+<p>Let&rsquo;s take another example where Rust results in compilation error. It is a slight change in the test, but an important one.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#ff79c6">#[cfg(test)]</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">mod</span> tests {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">#[test]</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">should_contain_any_chars_compiler_error</span>() {
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">let</span> matcher;
+</span></span><span style="display:flex;"><span>        {
+</span></span><span style="display:flex;"><span>            <span style="color:#8be9fd;font-style:italic">let</span> chars <span style="color:#ff79c6">=</span> [<span style="color:#f1fa8c">&#39;@&#39;</span>, <span style="color:#f1fa8c">&#39;#&#39;</span>, <span style="color:#f1fa8c">&#39;.&#39;</span>];
+</span></span><span style="display:flex;"><span>            matcher <span style="color:#ff79c6">=</span> contain_any_characters(<span style="color:#ff79c6">&amp;</span>chars);
+</span></span><span style="display:flex;"><span>                                             <span style="color:#ff79c6">^^^^^^</span> borrowed value does not live long enough
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        assert!(matcher.test(<span style="color:#ff79c6">&amp;</span><span style="color:#f1fa8c">&#34;password@1&#34;</span>).passed); <span style="color:#ff79c6">-</span> chars dropped here <span style="color:#ff79c6">while</span> still borrowed
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Here, we declare <code>chars</code> as an array, and its reference is passed to the function <code>contain_any_characters</code>. Rust will drop <code>chars</code> array at the end
+of the inner block, however <code>matcher</code> outlives the reference. Rust does not allow dangling references and thus it results in a compilation error.</p>
+<p>Question, how do we decide if matchers should have a reference of the extra data or own the data?</p>
+<p>We need to answer a few questions to take this decision:</p>
+<ol>
+<li>This crate will be used in testing (unit/integration/functional/any other). Is it ok if a matcher takes the ownership of extra data?</li>
+<li>Do you care about the consistency of ownership vs borrow concept? Do you want all the matchers to refer to extra data or take ownership?</li>
+<li>Are you going to build a concept that <a href="#matcher-composition">combines various matchers</a>
+ and can the lifetimes of various matchers cause any problems?</li>
+</ol>
+<p>I recently finished an assertions crate called <a href="https://github.com/SarthakMakhija/clearcheck" target="_blank" rel="noopener">clearcheck</a>
+ and I decided to have matchers own their data. My decision was primarily
+based on point 1.</p>
+<h3 id="matcher-composition--using-trait-objects">Matcher composition : using trait objects</h3>
+<p>We now have matcher as a citizen in the code. I think it is worth building a concept that allows composition of various matchers using operators like:
+<strong>and</strong>, <strong>or</strong>.</p>
+<p>We can introduce an abstraction <code>Matchers</code> that contains a collection of objects which implement <code>Matcher&lt;T&gt;</code> trait.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#ff79c6">enum</span> <span style="color:#50fa7b">Kind</span> {
+</span></span><span style="display:flex;"><span>    And,
+</span></span><span style="display:flex;"><span>    Or,
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">pub</span> <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">Matchers</span><span style="color:#ff79c6">&lt;</span>T, M: <span style="color:#50fa7b">Matcher</span><span style="color:#ff79c6">&lt;</span>T<span style="color:#ff79c6">&gt;&gt;</span> {
+</span></span><span style="display:flex;"><span>    matchers: <span style="color:#8be9fd;font-style:italic">Vec</span><span style="color:#ff79c6">&lt;</span>M<span style="color:#ff79c6">&gt;</span>,
+</span></span><span style="display:flex;"><span>    kind: <span style="color:#50fa7b">Kind</span>,
+</span></span><span style="display:flex;"><span>    inner: <span style="color:#50fa7b">PhantomData</span><span style="color:#ff79c6">&lt;</span>T<span style="color:#ff79c6">&gt;</span>,
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Our first attempt is to create a <code>Matchers</code> abstraction that holds a vector of <code>M</code>, where <code>M</code> is a <code>Matcher</code> that operates on a <code>T</code>.</p>
+<p>We need to understand how generics are processed in Rust to understand an issue with this design. In Rust, generics undergo <a href="https://rustc-dev-guide.rust-lang.org/backend/monomorph.html" target="_blank" rel="noopener">monomorphization</a>
+ which means the compiler
+produces a different copy of the generic code for each concrete type needed. This means if the generic type <code>Option&lt;T&gt;</code> is used with <code>f64</code> and <code>i32</code>,
+the compiler will produce two copies of <code>Option</code>, which would be similar to <code>Option_f64</code> and <code>Option_i32</code>.</p>
+<p>Given our definition of <code>Matchers</code>, Rust will emit different copies of <code>Matchers</code> for each concrete type of <code>Matcher</code>. This also means that Rust
+will not allow us to combine different types of matcher objects like <code>MembershipMatcher</code> and <code>SubstringMatcher</code> using generics, even if all of them implement the <code>Matcher&lt;T&gt;</code> trait for the same <code>T</code>.</p>
+<p>So, we need a different way to combine matchers. We have already seen <a href="#connecting-assertions-and-matchers---using-blanket-trait-and-trait-object">trait objects</a>
+,
+which point to both an instance of a type implementing a trait and a table that is used to look up trait methods on that type at runtime.
+We create a trait object by specifying either <code>&amp;</code> reference or a <code>Box&lt;T&gt;</code> smart pointer, then the <code>dyn</code> keyword, and then specifying the relevant trait.
+Trait objects enable storing objects (inside a struct) regardless of their specific types, as long as they fulfill the required behavior specified by a trait.</p>
+<p>We can now represent <code>Matchers</code> using a vector of trait objects, which implement the <code>Matcher&lt;T&gt;</code> trait.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#ff79c6">pub</span> <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">Matchers</span><span style="color:#ff79c6">&lt;</span>T<span style="color:#ff79c6">&gt;</span> {
+</span></span><span style="display:flex;"><span>    matchers: <span style="color:#8be9fd;font-style:italic">Vec</span><span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd;font-style:italic">Box</span><span style="color:#ff79c6">&lt;</span><span style="color:#ff79c6">dyn</span> Matcher<span style="color:#ff79c6">&lt;</span>T<span style="color:#ff79c6">&gt;&gt;&gt;</span>,
+</span></span><span style="display:flex;"><span>    kind: <span style="color:#50fa7b">Kind</span>,
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Let&rsquo;s now implement a builder to create a <code>Matchers</code> object.</p>
+<p>(<em>I am only going to describe the <strong>and</strong> operator, and <strong>positive assertions</strong></em>.
+You can refer the code <a href="https://github.com/SarthakMakhija/clearcheck/blob/main/src/matchers/compose/mod.rs" target="_blank" rel="noopener">here</a>
+ for composition with inverted assertions.)</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#ff79c6">pub</span> <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">MatchersBuilder</span><span style="color:#ff79c6">&lt;</span>T<span style="color:#ff79c6">&gt;</span> {
+</span></span><span style="display:flex;"><span>    matchers: <span style="color:#8be9fd;font-style:italic">Vec</span><span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd;font-style:italic">Box</span><span style="color:#ff79c6">&lt;</span><span style="color:#ff79c6">dyn</span> Matcher<span style="color:#ff79c6">&lt;</span>T<span style="color:#ff79c6">&gt;&gt;&gt;</span>,
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">impl</span><span style="color:#ff79c6">&lt;</span>T: <span style="color:#50fa7b">Debug</span><span style="color:#ff79c6">&gt;</span> MatchersBuilder<span style="color:#ff79c6">&lt;</span>T<span style="color:#ff79c6">&gt;</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span> <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">start_building</span>(matcher: <span style="color:#8be9fd;font-style:italic">Box</span><span style="color:#ff79c6">&lt;</span><span style="color:#ff79c6">dyn</span> Matcher<span style="color:#ff79c6">&lt;</span>T<span style="color:#ff79c6">&gt;&gt;</span>) -&gt; <span style="color:#50fa7b">Self</span> {
+</span></span><span style="display:flex;"><span>        MatchersBuilder {
+</span></span><span style="display:flex;"><span>            matchers: <span style="color:#50fa7b">vec</span><span style="color:#ff79c6">!</span>[matcher]
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span> <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">push</span>(<span style="color:#ff79c6">mut</span> self, matcher: <span style="color:#8be9fd;font-style:italic">Box</span><span style="color:#ff79c6">&lt;</span><span style="color:#ff79c6">dyn</span> Matcher<span style="color:#ff79c6">&lt;</span>T<span style="color:#ff79c6">&gt;&gt;</span>) -&gt; <span style="color:#50fa7b">Self</span> {
+</span></span><span style="display:flex;"><span>        self.matchers.push(matcher);
+</span></span><span style="display:flex;"><span>        self
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span> <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">combine_as_and</span>(self) -&gt; <span style="color:#50fa7b">Matchers</span><span style="color:#ff79c6">&lt;</span>T<span style="color:#ff79c6">&gt;</span> {
+</span></span><span style="display:flex;"><span>        Matchers::and(self.matchers)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><code>MatchersBuilder</code> allows composing multiple matchers and it can be used as following:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>MatchersBuilder::start_building(<span style="color:#8be9fd;font-style:italic">Box</span>::new(contain_a_digit()))
+</span></span><span style="display:flex;"><span>    .push(<span style="color:#8be9fd;font-style:italic">Box</span>::new(contain_any_characters(<span style="color:#ff79c6">&amp;</span>[<span style="color:#f1fa8c">&#39;#&#39;</span>, <span style="color:#f1fa8c">&#39;&amp;&#39;</span>])))
+</span></span><span style="display:flex;"><span>    .push(<span style="color:#8be9fd;font-style:italic">Box</span>::new(contain_a_character(<span style="color:#f1fa8c">&#39;0&#39;</span>)))
+</span></span><span style="display:flex;"><span>    .combine_as_and()
+</span></span></code></pre></div><p>Finally, <code>Matchers</code> is going to implement the <code>Matcher&lt;T&gt;</code> trait. This is what makes the crate really powerful.
+Anyone can create their custom matcher using composition and use it in the assertion(s) of their choice.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#ff79c6">impl</span><span style="color:#ff79c6">&lt;</span>T: <span style="color:#50fa7b">Debug</span><span style="color:#ff79c6">&gt;</span> Matcher<span style="color:#ff79c6">&lt;</span>T<span style="color:#ff79c6">&gt;</span> <span style="color:#ff79c6">for</span> Matchers<span style="color:#ff79c6">&lt;</span>T<span style="color:#ff79c6">&gt;</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">test</span>(<span style="color:#ff79c6">&amp;</span>self, value: <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">T</span>) -&gt; <span style="color:#50fa7b">MatcherResult</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">let</span> results <span style="color:#ff79c6">=</span> self
+</span></span><span style="display:flex;"><span>            .matchers
+</span></span><span style="display:flex;"><span>            .iter()
+</span></span><span style="display:flex;"><span>            .map(<span style="color:#ff79c6">|</span>matcher<span style="color:#ff79c6">|</span> matcher.test(value))
+</span></span><span style="display:flex;"><span>            .collect::<span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd;font-style:italic">Vec</span><span style="color:#ff79c6">&lt;</span>_<span style="color:#ff79c6">&gt;&gt;</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">match</span> self.kind {
+</span></span><span style="display:flex;"><span>            Kind::And <span style="color:#ff79c6">=&gt;</span> MatcherResult::formatted(
+</span></span><span style="display:flex;"><span>                results.iter().all(<span style="color:#ff79c6">|</span>result<span style="color:#ff79c6">|</span> result.passed),
+</span></span><span style="display:flex;"><span>                messages(
+</span></span><span style="display:flex;"><span>                    <span style="color:#ff79c6">&amp;</span>results,
+</span></span><span style="display:flex;"><span>                    <span style="color:#ff79c6">|</span>result<span style="color:#ff79c6">|</span> <span style="color:#ff79c6">!</span>result.passed,
+</span></span><span style="display:flex;"><span>                    <span style="color:#ff79c6">|</span>result<span style="color:#ff79c6">|</span> result.failure_message.clone(),
+</span></span><span style="display:flex;"><span>                ),
+</span></span><span style="display:flex;"><span>                messages(
+</span></span><span style="display:flex;"><span>                    <span style="color:#ff79c6">&amp;</span>results,
+</span></span><span style="display:flex;"><span>                    <span style="color:#ff79c6">|</span>result<span style="color:#ff79c6">|</span> result.passed,
+</span></span><span style="display:flex;"><span>                    <span style="color:#ff79c6">|</span>result<span style="color:#ff79c6">|</span> result.inverted_failure_message.clone(),
+</span></span><span style="display:flex;"><span>                ),
+</span></span><span style="display:flex;"><span>            ),
+</span></span><span style="display:flex;"><span>            <span style="color:#6272a4">//Kind::Or skipped
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">messages</span><span style="color:#ff79c6">&lt;</span>P, M<span style="color:#ff79c6">&gt;</span>(results: <span style="color:#ff79c6">&amp;</span>[MatcherResult], predicate: <span style="color:#50fa7b">P</span>, mapper: <span style="color:#50fa7b">M</span>) -&gt; <span style="color:#8be9fd;font-style:italic">String</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#50fa7b">where</span>
+</span></span><span style="display:flex;"><span>        P: <span style="color:#8be9fd;font-style:italic">Fn</span>(<span style="color:#ff79c6">&amp;&amp;</span>MatcherResult) -&gt; <span style="color:#8be9fd">bool</span>,
+</span></span><span style="display:flex;"><span>        M: <span style="color:#8be9fd;font-style:italic">Fn</span>(<span style="color:#ff79c6">&amp;</span>MatcherResult) -&gt; <span style="color:#8be9fd;font-style:italic">String</span>,
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    results
+</span></span><span style="display:flex;"><span>        .iter()
+</span></span><span style="display:flex;"><span>        .filter(predicate)
+</span></span><span style="display:flex;"><span>        .map(mapper)
+</span></span><span style="display:flex;"><span>        .collect::<span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd;font-style:italic">Vec</span><span style="color:#ff79c6">&lt;</span>_<span style="color:#ff79c6">&gt;&gt;</span>()
+</span></span><span style="display:flex;"><span>        .join(<span style="color:#f1fa8c">&#34;</span><span style="color:#f1fa8c">\n</span><span style="color:#f1fa8c">&#34;</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>The <code>test</code> method runs all the matchers and collects <code>MatcherResult</code>s. It then produces an instance of <code>MatcherResult</code> based on the <code>Kind</code>.</p>
+<p>Let&rsquo;s see the concept of custom matchers in action.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#ff79c6">#[cfg(test)]</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">mod</span> custom_string_matchers_tests {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">use</span> std::fmt::Debug;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">use</span> <span style="color:#ff79c6">crate</span>::{contain_a_character, contain_a_digit, contain_any_characters, Matchers, MatchersBuilder, Should};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">be_a_valid_password</span><span style="color:#ff79c6">&lt;</span>T: <span style="color:#8be9fd;font-style:italic">AsRef</span><span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">str</span><span style="color:#ff79c6">&gt;</span> <span style="color:#ff79c6">+</span> Debug<span style="color:#ff79c6">&gt;</span>() -&gt; <span style="color:#50fa7b">Matchers</span><span style="color:#ff79c6">&lt;</span>T<span style="color:#ff79c6">&gt;</span> {
+</span></span><span style="display:flex;"><span>        MatchersBuilder::start_building(<span style="color:#8be9fd;font-style:italic">Box</span>::new(contain_a_digit()))
+</span></span><span style="display:flex;"><span>            .push(<span style="color:#8be9fd;font-style:italic">Box</span>::new(contain_any_characters(<span style="color:#ff79c6">&amp;</span>[<span style="color:#f1fa8c">&#39;#&#39;</span>, <span style="color:#f1fa8c">&#39;&amp;&#39;</span>, <span style="color:#f1fa8c">&#39;@&#39;</span>])))
+</span></span><span style="display:flex;"><span>            .push(<span style="color:#8be9fd;font-style:italic">Box</span>::new(contain_a_character(<span style="color:#f1fa8c">&#39;0&#39;</span>)))
+</span></span><span style="display:flex;"><span>            .combine_as_and()
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">trait</span> PasswordAssertion {
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">should_be_a_valid_password</span>(<span style="color:#ff79c6">&amp;</span>self) -&gt; <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">Self</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">impl</span> PasswordAssertion <span style="color:#ff79c6">for</span> <span style="color:#ff79c6">&amp;</span><span style="color:#8be9fd">str</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">should_be_a_valid_password</span>(<span style="color:#ff79c6">&amp;</span>self) -&gt; <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">Self</span> {
+</span></span><span style="display:flex;"><span>            self.should(<span style="color:#ff79c6">&amp;</span>be_a_valid_password());
+</span></span><span style="display:flex;"><span>            self
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">#[test]</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">should_be_a_valid_password</span>() {
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">let</span> password <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">&#34;P@@sw0rd9082&#34;</span>;
+</span></span><span style="display:flex;"><span>        password.should_be_a_valid_password();
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>This involves the following:</p>
+<ul>
+<li>Creating a custom password matcher.</li>
+<li>Creating a custom password assertion.</li>
+<li>Implementing the password assertion for <code>&amp;str</code>.</li>
+<li>Leveraging the custom matcher in the assertion using the built-in trait <code>Should</code>.</li>
+</ul>
+<p>That&rsquo;s it folks. We have arrived at the end of the article. I hope it was worth your time.</p>
+<p>I have an assertions crate called <a href="https://github.com/SarthakMakhija/clearcheck" target="_blank" rel="noopener">clearcheck</a>
+. Do take a look if the concepts that were discussed in the article excite you.</p>
+<h3 id="references">References</h3>
+<ul>
+<li><a href="https://doc.rust-lang.org/book/" target="_blank" rel="noopener">The Rust Programming Language</a>
+</li>
+<li><a href="https://www.oreilly.com/library/view/programming-rust-2nd/9781492052586/" target="_blank" rel="noopener">Programming Rust</a>
+</li>
+<li><a href="https://stackoverflow.com/questions/24158114/what-are-the-differences-between-rusts-string-and-str" target="_blank" rel="noopener">String types</a>
+</li>
+</ul>
+
+  </article>
+<div class="tag-list-container">
+    <div class="tag-list">
+        
+        <a class="button" href="">
+            <p class="tag"><i class="fa fa-fw fa-tag"></i>Rust</p>
+        </a>
+        
+        <a class="button" href="">
+            <p class="tag"><i class="fa fa-fw fa-tag"></i>Assertions</p>
+        </a>
+        
+        <a class="button" href="">
+            <p class="tag"><i class="fa fa-fw fa-tag"></i>Elegant-assertions</p>
+        </a>
+        
+        <a class="button" href="">
+            <p class="tag"><i class="fa fa-fw fa-tag"></i>Clearcheck</p>
+        </a>
+        
+    </div>
+</div>
+
+
+
+<div class="px-2 mb-2">
+  
+  <script src="https://giscus.app/client.js"
+    data-repo="SarthakMakhija/tech-lessons-comments"
+    data-repo-id="R_kgDOJHu3mA"
+    data-category="Announcements"
+    data-category-id="DIC_kwDOJHu3mM4CUxhS"
+    data-mapping="og:title"
+    data-strict="0"
+    data-reactions-enabled="1"
+    data-emit-metadata="0"
+    data-input-position="bottom"
+    data-theme="light"
+    data-lang="en"
+    crossorigin="anonymous"
+    async>
+  </script>
+  
+</div>
+
+
+
+    </main><footer class="container p-6 mx-auto flex justify-between items-center">
+  <span></span>
+
+  <span class="text-base font-thin">
+    
+    tech-lessons.in © 2020 / Powered by  <a class="font-bold" target="_blank" href="https://gohugo.io/">Hugo</a>
+    
+  </span>
+
+  <span onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="p-1 cursor-pointer">
+    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" stroke-width="1.5"
+      stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M18 15l-6 -6l-6 6h12" />
+    </svg>
+  </span>
+</footer>
+
+<div class="search-ui absolute top-0 left-0 w-full h-full bg-white dark:bg-gray-800 hidden">
+  <div class="container max-w-3xl mx-auto p-12">
+    <div class="relative">
+      <div class="my-4 text-center text-2xl font-bold">Search</div>
+
+      <span class="p-2 absolute right-0 top-0 cursor-pointer close-search">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5"
+          stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </span>
+    </div>
+
+    <input type="search" class="py-2 px-3 w-full dark:text-black border dark:border-transparent"
+      placeholder="Enter search query" />
+
+    <div class="search-results text-lg font-medium my-4 hidden">Results</div>
+    <ul class="search-list my-2">
+
+    </ul>
+
+    <div class="no-results text-center my-8 hidden">
+      <div class="text-xl font-semibold mb-2">No results found</div>
+      <p class="font-light text-sm">Try adjusting your search query</p>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+<script src="//localhost:1313/js/scripts.min.js"></script>
+
+
+      <script async src="https://www.googletagmanager.com/gtag/js?id=G-9KKTKFQ2CM"></script>
+      <script>
+        var doNotTrack = false;
+        if ( false ) {
+          var dnt = (navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack);
+          var doNotTrack = (dnt == "1" || dnt == "yes");
+        }
+        if (!doNotTrack) {
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-9KKTKFQ2CM');
+        }
+      </script>
+
+
+
+
+
+<script>
+  const mobileMenuButton = document.querySelector('.mobile-menu-button')
+  const mobileMenu = document.querySelector('.mobile-menu')
+  function toggleMenu() {
+    mobileMenu.classList.toggle('hidden');
+    mobileMenu.classList.toggle('flex');
+  }
+  if(mobileMenu && mobileMenuButton){
+    mobileMenuButton.addEventListener('click', toggleMenu)
+  }
+</script>
+</body>
+</html>
