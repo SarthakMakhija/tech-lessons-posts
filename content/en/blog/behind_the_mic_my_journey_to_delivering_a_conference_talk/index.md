@@ -13,7 +13,7 @@ caption: "Background by Pixabay on Pexels"
 ---
 
 I recently gave a [talk](https://www.youtube.com/watch?v=_55OM23zhUo) on "Questioning database claims: Design patterns of storage engines" at GopherConIndia24 on 2nd December.
-The idea of the talk was to understand various patterns of storage engines (/key-value storage engines) like:
+The idea of the talk was to understand various patterns of storage engines (/key-value storage engines) such as:
 - **Persistence** (WAL, fsync) 
 - **Efficient Retrieval** (B+tree, bloom filters, data layouts)
 - **Efficient Ingestion** (Sequential IO, LSM, Wisckey) 
@@ -184,15 +184,16 @@ I finally gave the talk :). I believe it went well, and I received positive feed
 
 ### Introspection
 
-I found it beneficial to break down my preparation into smaller, manageable tasks and maintain a well-organized to-do list. This 
-allowed me to focus on one task at a time. I am incredibly grateful for the support I received from Unmesh Joshi, Gautam Rege, Aman Mangal, 
-and Tittu Varghese, whose assistance were invaluable in completing my tasks and giving a nice shape to my talk. 
+Looking back, I am incredibly grateful for the support I received from Unmesh Joshi, Gautam Rege, Aman Mangal, and Tittu Varghese, 
+whose assistance were invaluable in completing my tasks and giving a nice shape to my talk. 
+The mock practice sessions were also instrumental. Timing myself during rehearsals helped me develop a comfortable pace, significantly 
+reducing my anxiety about exceeding the allotted time.
 
-I found my mock practice sessions to be extremely helpful. Timing myself during rehearsals helped me develop a comfortable pace, 
-significantly reducing my anxiety about exceeding the allotted time.
+This experience has **reinforced the importance of meticulous preparation** and the **value of seeking feedback from colleagues**. 
+I encourage anyone considering submitting a talk proposal to embrace the challenge. The rewards – sharing your knowledge, 
+connecting with the community, and growing as a presenter – are truly immense.
 
-I believe it's perfectly normal to feel nervous before a presentation. However, if possible, I prefer to experience those nerves 
-beforehand, during practice sessions, rather than solely during the actual talk.
+I am deeply grateful to Thoughtworks, NPCI, and Caizin for their invaluable support in making this presentation a reality.
 
 The recording of the talk is available [here](https://www.youtube.com/watch?v=_55OM23zhUo) and the slides are available 
 [here](https://github.com/SarthakMakhija/questioning-database-claims-gocon24).
