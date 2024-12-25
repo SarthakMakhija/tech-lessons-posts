@@ -4,8 +4,11 @@
 
 ## Running on local
 
+    # Install Hugo and npm
+
     # Clone the repository
     git clone https://github.com/SarthakMakhija/tech-lessons-posts.git        
+    git submodule update --recursive --remote
 
     # Assuming npm is installed, install the dependencies
     npm i
