@@ -47,7 +47,7 @@ As a result of this discussion, the focus of our talk shifted to "Questioning da
 ### Building a task list
 
 Choosing the topic was only the beginning. I then had to outline the specific tasks involved in delivering the talk. I believe I am good
-at breaking down a complex project into manageable tasks. I created a task list with everything that I could think. Preparing a healthy
+at breaking down a complex project into manageable tasks. I created a task list with everything that I could think of. Preparing a healthy
 task list has a lot of advantages:
 1. **Enhanced Visibility**: A clear task list provides a comprehensive overview of the entire project, enabling better tracking of 
 progress and identifying potential roadblocks.
@@ -93,7 +93,7 @@ draft structure for the "Persistence" pattern took the following shape:
 
 I applied the same approach to all the patterns, and soon enough, my presentation was ready. Initially, I drafted a list of 
 "side points to cover" in each pattern, as seen in the image above. However, I refined this list by conducting timed practice sessions. This iterative 
-process helped me determine which points were essential to include within the allotted timeframe.
+process helped me determine which points were essential to include within the allotted time frame.
 
 I moved on to the next stage, which was getting feedback on the presentation.
 
@@ -209,7 +209,7 @@ limit.
 
 ### Giving the talk
 
-Practice is very different from the actual talk. I knew I had practiced enough, but I was well aware of the fact that I might get nervous on 
+Practice is very different from actual talk. I knew I had practiced enough, but I was well aware of the fact that I might get nervous on 
 the stage. My anxiety wasn't about the audience or the stage, but about the pressure to perform well, deliver my message accurately, 
 and truly capture the essence of my talk. So, I wanted to feel a little of that pressure beforehand.
 
