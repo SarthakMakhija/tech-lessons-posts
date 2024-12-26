@@ -29,8 +29,9 @@ Let's start.
 ### Picking the topic
 
 Having spent decent time exploring key/value storage engines, I was eager to present my learnings on recurring patterns within this space. 
-I define a pattern as a repeating or a recurring solution to a problem. For instance, achieving durability – ensuring data is never lost 
-after being acknowledged as written – requires the implementation of a Write-Ahead Log (WAL) and the execution of the `fsync` system call.
+I define a <span style="color: #F78C6C"> pattern </span> <span style="color: #28a745"> as a repeating or a recurring solution to a problem </span>. For instance, 
+achieving <span style="color: #F78C6C">  durability </span> – <span style="color: #28a745"> ensuring data is never lost after being acknowledged as written </span> – 
+requires the implementation of a <span style="color: #28a745"> Write-Ahead Log (WAL) </span> along with <span style="color: #28a745">  fsync system call.</span>
 
 My initial concept for the talk centered around "Patterns of Key/Value Storage Engines". I was going to present the talk with [Tittu Varghese](https://www.linkedin.com/in/tittuvarghese/),
 who is an architect at NPCI. Both of us recognized the need to refine the topic further. Despite our understanding of these 
@@ -42,6 +43,22 @@ patterns but also develop a critical lens to evaluate database claims. By unders
 question the promises made by various database solutions. 
 
 As a result of this discussion, the focus of our talk shifted to "Questioning database claims: Design patterns of storage engines".
+
+### Building a task list
+
+Choosing the topic was only the beginning. I then had to outline the specific tasks involved in delivering the talk. I believe I am good
+at breaking down a complex project into manageable tasks. I created a task list with everything that I could think. Preparing a healthy
+task list has a lot of advantages:
+1. **Enhanced Visibility**: A clear task list provides a comprehensive overview of the entire project, enabling better tracking of 
+progress and identifying potential roadblocks.
+2. **Improved Focus**: Concentrating on individual tasks allows in maintaining a steady pace and minimizing the feeling of being overwhelmed.
+3. **Reduced Anxiety**: A well-defined task list minimizes anxiety by providing a clear roadmap and a sense of control over the project.
+
+The refined task list is shown below. 
+
+<figure>
+    <img class="align-center" src="/talk-task-list.jpeg" />
+</figure>
 
 ### Preparing the presentation
 
