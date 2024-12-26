@@ -1,13 +1,13 @@
 ---
 author: "Sarthak Makhija"
 title: "Behind the Mic: My journey to delivering a conference talk"
-date: 2024-12-25
+date: 2024-12-26
 description: "
 I recently gave a talk with Tittu Varghese on 'Questioning database claims: Design patterns of storage engines' at GopherConIndia24 on 2nd December.
 In this article, I’ll walk you through my journey - from brainstorming the topic and building the presentation to running mock sessions
 and delivering the final talk. Along the way, I’ll share the experiences and emotions that shaped my path to the stage.
 "
-tags: ["Talk Preparation", "Questioning database claims", "Design patterns of storage engines", "Public Speaking", "Conference Preparation"]
+tags: ["Talk Preparation", "Public Speaking", "Conference Preparation", "Questioning database claims", "Design patterns of storage engines"]
 thumbnail: "/talk_title.jpg"
 caption: "Photo by Pixabay on Pexels"
 ---
@@ -28,9 +28,24 @@ Let's start.
   
 ### Picking the topic
 
+Having spent decent time exploring key/value storage engines, I was eager to present my learnings on recurring patterns within this space. 
+I define a pattern as a repeating or a recurring solution to a problem. For instance, achieving durability – ensuring data is never lost 
+after being acknowledged as written – requires the implementation of a Write-Ahead Log (WAL) and the execution of the `fsync` system call.
+
+My initial concept for the talk centered around "Patterns of Key/Value Storage Engines". I was going to present the talk with [Tittu Varghese](https://www.linkedin.com/in/tittuvarghese/),
+who is an architect at NPCI. Both of us recognized the need to refine the topic further. Despite our understanding of these 
+patterns, we sought to ensure the talk offered a more focused and impactful message.
+
+To do this, we discussed it with [Gautam Rege](https://www.linkedin.com/in/gautamrege/) during a call. This conversation proved invaluable.
+We discussed the key takeaways for the audience and all of us agreed that the audience should not only grasp key-value storage engine 
+patterns but also develop a critical lens to evaluate database claims. By understanding these patterns, they would be better equipped to 
+question the promises made by various database solutions. 
+
+As a result of this discussion, the focus of our talk shifted to "Questioning database claims: Design patterns of storage engines".
+
 ### Preparing the presentation
 
-After the topic was finalized, I identified four key patterns of key-value storage engines to focus on in the talk:
+After the topic was finalized, I identified four key patterns of key-value storage engines to cover in the talk:
 - Durability
 - Read optimization
 - Write optimization
@@ -178,8 +193,7 @@ Practice is very different from the actual talk. I knew I had practiced enough, 
 the stage. My anxiety wasn't about the audience or the stage, but about the pressure to perform well, deliver my message accurately, 
 and truly capture the essence of my talk. So, I wanted to feel a little of that pressure beforehand.
 
-This is where [Tittu Varghese](https://www.linkedin.com/in/tittuvarghese/), an architect at the National Payments Corporation of India (NPCI), 
-comes in. I shared the stage with Tittu. He skillfully provided the necessary context for my talk, creating a smooth transition for my 
+This is where [Tittu Varghese](https://www.linkedin.com/in/tittuvarghese/), comes in. I shared the stage with Tittu. He skillfully provided the necessary context for my talk, creating a smooth transition for my 
 presentation. Tittu spoke for a few minutes, which proved invaluable. This period allowed me to get comfortable with the stage, observe 
 the audience, and build my confidence for the rest of the presentation.
 
