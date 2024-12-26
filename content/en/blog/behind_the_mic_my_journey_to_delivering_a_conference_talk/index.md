@@ -3,7 +3,7 @@ author: "Sarthak Makhija"
 title: "Behind the Mic: My journey to delivering a conference talk"
 date: 2024-12-25
 description: "
-I recently gave a talk on 'Questioning database claims: Design patterns of storage engines' at GopherConIndia24 on 2nd December.
+I recently gave a talk with Tittu Varghese on 'Questioning database claims: Design patterns of storage engines' at GopherConIndia24 on 2nd December.
 In this article, I’ll walk you through my journey - from brainstorming the topic and building the presentation to running mock sessions
 and delivering the final talk. Along the way, I’ll share the experiences and emotions that shaped my path to the stage.
 "
@@ -12,7 +12,7 @@ thumbnail: "/talk_title.jpg"
 caption: "Photo by Pixabay on Pexels"
 ---
 
-I recently gave a [talk](https://www.youtube.com/watch?v=_55OM23zhUo) on "Questioning database claims: Design patterns of storage engines" at GopherConIndia24 on 2nd December.
+I recently gave a [talk](https://www.youtube.com/watch?v=_55OM23zhUo) with Tittu Varghese on "Questioning database claims: Design patterns of storage engines" at GopherConIndia24 on 2nd December.
 The idea of the talk was to understand various patterns of storage engines (/key-value storage engines) such as:
 - **Persistence** (WAL, fsync) 
 - **Efficient Retrieval** (B+tree, bloom filters, data layouts)
@@ -37,9 +37,9 @@ After the topic was finalized, I identified four key patterns of key-value stora
 - Transactions
 
 Although I wasn’t entirely satisfied with the names of the patterns, I decided to move forward with them. To organize my thoughts, 
-I created a simple template to structure the presentation:
+I created a <span style="color: #28a745"> simple template to structure the presentation:</span>
 
-**Pattern name** → **Definition** → **Sub-patterns** → **Questions to evaluate database claims**
+**Pattern name** → **Definition** → **Sub-concepts** → **Questions to evaluate database claims**
 
 I had a great brainstorming session with [Unmesh Joshi](https://www.linkedin.com/in/unmesh-joshi-9487635/) around patterns and questions to 
 evaluate database claims. I received valuable feedback on the pattern names, suggesting that they should be nouns. 
@@ -76,7 +76,7 @@ I had a call with [Gautam Rege](https://www.linkedin.com/in/gautamrege/) and I r
 
 This was a wonderful call because it gave a clear vision for my talk. I could describe the talk to anyone with the following flow:  
 
-**Understand patterns of storage engines → Question database claims → Pick right database(s)**.
+**Understand patterns of storage engines → Question database claims → Apply patterns**.
 
 During the call, I also received valuable information about the timing of the talk - it needed to be completed within 22-25 minutes. This 
 meant I couldn’t dive too deeply into any one pattern. Additionally, the use cases at the end of the talk needed to be simple enough for the 
@@ -99,8 +99,8 @@ timing just yet. Instead, I aimed to work on the following areas:
 - Focusing on my tone, clarity, and ensuring that I didn’t sound nervous or have my breathing interfere with my speech
 - Removing redundant sentences while speaking
 
-I didn’t start by practicing the entire talk. Instead, I focused on one pattern at a time, evaluated my mistakes, and once I felt 
-confident with a pattern, I moved on to a few full practice sessions of the entire talk.
+I didn’t start by practicing the entire talk. Instead, <span style="color: #28a745"> I focused on one pattern at a time, evaluated my mistakes, and once I felt 
+confident with a pattern </span>, I moved on to a few full practice sessions of the entire talk.
 
 I practiced 5-7 times and things started to fall in place. However, there were still two key areas that I had to work on:
 
@@ -127,7 +127,7 @@ difficult to convey the essence of the talk.
 I went back to my room to work on "talk timing" and "audience engagement". Before practicing, I thought of showing my slides to [Aman Mangal](https://www.linkedin.com/in/amanmangal/). 
 Aman is a good friend and works at Hypermode. He provided valuable feedback, suggesting that I add slides to explain key concepts 
 like B+Tree, Bloom filter, WAL, and others. Taking his advice, I integrated slides within each pattern to provide clear explanations 
-of these core concepts. An example of one such slide is included below.
+of these core concepts. An example of one such slide is shown below.
 
 <figure>
     <img class="align-center" src="/talk-sub-concepts.png" />
@@ -146,7 +146,7 @@ After practicing again, my talk time dropped to 21 minutes.
 
 It was now the time to involve the virtual audience. To do this, I revisited the slides and looked for opportunities to engage them.
 
-**I was able to create enough engagement points in the slides:**
+<span style="color: #28a745">I was able to create enough engagement points in the slides:</span>
 
 1. One observation I made on December 1st was that while the speakers were greeted by the audience, the applause wasn’t very loud. 
 I saw this as an opportunity to inject some humor and create a brief moment of audience engagement.
@@ -180,7 +180,7 @@ and truly capture the essence of my talk. So, I wanted to feel a little of that 
 
 This is where [Tittu Varghese](https://www.linkedin.com/in/tittuvarghese/), an architect at the National Payments Corporation of India (NPCI), 
 comes in. I shared the stage with Tittu. He skillfully provided the necessary context for my talk, creating a smooth transition for my 
-presentation. Tittu spoke for about two minutes, which proved invaluable. This period allowed me to get comfortable with the stage, observe 
+presentation. Tittu spoke for a few minutes, which proved invaluable. This period allowed me to get comfortable with the stage, observe 
 the audience, and build my confidence for the rest of the presentation.
 
 I finally gave the talk :). I believe it went well, and I received positive feedback.
@@ -193,7 +193,7 @@ presentation.
 
 The mock practice sessions proved invaluable. Timing myself during rehearsals helped me develop a comfortable pace, significantly reducing my anxiety about exceeding the allotted time.
 
-This experience has **reinforced the importance of meticulous preparation** and the **value of seeking feedback from colleagues**. 
+This experience has <span style="color: #28a745">reinforced the importance of meticulous preparation</span> and <span style="color: #28a745">the value of seeking feedback from colleagues</span>. 
 I encourage anyone considering submitting a talk proposal to embrace the challenge. The rewards – sharing your knowledge, 
 connecting with the community, and growing as a presenter – are truly immense.
 
