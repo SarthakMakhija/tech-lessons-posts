@@ -21,7 +21,7 @@ type: page
     <p><img class="self-image" alt="Sarthak Makhija" src="/self.png"></p>
 </div>
 
-I am Sarthak Makhija, and I am a Principal Architect at Caizin. 
+I am Sarthak Makhija, Principal Architect at Caizin. 
 
 Prior to joining Caizin, I was with Thoughtworks where I led a team that developed a **strongly consistent**, **distributed** **key/value storage** engine in Go.
 
