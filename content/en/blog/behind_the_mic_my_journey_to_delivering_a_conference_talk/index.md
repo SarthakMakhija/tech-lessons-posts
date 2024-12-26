@@ -51,16 +51,16 @@ at breaking down a complex project into manageable tasks. I created a task list 
 task list has a lot of advantages:
 1. **Enhanced Visibility**: A clear task list provides a comprehensive overview of the entire project, enabling better tracking of 
 progress and identifying potential roadblocks.
-2. **Improved Focus**: Concentrating on individual tasks allows in maintaining a steady pace and minimizing the feeling of being overwhelmed.
+2. **Improved Focus**: Concentrating on individual tasks allows maintaining a steady pace and minimizing the feeling of being overwhelmed.
 3. **Reduced Anxiety**: A well-defined task list minimizes anxiety by providing a clear roadmap and a sense of control over the project.
 
-The refined task list is shown below. 
+My refined task list is shown below. 
 
 <figure>
     <img class="align-center" src="/talk-task-list.jpeg" />
 </figure>
 
-I then moved on to the presentation preparation.
+I then moved on to preparing the presentation.
 
 ### Preparing the presentation
 
@@ -75,8 +75,8 @@ I created a <span style="color: #28a745"> simple template to structure the prese
 
 **Pattern name** → **Definition** → **Sub-concepts** → **Questions to evaluate database claims**
 
-I had a great brainstorming session with [Unmesh Joshi](https://www.linkedin.com/in/unmesh-joshi-9487635/) around patterns and questions that one should ask 
-to evaluate database claims. I received valuable feedback on the pattern names, suggesting that they should be nouns. 
+I had a great brainstorming session with [Unmesh Joshi](https://www.linkedin.com/in/unmesh-joshi-9487635/) around patterns of storage engines 
+and questions that one should ask to evaluate database claims. I received valuable feedback on the pattern names, suggesting that they should be nouns. 
 Based on this input, I refined the names of the patterns as follows:
 
 - Durability → **Persistence**
@@ -91,16 +91,19 @@ draft structure for the "Persistence" pattern took the following shape:
     <img class="align-center" src="/talk-preparation.png" />
 </figure>
 
+The root is the name of the pattern, followed by a set of questions designed to validate the "durability" claim of databases.
+The template concludes with a list of potential points that I might to cover in this pattern.
+
 I applied the same approach to all the patterns, and soon enough, my presentation was ready. Initially, I drafted a list of 
-"side points to cover" in each pattern, as seen in the image above. However, I refined this list by conducting timed practice sessions. This iterative 
-process helped me determine which points were essential to include within the allotted time frame.
+"side points to cover" in each pattern, as seen in the image above. However, I refined this list by conducting timed practice sessions. 
+This iterative process helped me in determining which points were essential to include within the allotted time frame.
 
 I moved on to the next stage, which was getting feedback on the presentation.
 
 ### Getting feedback on the presentation
 
 My presentation started with an examination of various database claims. It then delved into key/value storage engine patterns and a set of 
-questions for evaluating these claims. However, I felt a sense of incompleteness, as if a crucial element was missing, though I couldn't 
+questions for evaluating various database claims. However, I felt a sense of incompleteness, as if a crucial element was missing, though I couldn't 
 quite articulate what it was.
 
 I had a call with [Gautam Rege](https://www.linkedin.com/in/gautamrege/) and I received some insightful feedback:
@@ -134,7 +137,7 @@ timing just yet. Instead, I aimed to work on the following areas:
 - Removing redundant sentences while speaking
 
 I didn’t start by practicing the entire talk. Instead, <span style="color: #28a745"> I focused on one pattern at a time, evaluated my mistakes, and once I felt 
-confident with a pattern </span>, I moved on to a few full practice sessions of the entire talk.
+confident with a pattern </span>, I moved on to a <span style="color: #28a745">few full practice sessions of the entire talk.</span>
 
 I practiced 5-7 times and things started to fall in place. However, there were still two key areas that I had to work on:
 
@@ -213,7 +216,7 @@ Practice is very different from actual talk. I knew I had practiced enough, but 
 the stage. My anxiety wasn't about the audience or the stage, but about the pressure to perform well, deliver my message accurately, 
 and truly capture the essence of my talk. So, I wanted to feel a little of that pressure beforehand.
 
-This is where [Tittu Varghese](https://www.linkedin.com/in/tittuvarghese/) helped. I shared the stage with Tittu. He skillfully provided the necessary context for my talk, creating a smooth transition for my 
+This is where [Tittu Varghese](https://www.linkedin.com/in/tittuvarghese/) helped. I shared the stage with Tittu. He skillfully provided the necessary context for the talk, creating a smooth transition for my 
 presentation. Tittu spoke for a few minutes, which proved invaluable. This period allowed me to get comfortable with the stage, observe 
 the audience, and build my confidence for the rest of the presentation.
 
