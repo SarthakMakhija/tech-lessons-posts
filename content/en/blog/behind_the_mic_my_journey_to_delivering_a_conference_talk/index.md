@@ -8,7 +8,7 @@ In this article, I’ll walk you through my journey - from brainstorming the top
 and delivering the final talk. Along the way, I’ll share the experiences and emotions that shaped my path to the stage.
 "
 tags: ["Talk Preparation", "Public Speaking", "Conference Preparation", "Questioning database claims", "Design patterns of storage engines"]
-thumbnail: "/talk_title.jpg"
+thumbnail: "/talk_title.webp"
 caption: "Photo by Pixabay on Pexels"
 ---
 
@@ -57,7 +57,7 @@ progress and identifying potential roadblocks.
 My refined task list is shown below. 
 
 <figure>
-    <img class="align-center" src="/talk-task-list.jpeg" />
+    <img class="align-center" src="/talk-task-list.webp" />
 </figure>
 
 I then moved on to preparing the presentation.
@@ -88,7 +88,7 @@ The template provided a clear framework to organize my ideas and the discussion 
 draft structure for the "Persistence" pattern took the following shape:
 
 <figure>
-    <img class="align-center" src="/talk-preparation.png" />
+    <img class="align-center" src="/talk-preparation.webp" />
 </figure>
 
 The root is the name of the pattern, followed by a set of questions designed to validate the "durability" claim of databases.
@@ -123,7 +123,7 @@ I went back and made the necessary changes. The presentation felt complete now. 
 the image of one such slide is shown below.
 
 <figure>
-    <img class="align-center" src="/write-optimized-claim.png" />
+    <img class="align-center" src="/talk-write-optimized-claim.webp" />
 </figure>
 
 ### Practice round 1
@@ -167,7 +167,7 @@ like B+Tree, Bloom filter, WAL, and others. Taking his advice, I integrated slid
 of these core concepts. An example of one such slide is shown below.
 
 <figure>
-    <img class="align-center" src="/talk-sub-concepts.png" />
+    <img class="align-center" src="/talk-sub-concepts.webp" />
 </figure>
 
 Now was the time to do a few more mock runs.
@@ -192,7 +192,7 @@ I saw this as an opportunity to inject some humor and create a brief moment of a
 2. On the slide discussing claims of various databases and key/value storage engines, I decided to ask the audience to identify the icons.
 
 <figure>
-    <img class="align-center" src="/database-claims.png" />
+    <img class="align-center" src="/talk-database-claims.webp" />
 </figure>
 
 3. Based on Gautam Rege's feedback, I had already added a slide at the end of each pattern to revisit the database claims. This time
@@ -200,7 +200,7 @@ I incorporated animations in these slides (by hiding the table in the image belo
 listed databases (or storage engines) satisfied the given claim.
 
 <figure>
-    <img class="align-center" src="/read-optimized-claim.png" />
+    <img class="align-center" src="/talk-read-optimized-claim.webp" />
 </figure>
 
 4. Finally, I added animations in "Applying patterns" slides. I decided to ask the audience to pick database(s) or key/value storage engines
