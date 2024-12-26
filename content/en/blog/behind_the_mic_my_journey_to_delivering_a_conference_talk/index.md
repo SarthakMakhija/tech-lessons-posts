@@ -30,7 +30,7 @@ Let's start.
 
 Having spent decent time exploring key/value storage engines, I was eager to present my learnings on recurring patterns within this space. 
 I define a <span style="color: #F78C6C"> pattern </span> <span style="color: #28a745"> as a repeating or a recurring solution to a problem </span>. For instance, 
-achieving <span style="color: #F78C6C">  durability </span> – <span style="color: #28a745"> ensuring data is never lost after being acknowledged as written </span> – 
+the pattern <span style="color: #F78C6C"> Persistence </span> – <span style="color: #28a745"> refers to ensuring that data is never lost after being acknowledged as stored </span> – 
 requires the implementation of a <span style="color: #28a745"> Write-Ahead Log (WAL) </span> along with <span style="color: #28a745">  fsync system call.</span>
 
 My initial concept for the talk centered around "Patterns of Key/Value Storage Engines". I was going to present the talk with [Tittu Varghese](https://www.linkedin.com/in/tittuvarghese/),
@@ -38,7 +38,7 @@ who is an architect at NPCI. Both of us recognized the need to refine the topic 
 patterns, we sought to ensure the talk offered a more focused and impactful message.
 
 To do this, we discussed it with [Gautam Rege](https://www.linkedin.com/in/gautamrege/) during a call. This conversation proved invaluable.
-We discussed the key takeaways for the audience and all of us agreed that the audience should not only grasp key-value storage engine 
+We discussed the key takeaways for the audience and all of us agreed that the audience should not only grasp key/value storage engine 
 patterns but also develop a critical lens to evaluate database claims. By understanding these patterns, they would be better equipped to 
 question the promises made by various database solutions. 
 
@@ -60,9 +60,11 @@ The refined task list is shown below.
     <img class="align-center" src="/talk-task-list.jpeg" />
 </figure>
 
+I then moved on to the presentation preparation.
+
 ### Preparing the presentation
 
-After the topic was finalized, I identified four key patterns of key-value storage engines to cover in the talk:
+After the topic was finalized and task list prepared, I identified four key patterns of key-value storage engines to cover in the talk:
 - Durability
 - Read optimization
 - Write optimization
@@ -73,8 +75,8 @@ I created a <span style="color: #28a745"> simple template to structure the prese
 
 **Pattern name** → **Definition** → **Sub-concepts** → **Questions to evaluate database claims**
 
-I had a great brainstorming session with [Unmesh Joshi](https://www.linkedin.com/in/unmesh-joshi-9487635/) around patterns and questions to 
-evaluate database claims. I received valuable feedback on the pattern names, suggesting that they should be nouns. 
+I had a great brainstorming session with [Unmesh Joshi](https://www.linkedin.com/in/unmesh-joshi-9487635/) around patterns and questions that one should ask 
+to evaluate database claims. I received valuable feedback on the pattern names, suggesting that they should be nouns. 
 Based on this input, I refined the names of the patterns as follows:
 
 - Durability → **Persistence**
@@ -83,14 +85,14 @@ Based on this input, I refined the names of the patterns as follows:
 - Transactions → **Coordination**
 
 The template provided a clear framework to organize my ideas and the discussion with Unmesh helped in refining it. To give an example, the 
-draft structure for the "Persistence" pattern took shape as follows:
+draft structure for the "Persistence" pattern took the following shape:
 
 <figure>
     <img class="align-center" src="/talk-preparation.png" />
 </figure>
 
 I applied the same approach to all the patterns, and soon enough, my presentation was ready. Initially, I drafted a list of 
-"side points to cover" as seen in the image above. However, I refined this list by conducting timed practice sessions. This iterative 
+"side points to cover" in each pattern, as seen in the image above. However, I refined this list by conducting timed practice sessions. This iterative 
 process helped me determine which points were essential to include within the allotted timeframe.
 
 I moved on to the next stage, which was getting feedback on the presentation.
@@ -145,11 +147,11 @@ whether it was to wake them up, ask questions, or perhaps even incorporate some 
 
 ### Travelling to Jaipur
 
-GopherCon India 2024 was held in Jaipur, and my talk was scheduled for December 2nd. I traveled to Jaipur on November 30th, 
+GopherCon India 2024 was held in Jaipur, and my talk was scheduled for December 2nd. I traveled to Jaipur on the evening of November 30th, 
 giving me one day to focus on improving the two key areas of my talk. On December 1st, I attended a few sessions and took notes on the following:
 
 - Talk time of various speakers
-- Attention space of the audience
+- Attention span of the audience
 - Any issues the speakers encountered with the microphone or presentation screen
 
 I did not see any issues with the microphone or the presentation screen. However, I realized that it was crucial to finish my talk under 
@@ -172,7 +174,8 @@ Now was the time to do a few more mock runs.
 I decided to remove the "Coordination" pattern from the talk. At first, it felt like I was doing the talk an injustice, but the most
 important thing was to help the audience grasp patterns like Persistence, Efficient Retrieval and Efficient ingestion along with the
 underlying concepts like WAL (write-ahead log), fsync, B+Tree, Bloom filter etc. I wanted them to realize the value of understanding 
-these patterns to effectively question database claims and choose the right database(s).
+these patterns to effectively question database claims and choose the right database(s). I was able to convince myself with the idea of dropping
+the "Coordination" pattern.
 
 After practicing again, my talk time dropped to 21 minutes.
 
@@ -210,7 +213,7 @@ Practice is very different from the actual talk. I knew I had practiced enough, 
 the stage. My anxiety wasn't about the audience or the stage, but about the pressure to perform well, deliver my message accurately, 
 and truly capture the essence of my talk. So, I wanted to feel a little of that pressure beforehand.
 
-This is where [Tittu Varghese](https://www.linkedin.com/in/tittuvarghese/), comes in. I shared the stage with Tittu. He skillfully provided the necessary context for my talk, creating a smooth transition for my 
+This is where [Tittu Varghese](https://www.linkedin.com/in/tittuvarghese/) helped. I shared the stage with Tittu. He skillfully provided the necessary context for my talk, creating a smooth transition for my 
 presentation. Tittu spoke for a few minutes, which proved invaluable. This period allowed me to get comfortable with the stage, observe 
 the audience, and build my confidence for the rest of the presentation.
 
