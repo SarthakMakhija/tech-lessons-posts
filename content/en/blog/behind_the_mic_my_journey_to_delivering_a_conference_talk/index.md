@@ -162,7 +162,7 @@ I did not see any issues with the microphone or the presentation screen. However
 difficult to convey the essence of the talk.
 
 I went back to my room to work on "talk timing" and "audience engagement". Before practicing, I thought of showing my slides to [Aman Mangal](https://www.linkedin.com/in/amanmangal/). 
-Aman is a good friend and works at Hypermode. He provided valuable feedback, suggesting that I add slides to explain key concepts 
+Aman is a good friend and works at Dgraph. He provided valuable feedback, suggesting that I add slides to explain key concepts 
 like B+Tree, Bloom filter, WAL, and others. Taking his advice, I integrated slides within each pattern to provide clear explanations 
 of these core concepts. An example of one such slide is shown below.
 
@@ -231,8 +231,8 @@ presentation.
 The mock practice sessions proved invaluable. Timing myself during rehearsals helped me develop a comfortable pace, significantly reducing my anxiety about exceeding the allotted time.
 
 This experience has <span style="color: #28a745">reinforced the importance of meticulous preparation</span> and <span style="color: #28a745">the value of seeking feedback from colleagues</span>. 
-I encourage anyone considering submitting a talk proposal to embrace the challenge. The rewards – sharing your knowledge, 
-connecting with the community, and growing as a presenter – are truly immense.
+I encourage anyone considering submitting a talk proposal to embrace the challenge. The rewards - sharing your knowledge, 
+connecting with the community, and growing as a presenter - are truly immense.
 
 I am deeply grateful to Thoughtworks, NPCI, and Caizin for their invaluable support in making this presentation a reality.
 
