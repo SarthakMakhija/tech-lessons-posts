@@ -9,7 +9,7 @@ and delivering the final talk. Along the way, I’ll share the experiences and e
 "
 tags: ["Talk Preparation", "Questioning database claims", "Design patterns of storage engines", "Public Speaking", "Conference Preparation"]
 thumbnail: "/talk_title.jpg"
-caption: "Background by Pixabay on Pexels"
+caption: "Photo by Pixabay on Pexels"
 ---
 
 I recently gave a [talk](https://www.youtube.com/watch?v=_55OM23zhUo) on "Questioning database claims: Design patterns of storage engines" at GopherConIndia24 on 2nd December.
@@ -41,34 +41,38 @@ I created a simple template to structure the presentation:
 
 **Pattern name** → **Definition** → **Sub-patterns** → **Questions to evaluate database claims**
 
-I had a good brainstorming session with [Unmesh Joshi](https://www.linkedin.com/in/unmesh-joshi-9487635/) around patterns and questions to evaluate database claims. I received valuable feedback on 
-the pattern names, suggesting that they should be nouns. Based on this input, I refined the names as follows:
+I had a great brainstorming session with [Unmesh Joshi](https://www.linkedin.com/in/unmesh-joshi-9487635/) around patterns and questions to 
+evaluate database claims. I received valuable feedback on the pattern names, suggesting that they should be nouns. 
+Based on this input, I refined the names of the patterns as follows:
 
 - Durability → **Persistence**
 - Read Optimization → **Efficient Retrieval**
 - Write Optimization → **Efficient Ingestion**
 - Transactions → **Coordination**
 
-The template provided a clear framework to organize my ideas. To give an example, the draft structure for the "Persistence" pattern took 
-shape as follows:
+The template provided a clear framework to organize my ideas and the discussion with Unmesh helped in refining it. To give an example, the 
+draft structure for the "Persistence" pattern took shape as follows:
 
 <figure>
     <img class="align-center" src="/talk-preparation.png" />
 </figure>
 
-I applied the same approach to all the patterns, and soon enough, my presentation was ready. I moved on to the next stage, which was getting 
-feedback on the presentation.
+I applied the same approach to all the patterns, and soon enough, my presentation was ready. Initially, I drafted a list of 
+"side points to cover" as seen in the image above. However, I refined this list by conducting timed practice sessions. This iterative 
+process helped me determine which points were essential to include within the allotted timeframe.
+
+I moved on to the next stage, which was getting feedback on the presentation.
 
 ### Getting feedback on the presentation
 
-Up until this point, my presentation covered key/value storage engine patterns and questions for evaluating database claims, but something 
-still felt missing - I just couldn't pinpoint what it was.
+My presentation started with an examination of various database claims. It then delved into key/value storage engine patterns and a set of 
+questions for evaluating these claims. However, I felt a sense of incompleteness, as if a crucial element was missing, though I couldn't 
+quite articulate what it was.
 
 I had a call with [Gautam Rege](https://www.linkedin.com/in/gautamrege/) and I received some insightful feedback:
 
-1. Start with the claims made by various databases
-2. Revisit those claims at the end of each pattern
-3. Conclude the presentation with some use cases, where the audience can select the appropriate database(s) or key/value storage engine(s).
+1. Revisit those claims at the end of each pattern
+2. Conclude the presentation with some use cases, where the audience can select the appropriate database(s) or key/value storage engine(s).
 
 This was a wonderful call because it gave a clear vision for my talk. I could describe the talk to anyone with the following flow:  
 
@@ -82,7 +86,7 @@ I went back and made the necessary changes. The presentation felt complete now. 
 the image of one such slide is shown below.
 
 <figure>
-    <img class="align-center" src="/database-claims.png" />
+    <img class="align-center" src="/write-optimized-claim.png" />
 </figure>
 
 ### Practice round 1
@@ -113,19 +117,17 @@ GopherCon India 2024 was held in Jaipur, and my talk was scheduled for December 
 giving me one day to focus on improving the two key areas of my talk. On December 1st, I attended a few sessions and took notes on the following:
 
 - Talk time of various speakers
-- Audience attention span
+- Attention space of the audience
 - Any issues the speakers encountered with the microphone or presentation screen
 
 I did not see any issues with the microphone or the presentation screen. However, I realized that it was crucial to finish my talk under 
 25 minutes to allow the audience time for questions. Another important realization was that without engaging the audience, it would be 
 difficult to convey the essence of the talk.
 
-I returned to focusing on the two key areas that I needed to improve in my talk. I went back to my room in the second half to consolidate 
-my thoughts and practice again. Before practicing, I thought of showing my slides to [Aman Mangal](https://www.linkedin.com/in/amanmangal/). 
+I went back to my room to work on "talk timing" and "audience engagement". Before practicing, I thought of showing my slides to [Aman Mangal](https://www.linkedin.com/in/amanmangal/). 
 Aman is a good friend and works at Hypermode. He provided valuable feedback, suggesting that I add slides to explain key concepts 
-like B+Tree, Bloom filter, WAL, and others. 
-
-I added a few more slides, the image of one such slide is shown below.
+like B+Tree, Bloom filter, WAL, and others. Taking his advice, I integrated slides within each pattern to provide clear explanations 
+of these core concepts. An example of one such slide is included below.
 
 <figure>
     <img class="align-center" src="/talk-sub-concepts.png" />
@@ -136,8 +138,9 @@ Now was the time to do a few more mock runs.
 ### Practice round 2
 
 I decided to remove the "Coordination" pattern from the talk. At first, it felt like I was doing the talk an injustice, but the most
-important thing was to help the audience grasp essential concepts like WAL (write-ahead log), fsync, B+Tree, Bloom filter etc. I wanted them
-to realize the value of understanding these patterns to effectively question database claims and choose the right database(s).
+important thing was to help the audience grasp patterns like Persistence, Efficient Retrieval and Efficient ingestion along with the
+underlying concepts like WAL (write-ahead log), fsync, B+Tree, Bloom filter etc. I wanted them to realize the value of understanding 
+these patterns to effectively question database claims and choose the right database(s).
 
 After practicing again, my talk time dropped to 21 minutes.
 
@@ -184,10 +187,11 @@ I finally gave the talk :). I believe it went well, and I received positive feed
 
 ### Introspection
 
-Looking back, I am incredibly grateful for the support I received from Unmesh Joshi, Gautam Rege, Aman Mangal, and Tittu Varghese, 
-whose assistance were invaluable in completing my tasks and giving a nice shape to my talk. 
-The mock practice sessions were also instrumental. Timing myself during rehearsals helped me develop a comfortable pace, significantly 
-reducing my anxiety about exceeding the allotted time.
+Reflecting on the experience, I realize that while I delivered the talk, its success was truly a team effort. I am incredibly grateful 
+to Unmesh Joshi, Gautam Rege, Aman Mangal, and Tittu Varghese, whose invaluable input and support were instrumental in shaping this 
+presentation.
+
+The mock practice sessions proved invaluable. Timing myself during rehearsals helped me develop a comfortable pace, significantly reducing my anxiety about exceeding the allotted time.
 
 This experience has **reinforced the importance of meticulous preparation** and the **value of seeking feedback from colleagues**. 
 I encourage anyone considering submitting a talk proposal to embrace the challenge. The rewards – sharing your knowledge, 
