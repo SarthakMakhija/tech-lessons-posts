@@ -261,7 +261,7 @@ private void show() throws IOException {
 
 Run the tests, ensure nothing breaks, add tests for the `format` method in `Tasks` and commit the change.
 
-#### Identify similar pattern
+#### Identify similar patterns
 
 It is important to look for similar concepts in the code while refactoring. With the introduction of the `Tasks` abstraction
 we can check if there are other places where this abstraction can be applied. The simplest way would be to look for the same pattern: for-loop over
@@ -437,3 +437,12 @@ We can defer this refactoring, add a TODO, and revisit it later when the impact 
 right time to evaluate whether `Projects` should extend `LinkedHashMap<>` or instead use composition. Here is my final version of the 
 [Projects](https://github.com/SarthakMakhija/task-list-refactoring/blob/main/src/main/java/com/codurance/training/tasks/Projects.java) class.
 
+#### Maintain a TODO list
+
+#### Avoid coding in brain
+
+#### Avoid bias  
+
+#### Rubber duck
+
+#### 
