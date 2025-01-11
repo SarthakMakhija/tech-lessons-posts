@@ -261,7 +261,7 @@ private void show() throws IOException {
 
 Run the tests, ensure nothing breaks, add tests for the `format` method in `Tasks` and commit the change.
 
-### Identify similar pattern
+#### Identify similar pattern
 
 It is important to look for similar concepts in the code while refactoring. With the introduction of the `Tasks` abstraction
 we can check if there are other places where this abstraction can be applied. The simplest way would be to look for the same pattern: for-loop over
@@ -400,4 +400,40 @@ Run all the tests to ensure the changes didn’t break any functionality, add sp
 and prepare the commit. It’s important to note that the `Projects` abstraction wasn’t introduced as an arbitrary design decision, 
 it was driven by a clear need to encapsulate the collection. A similar refactoring can be applied to the `setDone` method because it has a 
 for-loop over `projects.entrySet()`.
+
+#### Learn to defer
+
+It is crucial to not get carried away during refactoring. While it may be tempting to introduce a `Project` abstraction alongside 
+`Projects`, doing so can lead to compile time errors. For instance, the updated `Projects` class might look like this:
+
+```java
+public class Projects extends LinkedHashMap<String, Project> {
+    ...
+}
+
+class Project {
+    final String name;
+    final Tasks tasks;
+    ...
+}
+```
+
+The moment we do this, all the other methods start giving compile-time error. For example, consider the following method `addTask`.
+The line `Tasks projectTasks = projects.get(projectName);` will no longer compile because `projects.get(..)` now returns a 
+`Project` instead of `Tasks`: 
+
+```java
+private void addTask(String projectName, String description) {
+    Tasks projectTasks = projects.get(projectName);
+    if (projectTasks == null) {
+        throw new IllegalArgumentException("Unknown project: " + projectName);
+    }
+    projectTasks.add(new com.codurance.training.tasks.Task(nextId(), description, false));
+}
+```
+
+We can defer this refactoring, add a TODO, and revisit it later when the impact of changing `Projects` from being a `LinkedHashMap<String, Tasks>` to
+`LinkedHashMap<String, Project>` is localized. This means, only the methods of the `Projects` class would be impacted. That would also be the
+right time to evaluate whether `Projects` should extend `LinkedHashMap<>` or instead use composition. Here is my final version of the 
+[Projects](https://github.com/SarthakMakhija/task-list-refactoring/blob/main/src/main/java/com/codurance/training/tasks/Projects.java) class.
 
