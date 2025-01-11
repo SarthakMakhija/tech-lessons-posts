@@ -4,9 +4,9 @@ title: "Refactoring Mindset"
 date: 2025-01-11
 description: "
 "
-tags: ["Refactoring", "Mindset"]
-thumbnail: "/talk_title.webp"
-caption: "Photo by Pixabay on Pexels"
+tags: ["Refactoring", "Mindset", "Code Smells", "Clean Code"]
+thumbnail: "/refactoring-mindset-title.jpg"
+caption: "Photo by Magda Ehlers on Pexels"
 ---
 
 ### a section or a para that this article covers existing codebase.
@@ -438,6 +438,8 @@ right time to evaluate whether `Projects` should extend `LinkedHashMap<>` or ins
 [Projects](https://github.com/SarthakMakhija/task-list-refactoring/blob/main/src/main/java/com/codurance/training/tasks/Projects.java) class.
 
 #### Maintain a TODO list
+
+
 
 #### Avoid coding in brain
 
