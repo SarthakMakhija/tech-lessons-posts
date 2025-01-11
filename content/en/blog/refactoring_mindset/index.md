@@ -111,7 +111,7 @@ The `format` method is currently static, which means it doesn't belong to the cl
 However, it makes use of the fields of the `Task` class, so it should be moved to the `Task` class itself. To do this, we can simply 
 remove the `static` keyword and then, using a tool like `IntelliJ`, press `F6` to refactor the method and move it to the `Task` class.
 
-The `Task` and `TaskList` look like the following:
+The `Task` and `TaskList` are shown below:
 
 ```java
 String format() {
@@ -260,3 +260,144 @@ private void show() throws IOException {
 ```
 
 Run the tests, ensure nothing breaks, add tests for the `format` method in `Tasks` and commit the change.
+
+### Identify similar pattern
+
+It is important to look for similar concepts in the code while refactoring. With the introduction of the `Tasks` abstraction
+we can check if there are other places where this abstraction can be applied. The simplest way would be to look for the same pattern: for-loop over
+a collection of `Task`. This leads to a **loose guideline**: a for-loop over a collection of type `T`, **may** become a static method which depends only
+on the collection. This gives us an opportunity to [encapsulate the collection](https://refactoring.guru/encapsulate-collection).
+
+Let's see if there is another method where `Tasks` can be used. Consider the `setDone` method, it contains the same pattern, for-loop
+over a collection of `Task`.
+
+```java
+private void setDone(String idString, boolean done) {
+    int id = Integer.parseInt(idString);
+    for (Map.Entry<String, Tasks> project : projects.entrySet()) {
+        for (com.codurance.training.tasks.Task task : project.getValue()) {
+            if (task.getId() == id) {
+                task.setDone(done);
+                return;
+            }
+        }
+    }
+    out.printf("Could not find a task with an ID of %d.", id);
+    out.println();
+}
+```
+
+We can extract the inner for-loop in a separate method `toggleTaskWithId`.
+
+```java
+private void setDone(String idString, boolean done) {
+    int id = Integer.parseInt(idString);
+    for (Map.Entry<String, Tasks> project : projects.entrySet()) {
+        Tasks tasks = project.getValue();
+        if (toggleTaskWithId(done, tasks, id)) return;
+    }
+    out.printf("Could not find a task with an ID of %d.", id);
+    out.println();
+}
+
+private static boolean toggleTaskWithId(boolean done, Tasks tasks, int id) {
+    for (Task task : tasks) {
+        if (task.getId() == id) {
+            task.setDone(done);
+            return true;
+        }
+    }
+    return false;
+}
+```
+
+The method `toggleTaskWithId` becomes static, and we can move it to the `Tasks` class. 
+
+```java
+public class Tasks extends ArrayList<Task> {
+    boolean toggleTaskWithId(boolean done, int id) {
+        for (Task task : this) {
+            if (task.getId() == id) {
+                task.setDone(done);
+                return true;
+            }
+        }
+        return false;
+    }
+    //not showing the format method
+}
+```
+
+The method `toggleTaskWithId` method takes a `boolean` parameter. This might tempt us to refactor further by creating two separate 
+methods: one to mark a task as done and another to mark it as undone. However, it’s important to stay focused on the current refactoring 
+goal and avoid getting sidetracked.
+
+Instead, this is a good opportunity to add a _TODO_ note, either directly in the code or in a separate file, as a reminder for a future
+improvement. Run all the tests to ensure the changes didn’t break any functionality, add specific tests for the `toggleTaskWithId` method
+and prepare the commit.
+
+Let's take a look at the `show` method again.
+
+```java
+private void show() throws IOException {
+    for (Map.Entry<String, Tasks> project : projects.entrySet()) {
+        writer.write(project.getKey());
+        writer.write("\n");
+        Tasks tasks = project.getValue();
+        writer.write(tasks.format());
+    }
+}
+```
+
+We are seeing the same pattern again, a for-loop over a collection. We can extract the for-loop into a separate method.
+
+```java
+private void show() throws IOException {
+    format(projects, writer);
+}
+
+private static void format(Map<String, Tasks> projects, Writer writer) throws IOException {
+    for (Map.Entry<String, Tasks> project : projects.entrySet()) {
+        writer.write(project.getKey());
+        writer.write("\n");
+        Tasks tasks = project.getValue();
+        writer.write(tasks.format());
+    }
+}
+```
+
+The static method `format` works on a collection of type `Map<String, Tasks>` referred to as `projects`. Thus, the method can be moved 
+to `Map` or we can encapsulate the `Map`. To proceed, we will now introduce the abstraction `Projects` and to keep the refactoring 
+small, we will extend it from `LinkedHashMap<String, Tasks>`.
+
+The `Projects` class is shown below:
+
+```java
+public class Projects extends LinkedHashMap<String, Tasks> {
+    String format() {
+        StringBuilder formatted = new StringBuilder();
+        for (Map.Entry<String, Tasks> project : this.entrySet()) {
+            formatted.append(project.getKey());
+            formatted.append("\n");
+            formatted.append(project.getValue().format());
+        }
+        return formatted.toString();
+    }
+}
+```
+
+The `show` method and the instantiation of `projects` variable look like the following:  
+
+```java
+private final Projects projects = new Projects();
+
+private void show() throws IOException {
+    this.writer.write(this.projects.format());
+}
+```
+
+Run all the tests to ensure the changes didn’t break any functionality, add specific tests for the `format` method in `Projects`
+and prepare the commit. It’s important to note that the `Projects` abstraction wasn’t introduced as an arbitrary design decision, 
+it was driven by a clear need to encapsulate the collection. A similar refactoring can be applied to the `setDone` method because it has a 
+for-loop over `projects.entrySet()`.
+
