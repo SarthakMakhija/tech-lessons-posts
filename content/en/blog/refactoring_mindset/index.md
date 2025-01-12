@@ -3,17 +3,33 @@ author: "Sarthak Makhija"
 title: "Refactoring Mindset"
 date: 2025-01-11
 description: "
+I haven't written about refactoring in a while. Recently, my team and I have been reading 'Refactoring' by Martin Fowler and undertook a 
+TaskList kata as a practical exercise. This inspired me to write this article, which focuses on cultivating a refactoring mindset – 
+a proactive approach to consistently improve your code.
 "
 tags: ["Refactoring", "Mindset", "Code Smells", "Clean Code"]
 thumbnail: "/refactoring-mindset-title.jpg"
 caption: "Photo by Dmitry Demidov on Pexels"
 ---
 
-### a section or a para that this article covers existing codebase.
+Continuous code improvement is an iterative process. This article focuses on cultivating a "refactoring mindset" – a proactive approach 
+that empowers you to consistently refine your code. 
 
-### Safety net
+We'll explore key principles like making small, frequent changes, recognizing code smells, learning to defer refactoring tasks, and 
+minimizing bias to maintain a sustainable pace of improvement.
+
+This article takes the [TaskList](https://kata-log.rocks/task-list-kata) kata, makes minimal modifications, and refactors the code.
+The code to refactor is available [here](https://github.com/SarthakMakhija/task-list-refactoring/tree/original).
 
 ### Mindset
+
+A refactoring mindset encourages developers to embrace small changes. Cultivating this mindset involves recognizing code smells, 
+identifying and leveraging similar patterns within the codebase, learning to defer less critical refactoring tasks, and maintaining a 
+TODO list to track areas for improvement. 
+Furthermore, it's important to avoid "coding in the brain" by bringing the thoughts and ideas in code, and to be mindful of personal biases 
+that may influence coding choices.
+
+#### Safety net
 
 #### Small changes, small commits
 
@@ -567,7 +583,10 @@ I did not introduce `Arguments` until it was needed. This [git commit](https://g
 shows subtle [code duplication](https://refactoring.guru/smells/duplicate-code) and [incomplete library class](https://refactoring.guru/smells/incomplete-library-class), which resulted in the
 creation of the abstraction [Arguments](https://github.com/SarthakMakhija/task-list-refactoring/blob/main/src/main/java/com/codurance/training/commands/Arguments.java).
 
+### Summary
+
+The article highlights the importance of "making small and incremental changes", "developing a code smell radar", "staying focussed", 
+"identifying patterns in the code", "learning to defer", "maintaining a TODO List", "avoiding coding in the brain", and "challenging biases".
+
 The final code is available [here](https://github.com/SarthakMakhija/task-list-refactoring) and the code which was refactored is 
 [here](https://github.com/SarthakMakhija/task-list-refactoring/tree/original).
-
-
