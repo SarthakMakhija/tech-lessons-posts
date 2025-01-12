@@ -30,9 +30,34 @@ identifying and leveraging similar patterns within the codebase, learning to def
 TODO list to track areas for improvement. Furthermore, it's important to avoid "coding in the brain" by bringing the thoughts and 
 ideas in code, and to be mindful of personal biases that may influence coding choices.
 
-#### Safety net
+#### Build safety net
 
-...
+Begin refactoring by building a safety net. Once the safety net is in place, make incremental changes to the system and use the 
+safety net to gather feedback. Tests, preferably unit tests, serve as the safety net, ensuring that refactoring remains low-risk. 
+If the component you want to refactor, such as a method, is covered by tests, you can confidently proceed with changes.
+
+But what if no tests exist for the method you want to refactor? Start by adding [characterization tests](https://tech-lessons.in/en/blog/lets_define_legacy_code/#which-tests-to-write).
+A characterization test by definition documents the current behavior of the system the exact same way it is running on the production 
+environment. 
+
+> This assumes the code being refactored is currently running in production. Characterization tests ensure the current behavior is captured 
+> accurately before refactoring.
+
+Here's an example of a characterization test for `TaskList`:
+
+```java
+@Test
+public void executeWithAdditionOfAProjectContainingOneTask() throws Exception {
+    StringWriter writer = new StringWriter();
+    TaskList taskList = new TaskList(writer);
+    taskList.execute("add project caizin");
+    taskList.execute("add task caizin Task1");
+    taskList.execute("show");
+
+    String expected = "caizin\n" + "[ ] 1: Task1" + "\n";
+    assertEquals(expected, writer.toString());
+}
+```
 
 #### Small changes, small commits
 
