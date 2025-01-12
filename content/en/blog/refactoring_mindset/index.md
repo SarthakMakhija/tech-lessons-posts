@@ -3,8 +3,8 @@ author: "Sarthak Makhija"
 title: "Refactoring Mindset"
 date: 2025-01-11
 description: "
-I haven't written about refactoring in a while. Recently, my team and I have been reading 'Refactoring' by Martin Fowler and undertook a 
-TaskList kata as a practical exercise. This inspired me to write this article, which focuses on cultivating a refactoring mindset – 
+I haven't written about refactoring in a while. Recently, my team and I have been reading 'Refactoring' by Martin Fowler and we undertook a 
+TaskList kata as a refactoring exercise. This inspired me to write this article, which focuses on cultivating a refactoring mindset – 
 a proactive approach to consistently improve your code.
 "
 tags: ["Refactoring", "Mindset", "Code Smells", "Clean Code"]
@@ -18,12 +18,26 @@ that empowers you to consistently refine your code.
 We'll explore key principles like making small, frequent changes, recognizing code smells, learning to defer refactoring tasks, and 
 minimizing bias to maintain a sustainable pace of improvement.
 
-This article takes the [TaskList](https://kata-log.rocks/task-list-kata) kata, makes minimal modifications to the original kata, and refactors the code.
-The code to refactor is available [here](https://github.com/SarthakMakhija/task-list-refactoring/tree/original).
+This article takes the [TaskList](https://kata-log.rocks/task-list-kata) kata, makes minimal modifications to the original kata, and 
+explains "refactoring mindset" while refactoring the code. The code for refactoring is available [here](https://github.com/SarthakMakhija/task-list-refactoring/tree/original).
 
-### Overview of TaskList
+### Brief overview of TaskList kata
 
-### Mindset
+TaskList kata is a CLI application which provides [Task](https://github.com/SarthakMakhija/task-list-refactoring/blob/original/src/main/java/com/codurance/training/tasks/Task.java) 
+and [TaskList](https://github.com/SarthakMakhija/task-list-refactoring/blob/original/src/main/java/com/codurance/training/tasks/TaskList.java) as its abstractions.
+[TaskList](https://github.com/SarthakMakhija/task-list-refactoring/blob/original/src/main/java/com/codurance/training/tasks/TaskList.java) provides the following commands:
+
+| **Command**               | **Description**                                       |
+|---------------------------|-------------------------------------------------------|
+| add project foundation    | Adds the project named **foundation**                 |
+| add task foundation Task1 | Adds the task **Task1** in the **foundation** project |
+| check 1                   | Marks the task with **id 1 as done**                  |
+| uncheck 1                 | Marks the task with **id 1 not undone**               |
+| show                      | Lists all tasks across all projects                   |
+
+Let's move on to the "refactoring mindset". 
+
+### Refactoring mindset
 
 A refactoring mindset encourages developers to embrace small changes. Cultivating this mindset involves recognizing code smells, 
 identifying and leveraging similar patterns within the codebase, learning to defer some refactoring tasks, and maintaining a 
