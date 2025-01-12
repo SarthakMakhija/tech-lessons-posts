@@ -73,7 +73,7 @@ public void executeWithAdditionOfAProjectContainingOneTask() throws Exception {
 }
 ```
 
-#### Small changes, small commits
+#### Make small changes, small commits
 
 Starting small is essential when refactoring. When you are starting to refactor, identify the smallest change that you can make. I think it is important to be 
 patient, and not worry too much about the final state. Each incremental change contributes to improving the code step by step.
@@ -107,7 +107,7 @@ private void addProject(String name) {
 With this change, the method name `addProject` aligns clearly with the collection `projects`, allowing the domain concept of 
 `Project` to begin surfacing more clearly.
 
-#### Recognize Code Smells
+#### Recognize code smells
 
 There are certain smells which are more common than the others. For example, the "bad name" smell is more common than "long method," 
 and "long method" is more common than "refused bequest." Being familiar with these common smells makes refactoring significantly easier.
