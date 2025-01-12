@@ -439,7 +439,15 @@ right time to evaluate whether `Projects` should extend `LinkedHashMap<>` or ins
 
 #### Maintain a TODO list
 
+It is crucial to maintain a TODO list while refactoring. Preparing a good TODO list has a lot of advantages: 
 
+1. **Improved Focus**: Concentrating on individual tasks allows maintaining a steady pace and minimizing the feeling of being overwhelmed.
+2. **Reduced Anxiety**: A well-defined TODO list minimizes anxiety by providing a clear path.
+3. **Enhanced Visibility**: A detailed TODO list gives a clear view of all pending tasks, ensuring nothing gets overlooked.
+
+I prefer adding refactoring TODOs directly in my code, where I document everything from ideas to potential distractions. 
+These TODO items are removed as they are completed. An example is available in this [git commit](https://github.com/SarthakMakhija/task-list-refactoring/commit/ec553e57e8fcdc6adf87d75d41981efd773075d7).
+At the end of the story, I make it a point to review and ensure no TODO is left unresolved.
 
 #### Avoid coding in brain
 
