@@ -4,7 +4,7 @@ title: "Refactoring Mindset"
 date: 2025-01-11
 description: "
 I haven't written about refactoring in a while. Recently, my team and I have been reading 'Refactoring' by Martin Fowler and we undertook a 
-TaskList kata as a refactoring exercise. This inspired me to write this article, which focuses on cultivating a refactoring mindset – 
+TaskList kata as a refactoring exercise. This inspired me to write this article, which focuses on cultivating a Refactoring Mindset – 
 a proactive approach to consistently improve your code.
 "
 tags: ["Refactoring", "Mindset", "Code Smells", "Clean Code"]
@@ -12,14 +12,14 @@ thumbnail: "/refactoring-mindset-title.jpg"
 caption: "Photo by Dmitry Demidov on Pexels"
 ---
 
-Continuous code improvement is an iterative process. This article focuses on cultivating a "refactoring mindset" – a proactive approach 
+Continuous code improvement is an iterative process. This article focuses on cultivating a "Refactoring Mindset" – a proactive approach 
 that empowers you to consistently refine your code. 
 
 We'll explore key principles like making small, frequent changes, recognizing code smells, learning to defer refactoring tasks, and 
 minimizing bias to maintain a sustainable pace of improvement.
 
 This article takes the [TaskList](https://kata-log.rocks/task-list-kata) kata, makes minimal modifications to the original kata, and 
-explains "refactoring mindset" while refactoring the code. The code for refactoring is available [here](https://github.com/SarthakMakhija/task-list-refactoring/tree/original).
+explains "Refactoring Mindset" while refactoring the code. The code for refactoring is available [here](https://github.com/SarthakMakhija/task-list-refactoring/tree/original).
 
 ### Brief overview of TaskList kata
 
@@ -35,11 +35,11 @@ and [TaskList](https://github.com/SarthakMakhija/task-list-refactoring/blob/orig
 | uncheck 1                 | Marks the task with **id 1 not undone**               |
 | show                      | Lists all tasks across all projects                   |
 
-Let's move on to the "refactoring mindset". 
+Let's move on to the "Refactoring Mindset". 
 
 ### Refactoring mindset
 
-A refactoring mindset encourages developers to embrace small changes. Cultivating this mindset involves recognizing code smells, 
+Refactoring Mindset encourages developers to embrace small changes. Cultivating this mindset involves recognizing code smells, 
 identifying and leveraging similar patterns within the codebase, learning to defer some refactoring tasks, and maintaining a 
 TODO list to track areas for improvement. Furthermore, it's important to avoid "coding in the brain" by bringing the thoughts and 
 ideas in code, and to be mindful of personal biases that may influence coding choices.
