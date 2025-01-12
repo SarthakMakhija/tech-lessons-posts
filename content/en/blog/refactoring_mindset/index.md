@@ -451,6 +451,47 @@ At the end of the story, I make it a point to review and ensure no TODO is left 
 
 #### Avoid coding in brain
 
+It’s important to avoid "coding in brain," as it can lead to overthinking and complicating the task at hand. Visualizing code is a 
+natural tendency, but letting that visualization drive the implementation can cause unnecessary complexity. 
+For example, while refactoring `TaskList`, I encountered the `switch` statement inside the `execute` method:
+
+```java
+public void execute(String commandLine) throws Exception {
+    String[] commandRest = commandLine.split(" ", 2);
+    String command = commandRest[0];
+    switch (command) {
+        case "show":
+            show();
+            break;
+        case "add":
+            add(commandRest[1]);
+            break;
+        case "check":
+            check(commandRest[1]);
+            break;
+        case "uncheck":
+            uncheck(commandRest[1]);
+            break;
+        default:
+            throw new IllegalArgumentException("Unknown command: " + command);
+    }
+```
+
+This is where my imagination took over. Let me summarize my thought process:
+
+> I started imagining creating multiple `Commands`, each implementing a `Command` interface.
+> 
+> I envisioned needing an abstraction (like a `factory`) to instantiate the correct command based on the command line. 
+> This factory would require either a `switch` or a `Map` to handle the mapping between the user provided command and the actual instance.
+> 
+> Additionally, I imagined another abstraction to parse the command line, which would need to recognize "add_project" and "add_task" commands, 
+> resulting in yet another `switch` (or `if-else`).
+> As a result, adding a new command would trigger [shotgun surgery](https://refactoring.guru/smells/shotgun-surgery), where changes are 
+> required in multiple places.
+
+I admit this was too much. This imagination not only increased anxiety, but also disrupted my progress. Ultimately, I decided to take 
+a pause, focus on incremental improvements, and not worry too much about the final code or the potential new smells that might arise.
+
 #### Avoid bias  
 
 #### Rubber duck
