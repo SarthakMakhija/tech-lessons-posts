@@ -18,18 +18,21 @@ that empowers you to consistently refine your code.
 We'll explore key principles like making small, frequent changes, recognizing code smells, learning to defer refactoring tasks, and 
 minimizing bias to maintain a sustainable pace of improvement.
 
-This article takes the [TaskList](https://kata-log.rocks/task-list-kata) kata, makes minimal modifications, and refactors the code.
+This article takes the [TaskList](https://kata-log.rocks/task-list-kata) kata, makes minimal modifications to the original kata, and refactors the code.
 The code to refactor is available [here](https://github.com/SarthakMakhija/task-list-refactoring/tree/original).
+
+### Overview of TaskList
 
 ### Mindset
 
 A refactoring mindset encourages developers to embrace small changes. Cultivating this mindset involves recognizing code smells, 
-identifying and leveraging similar patterns within the codebase, learning to defer less critical refactoring tasks, and maintaining a 
-TODO list to track areas for improvement. 
-Furthermore, it's important to avoid "coding in the brain" by bringing the thoughts and ideas in code, and to be mindful of personal biases 
-that may influence coding choices.
+identifying and leveraging similar patterns within the codebase, learning to defer some refactoring tasks, and maintaining a 
+TODO list to track areas for improvement. Furthermore, it's important to avoid "coding in the brain" by bringing the thoughts and 
+ideas in code, and to be mindful of personal biases that may influence coding choices.
 
 #### Safety net
+
+...
 
 #### Small changes, small commits
 
@@ -436,7 +439,7 @@ class Project {
 
 The moment we do this, all the other methods start giving compile-time error. For example, consider the following method `addTask`.
 The line `Tasks projectTasks = projects.get(projectName);` will no longer compile because `projects.get(..)` now returns a 
-`Project` instead of `Tasks`: 
+`Project` instead of `Tasks`. 
 
 ```java
 private void addTask(String projectName, String description) {
@@ -449,8 +452,8 @@ private void addTask(String projectName, String description) {
 ```
 
 We can defer this refactoring, add a TODO, and revisit it later when the impact of changing `Projects` from being a `LinkedHashMap<String, Tasks>` to
-`LinkedHashMap<String, Project>` is localized. This means, only the methods of the `Projects` class would be impacted. That would also be the
-right time to evaluate whether `Projects` should extend `LinkedHashMap<>` or instead use composition. Here is my final version of the 
+`LinkedHashMap<String, Project>` is localized: only the methods of the `Projects` class would be impacted. That would also be the
+right time to evaluate whether `Projects` should extend `LinkedHashMap` or instead use composition. Here is my final version of the 
 [Projects](https://github.com/SarthakMakhija/task-list-refactoring/blob/main/src/main/java/com/codurance/training/tasks/Projects.java) class.
 
 #### Maintain a TODO list
@@ -524,14 +527,16 @@ At first glance, this approach might seem appealing. However, before proceeding,
 - Avoid introducing abstractions like `Arguments` unless they provide clear value
 - Decide whether a new instance of each command should be created for every execution or if a single instance should be reused
 
-I prefer adopting a bottom-up approach to implementing polymorphism. To refactor the `switch` statement, I will introduce the 
-`ShowCommand` (or another command), write tests for the newly created command, and then integrate it into the switch statement. I will repeat
-the same process for other commands.
+I prefer adopting a bottom-up approach for implementing polymorphism. To refactor the `switch` statement, I introduced the 
+`ShowCommand`, wrote tests for the newly created command, and then integrated it into the switch statement. I repeated
+the same process for other commands. This gave me enough clarity into the arguments required by the execute method in each command, 
+any duplication across commands, and the potential impact of adding a new command.
 
 ```java
 public class ShowCommand {
     private final Writer writer;
     private final Projects projects;
+    
     ShowCommand(Writer writer, Projects projects) {
         this.writer = writer;
         this.projects = projects;
@@ -546,6 +551,7 @@ public class ShowCommand {
     public void execute(String commandLine) throws Exception {
     String[] commandRest = commandLine.split(" ", 2);
     String command = commandRest[0];
+    
     switch (command) {
         case "show":
             new ShowCommand(writer, projects).execute();
@@ -555,8 +561,9 @@ public class ShowCommand {
 }
 ```
 
-This approach avoids forcing polymorphism and provides ample opportunities to evaluate whether the implementation of commands 
-aligns well with polymorphic behavior. The [git history](https://github.com/SarthakMakhija/task-list-refactoring/commits/main/?before=38497bd059794e714b36d32e16122de4bdacfa4f+70)
+I now find the bottom-up approach for introducing polymorphism highly intuitive, as it avoids forcing polymorphism and offers ample 
+opportunities to evaluate whether the implementation aligns well with polymorphic behavior. 
+The [git history](https://github.com/SarthakMakhija/task-list-refactoring/commits/main/?before=38497bd059794e714b36d32e16122de4bdacfa4f+70)
 highlights the step-by-step process followed to introduce polymorphic commands.
 
 This approach has been helpful in evolving the signature of the `execute` method. For example, here is the `execute` method of 
@@ -581,12 +588,18 @@ void execute(String[] arguments) throws IOException {
 Eventually, I changed the signature of the `execute` method to accept `List<String>`. The change is available [here](https://github.com/SarthakMakhija/task-list-refactoring/commit/9d43f63f4b51600e8f5018fadeba343aaf24a1a6).
 I did not introduce `Arguments` until it was needed. This [git commit](https://github.com/SarthakMakhija/task-list-refactoring/commit/af6fd64d8c9529a6e1b9af56332a590fa154dcf8) 
 shows subtle [code duplication](https://refactoring.guru/smells/duplicate-code) and [incomplete library class](https://refactoring.guru/smells/incomplete-library-class), which resulted in the
-creation of the abstraction [Arguments](https://github.com/SarthakMakhija/task-list-refactoring/blob/main/src/main/java/com/codurance/training/commands/Arguments.java).
+creation of the [Arguments](https://github.com/SarthakMakhija/task-list-refactoring/blob/main/src/main/java/com/codurance/training/commands/Arguments.java) abstraction.
+
+That's it. I finished my refactoring and the code which is available [here](https://github.com/SarthakMakhija/task-list-refactoring).
 
 ### Summary
 
-The article highlights the importance of "making small and incremental changes", "developing a code smell radar", "staying focussed", 
-"identifying patterns in the code", "learning to defer", "maintaining a TODO List", "avoiding coding in the brain", and "challenging biases".
+The article explores the principles, practices, and mental approach required to effectively refactor code. It emphasizes the importance 
+of incremental, focused improvements while avoiding over-engineering or unnecessary abstractions. Key takeaways include:
 
-The final code is available [here](https://github.com/SarthakMakhija/task-list-refactoring) and the code which was refactored is 
-[here](https://github.com/SarthakMakhija/task-list-refactoring/tree/original).
+1. **Maintain focus**: Break down tasks into smaller, manageable chunks. Use tools like TODO lists to capture ideas and distractions for later review.
+2. **Avoid coding in brain**: Resist the urge to visualize designs. Start with small, testable changes instead of trying to anticipate every possible abstraction.
+3. **Identify patterns**: Look for repetitive patterns, such as loops over collections, getters (or leak of internal state)  as potential candidates for refactoring.
+4. **Avoid unnecessary abstractions**: Be mindful of biases that can lead to over-complicated designs.
+5. **Evaluate polymorphism incrementally**: Introduce polymorphism step-by-step, I prefer the bottom-up approach to introduce polymorphism.
+6. **Document refactoring**: Use commit histories and TODOs to keep track of the refactoring journey.
