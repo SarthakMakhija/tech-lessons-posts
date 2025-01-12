@@ -475,6 +475,7 @@ public void execute(String commandLine) throws Exception {
         default:
             throw new IllegalArgumentException("Unknown command: " + command);
     }
+}
 ```
 
 This is where my imagination took over. Let me summarize my thought process:
@@ -492,6 +493,81 @@ This is where my imagination took over. Let me summarize my thought process:
 I admit this was too much. This imagination not only increased anxiety, but also disrupted my progress. Ultimately, I decided to take 
 a pause, focus on incremental improvements, and not worry too much about the final code or the potential new smells that might arise.
 
-#### Avoid bias 
+#### Avoid bias
 
-#### Rubber duck
+Recognizing bias is crucial because it can lead to unnecessary abstractions and overcomplicate the design. By identifying and 
+addressing bias early, one can focus on creating solutions that are simpler, and better aligned with the problem at hand.
+
+Let's revisit the `execute` method from [Avoid coding in brain](#avoid-coding-in-brain). At first glance, it might appear that 
+polymorphism is a natural solution. 
+This approach would involve creating separate command classes such as `AddProjectCommand`, `AddTaskCommand`, and `ShowCommand`, 
+each implementing an `execute` method that takes `Arguments` as a parameter.
+
+At first glance, this approach might seem appealing. However, before proceeding, it's essential to carefully evaluate the following:
+- Ensure that polymorphic behavior is not being forced unnecessarily
+- Avoid introducing abstractions like `Arguments` unless they provide clear value
+- Decide whether a new instance of each command should be created for every execution or if a single instance should be reused
+
+I prefer adopting a bottom-up approach to implementing polymorphism. To refactor the `switch` statement, I will introduce the 
+`ShowCommand` (or another command), write tests for the newly created command, and then integrate it into the switch statement. I will repeat
+the same process for other commands.
+
+```java
+public class ShowCommand {
+    private final Writer writer;
+    private final Projects projects;
+    ShowCommand(Writer writer, Projects projects) {
+        this.writer = writer;
+        this.projects = projects;
+    }
+    void execute() throws IOException {
+        this.writer.write(this.projects.format());
+    }
+}
+```
+
+```java
+    public void execute(String commandLine) throws Exception {
+    String[] commandRest = commandLine.split(" ", 2);
+    String command = commandRest[0];
+    switch (command) {
+        case "show":
+            new ShowCommand(writer, projects).execute();
+            break;
+        //not showing the other cases
+    }
+}
+```
+
+This approach avoids forcing polymorphism and provides ample opportunities to evaluate whether the implementation of commands 
+aligns well with polymorphic behavior. The [git history](https://github.com/SarthakMakhija/task-list-refactoring/commits/main/?before=38497bd059794e714b36d32e16122de4bdacfa4f+70)
+highlights the step-by-step process followed to introduce polymorphic commands.
+
+This approach has been helpful in evolving the signature of the `execute` method. For example, here is the `execute` method of 
+the `ShowCommand`:
+
+```java
+void execute(int taskId) throws IOException {
+    if (projects.toggleTaskWithId(taskId, true)) return;
+    writer.write(String.format("Could not find a task with an ID of %d\n", taskId));
+}
+```
+
+and the `execute` method of `AddProjectCommand`.
+
+```java
+void execute(String[] arguments) throws IOException {
+    String projectName = arguments[0];
+    projects.addProject(projectName);
+}
+```
+
+Eventually, I changed the signature of the `execute` method to accept `List<String>`. The change is available [here](https://github.com/SarthakMakhija/task-list-refactoring/commit/9d43f63f4b51600e8f5018fadeba343aaf24a1a6).
+I did not introduce `Arguments` until it was needed. This [git commit](https://github.com/SarthakMakhija/task-list-refactoring/commit/af6fd64d8c9529a6e1b9af56332a590fa154dcf8) 
+shows subtle [code duplication](https://refactoring.guru/smells/duplicate-code) and [incomplete library class](https://refactoring.guru/smells/incomplete-library-class), which resulted in the
+creation of the abstraction [Arguments](https://github.com/SarthakMakhija/task-list-refactoring/blob/main/src/main/java/com/codurance/training/commands/Arguments.java).
+
+The final code is available [here](https://github.com/SarthakMakhija/task-list-refactoring) and the code which was refactored is 
+[here](https://github.com/SarthakMakhija/task-list-refactoring/tree/original).
+
+
