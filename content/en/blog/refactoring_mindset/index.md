@@ -6,7 +6,7 @@ description: "
 "
 tags: ["Refactoring", "Mindset", "Code Smells", "Clean Code"]
 thumbnail: "/refactoring-mindset-title.jpg"
-caption: "Photo by Magda Ehlers on Pexels"
+caption: "Photo by Dmitry Demidov on Pexels"
 ---
 
 ### a section or a para that this article covers existing codebase.
@@ -492,8 +492,6 @@ This is where my imagination took over. Let me summarize my thought process:
 I admit this was too much. This imagination not only increased anxiety, but also disrupted my progress. Ultimately, I decided to take 
 a pause, focus on incremental improvements, and not worry too much about the final code or the potential new smells that might arise.
 
-#### Avoid bias  
+#### Avoid bias 
 
 #### Rubber duck
-
-#### 
