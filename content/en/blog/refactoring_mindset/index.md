@@ -3,29 +3,31 @@ author: "Sarthak Makhija"
 title: "Refactoring Mindset"
 date: 2025-01-11
 description: "
-I haven't written about refactoring in a while. Recently, my team and I have been reading 'Refactoring' by Martin Fowler and we undertook a 
-TaskList kata as a refactoring exercise. This inspired me to write this article, which focuses on cultivating a Refactoring Mindset – 
-a proactive approach to consistently improve your code.
+I haven't written about refactoring in a while. My team and I have been reading 'Refactoring by Martin Fowler' and recently worked 
+through the TaskList kata as a refactoring exercise. This experience inspired me to write this article, which focuses on 
+cultivating a 'refactoring mindset' – a deliberate and proactive approach to consistently improve your code.
 "
 tags: ["Refactoring", "Mindset", "Code Smells", "Clean Code"]
 thumbnail: "/refactoring-mindset-title.jpg"
 caption: "Photo by Dmitry Demidov on Pexels"
 ---
 
-Continuous code improvement is an iterative process. This article focuses on cultivating a "Refactoring Mindset" – a proactive approach 
-that empowers you to consistently refine your code. 
+Continuous code improvement is an iterative process. This article focuses on cultivating a "refactoring mindset" – a deliberate and 
+proactive approach to consistently improve your code. 
 
 We'll explore key principles like making small, frequent changes, recognizing code smells, learning to defer refactoring tasks, and 
 minimizing bias to maintain a sustainable pace of improvement.
 
 This article takes the [TaskList](https://kata-log.rocks/task-list-kata) kata, makes minimal modifications to the original kata, and 
-explains "Refactoring Mindset" while refactoring the code. The code for refactoring is available [here](https://github.com/SarthakMakhija/task-list-refactoring/tree/original).
+explains "refactoring mindset" while refactoring the code. You can find the code that was refactored [here](https://github.com/SarthakMakhija/task-list-refactoring/tree/original).
 
 ### Brief overview of TaskList kata
 
-TaskList kata is a CLI application which provides [Task](https://github.com/SarthakMakhija/task-list-refactoring/blob/original/src/main/java/com/codurance/training/tasks/Task.java) 
-and [TaskList](https://github.com/SarthakMakhija/task-list-refactoring/blob/original/src/main/java/com/codurance/training/tasks/TaskList.java) as its abstractions.
-[TaskList](https://github.com/SarthakMakhija/task-list-refactoring/blob/original/src/main/java/com/codurance/training/tasks/TaskList.java) provides the following commands:
+The [TaskList](https://kata-log.rocks/task-list-kata) kata is a CLI application designed to manage projects and their tasks. It supports 
+functionalities such as adding projects, adding tasks to projects, marking tasks as done or undone, and listing all tasks across all projects.
+It provides [Task](https://github.com/SarthakMakhija/task-list-refactoring/blob/original/src/main/java/com/codurance/training/tasks/Task.java) 
+and [TaskList](https://github.com/SarthakMakhija/task-list-refactoring/blob/original/src/main/java/com/codurance/training/tasks/TaskList.java) as its key abstractions.
+and supports the following commands:
 
 | **Command**               | **Description**                                       |
 |---------------------------|-------------------------------------------------------|
@@ -35,18 +37,21 @@ and [TaskList](https://github.com/SarthakMakhija/task-list-refactoring/blob/orig
 | uncheck 1                 | Marks the task with **id 1 not undone**               |
 | show                      | Lists all tasks across all projects                   |
 
-Let's move on to the "Refactoring Mindset". 
+In this article, we won’t be refactoring the entire codebase but will focus on cultivating the mindset behind refactoring. 
+If you’re curious, you can explore the refactored code [here](https://github.com/SarthakMakhija/task-list-refactoring). With that, 
+let’s dive into "refactoring mindset."
 
 ### Refactoring mindset
 
-Refactoring Mindset encourages developers to embrace small changes. Cultivating this mindset involves recognizing code smells, 
-identifying and leveraging similar patterns within the codebase, learning to defer some refactoring tasks, and maintaining a 
-TODO list to track areas for improvement. Furthermore, it's important to avoid "coding in the brain" by bringing the thoughts and 
-ideas in code, and to be mindful of personal biases that may influence coding choices.
+A refactoring mindset encourages developers to embrace small and incremental changes. Cultivating this mindset involves recognizing code smells, 
+identifying and leveraging similar patterns within the codebase, learning to defer some refactoring tasks when necessary.
+It also emphasizes the importance of maintaining a TODO list to track areas for improvement and building a strong safety net, such as robust
+tests, to ensure changes don’t break code. Furthermore, it's important to avoid "coding in the brain" by bringing the thoughts and 
+ideas in the actual code, and to be mindful of personal biases that may influence coding choices.
 
 #### Build safety net
 
-Begin refactoring by building a safety net. Once the safety net is in place, make incremental changes to the system and use the 
+Begin refactoring by building a safety net. Once the safety net is in place, make incremental changes to the code and use the 
 safety net to gather feedback. Tests, preferably unit tests, serve as the safety net, ensuring that refactoring remains low-risk. 
 If the component you want to refactor, such as a method, is covered by tests, you can confidently proceed with changes.
 
@@ -68,10 +73,50 @@ public void executeWithAdditionOfAProjectContainingOneTask() throws Exception {
     taskList.execute("add task caizin Task1");
     taskList.execute("show");
 
+    //We don't know the system at this stage, so let's expect a blank string.
+    String expected = " "; 
+    assertEquals(expected, writer.toString());
+}
+```
+
+Because we do not understand the system (at least as of now), we can expect the `Writer` to return a blank `String`. Let’s run the test and see it fail. 
+When it does, we have found out what the code actually does under the given condition.
+
+```java
+org.junit.ComparisonFailure
+Expected: " "
+Actual: caizin
+        [ ] 1: Task1
+
+```
+
+Now, that we know the behavior of the code, we can go ahead and change the test. Remember, at this point, our view of tests is different: 
+They don’t have any moral authority; they just sit there documenting what the system really does. At this stage, it’s very important to 
+have the knowledge of what the system actually does. 
+
+```java
+@Test
+public void executeWithAdditionOfAProjectContainingOneTask() throws Exception {
+    StringWriter writer = new StringWriter();
+    TaskList taskList = new TaskList(writer);
+    taskList.execute("add project caizin");
+    taskList.execute("add task caizin Task1");
+    taskList.execute("show");
+
     String expected = "caizin\n" + "[ ] 1: Task1" + "\n";
     assertEquals(expected, writer.toString());
 }
 ```
+
+It is usually difficult to determine the number of characterization tests that you should add before starting to refactor. Honestly, we can
+go on adding infinite number of such tests. A simple way to determine this is:
+- Look at the code that is being characterized.
+- The code itself can give ideas about what it does, and if we have questions, tests are an ideal way of asking them.
+- At that point, write tests that cover good enough portion of the code that is being characterized.
+
+For the `TaskList` kata, I started with a couple of characterization tests. There are available [here](https://github.com/SarthakMakhija/task-list-refactoring/commit/d9d05b85e707167561c06752f9fdc4c996b3c5c5).
+
+Now, that we have characterization tests, we can start refactoring.
 
 #### Make small changes, small commits
 
@@ -104,8 +149,8 @@ private void addProject(String name) {
 }
 ```
 
-With this change, the method name `addProject` aligns clearly with the collection `projects`, allowing the domain concept of 
-`Project` to begin surfacing more clearly.
+With this change, the method name `addProject` becomes more intuitive and aligns seamlessly with the `projects` collection, allowing the 
+domain concept of `Projects` to emerge more clearly.
 
 #### Recognize code smells
 
@@ -128,8 +173,7 @@ private void show() throws IOException {
 }
 ```
 
-The method `show` is displaying (/showing) the details of all the tasks across all the projects. Let's see if we can identify some smells
-in this method.
+The method `show` lists all tasks across all projects. Let's see if we can identify some smells in this method.
 
 While the method isn’t long in terms of the number of lines, it could certainly be broken down further. A method like this could be considered 
 a [long method](https://refactoring.guru/smells/long-method) because, even though the number of lines is small, it might be hiding other 
@@ -137,9 +181,9 @@ potential smells that are not clearly visible.
 
 The show method directly accesses the private fields of the `Task` class, which violates encapsulation and leads to 
 [inappropriate intimacy](https://refactoring.guru/smells/inappropriate-intimacy) between classes. This is problematic because a class 
-should have the freedom to change the internal structure of its fields without affecting other parts of the code. In other words, 
+should have the freedom to change the internal structure (/type) of its fields without affecting other parts of the code. In other words, 
 a class should expose behaviors that operate on its internal data rather than allowing external access to its internal state. 
-This aligns with the **Tell, Don’t Ask principle**: tell the object what to do, don’t ask for its internal state.
+This aligns with the **Tell, Don’t Ask** principle: tell the object what to do, don’t ask for its internal state.
 
 Additionally, if we find ourselves working with a [data class](https://refactoring.guru/smells/data-class) (a class that contains data but 
 lacks meaningful behavior), the least we can do is restrict the visibility of its getters and setters to minimize access 
@@ -165,9 +209,9 @@ private static String format(Task task) {
 }
 ```
 
-The `format` method is currently static, which means it doesn't belong to the class it's defined in since it doesn't use any of its fields. 
+The `format` method is currently static, which means it doesn't belong to the class it's defined in, since it doesn't use any of its fields. 
 However, it makes use of the fields of the `Task` class, so it should be moved to the `Task` class itself. To do this, we can simply 
-remove the `static` keyword and then, using a tool like `IntelliJ`, press `F6` to refactor the method and move it to the `Task` class.
+remove the `static` keyword and then, move it to the `Task` class.
 
 The `Task` and `TaskList` are shown below:
 
@@ -288,8 +332,8 @@ became
 private final Map<String, Tasks> projects = new LinkedHashMap<>();
 ```
 
-Run the tests and commit the change. Looking at the `format` method in the `Tasks` class, we can see that it both `formats` the tasks 
-and writes the output to an instance of `java.io.Writer`. The `format` method should only be responsible for generating and returning 
+Run the tests and commit the change. Looking at the `format` method in the `Tasks` class, we can see that it `formats` the tasks 
+and also writes the output to an instance of `java.io.Writer`. The `format` method should only be responsible for generating and returning 
 a formatted `String`, while the act of writing should be handled separately.
 
 This also aligns with the vocabulary of the `format` method that we introduced in [Recognize Code Smells](#recognize-code-smells) section.
@@ -492,8 +536,9 @@ private void addTask(String projectName, String description) {
 
 We can defer this refactoring, add a TODO, and revisit it later when the impact of changing `Projects` from being a `LinkedHashMap<String, Tasks>` to
 `LinkedHashMap<String, Project>` is localized: only the methods of the `Projects` class would be impacted. That would also be the
-right time to evaluate whether `Projects` should extend `LinkedHashMap` or instead use composition. Here is my final version of the 
-[Projects](https://github.com/SarthakMakhija/task-list-refactoring/blob/main/src/main/java/com/codurance/training/tasks/Projects.java) class.
+right time to evaluate whether `Projects` should extend `LinkedHashMap` or instead use composition. I decided to introduce 
+[Project](https://github.com/SarthakMakhija/task-list-refactoring/commit/e441f16663f9af15fd9bbcb1ac176794404b9fa3) only after I was sure
+that the change would only impact [Projects](https://github.com/SarthakMakhija/task-list-refactoring/blob/main/src/main/java/com/codurance/training/tasks/Projects.java) class.
 
 #### Maintain a TODO list
 
@@ -503,7 +548,7 @@ It is crucial to maintain a TODO list while refactoring. Preparing a good TODO l
 2. **Reduced Anxiety**: A well-defined TODO list minimizes anxiety by providing a clear path.
 3. **Enhanced Visibility**: A detailed TODO list gives a clear view of all pending tasks, ensuring nothing gets overlooked.
 
-I prefer adding refactoring TODOs directly in my code, where I document everything from ideas to potential distractions. 
+I prefer adding **refactoring TODOs** directly in my code, where I document everything from ideas to potential distractions. 
 These TODO items are removed as they are completed. An example is available in this [git commit](https://github.com/SarthakMakhija/task-list-refactoring/commit/ec553e57e8fcdc6adf87d75d41981efd773075d7).
 At the end of the story, I make it a point to review and ensure no TODO is left unresolved.
 
@@ -536,11 +581,11 @@ public void execute(String commandLine) throws Exception {
 }
 ```
 
-This is where my imagination took over. Let me summarize my thought process:
+This is where my imagination took over. Let me summarize my thought process, while I was imagining the code:
 
 > I started imagining creating multiple `Commands`, each implementing a `Command` interface.
 > 
-> I envisioned needing an abstraction (like a `factory`) to instantiate the correct command based on the command line. 
+> I imagined needing an abstraction (like a `factory`) to instantiate the correct command based on the command line. 
 > This factory would require either a `switch` or a `Map` to handle the mapping between the user provided command and the actual instance.
 > 
 > Additionally, I imagined another abstraction to parse the command line, which would need to recognize "add_project" and "add_task" commands, 
@@ -559,7 +604,7 @@ addressing bias early, one can focus on creating solutions that are simpler, and
 Let's revisit the `execute` method from [Avoid coding in brain](#avoid-coding-in-brain). At first glance, it might appear that 
 polymorphism is a natural solution. 
 This approach would involve creating separate command classes such as `AddProjectCommand`, `AddTaskCommand`, and `ShowCommand`, 
-each implementing an `execute` method that takes `Arguments` as a parameter.
+each implementing the `execute` method that takes `Arguments` as a parameter.
 
 At first glance, this approach might seem appealing. However, before proceeding, it's essential to carefully evaluate the following:
 - Ensure that polymorphic behavior is not being forced unnecessarily
@@ -629,16 +674,17 @@ I did not introduce `Arguments` until it was needed. This [git commit](https://g
 shows subtle [code duplication](https://refactoring.guru/smells/duplicate-code) and [incomplete library class](https://refactoring.guru/smells/incomplete-library-class), which resulted in the
 creation of the [Arguments](https://github.com/SarthakMakhija/task-list-refactoring/blob/main/src/main/java/com/codurance/training/commands/Arguments.java) abstraction.
 
-That's it. I finished my refactoring and the code which is available [here](https://github.com/SarthakMakhija/task-list-refactoring).
+That's it. I finished my refactoring and the code is available [here](https://github.com/SarthakMakhija/task-list-refactoring).
 
 ### Summary
 
 The article explores the principles, practices, and mental approach required to effectively refactor code. It emphasizes the importance 
 of incremental, focused improvements while avoiding over-engineering or unnecessary abstractions. Key takeaways include:
 
-1. **Maintain focus**: Break down tasks into smaller, manageable chunks. Use tools like TODO lists to capture ideas and distractions for later review.
-2. **Avoid coding in brain**: Resist the urge to visualize designs. Start with small, testable changes instead of trying to anticipate every possible abstraction.
-3. **Identify patterns**: Look for repetitive patterns, such as loops over collections, getters (or leak of internal state)  as potential candidates for refactoring.
-4. **Avoid unnecessary abstractions**: Be mindful of biases that can lead to over-complicated designs.
-5. **Evaluate polymorphism incrementally**: Introduce polymorphism step-by-step, I prefer the bottom-up approach to introduce polymorphism.
-6. **Document refactoring**: Use commit histories and TODOs to keep track of the refactoring journey.
+1. **Build safety net**: Ensure that tests, preferably unit tests, are in place before beginning the refactoring process. 
+2. **Maintain focus**: Break down tasks into smaller, manageable chunks. Use tools like TODO lists to capture ideas and distractions for later review.
+3. **Avoid coding in brain**: Resist the urge to visualize designs. Start with small, testable changes instead of trying to anticipate every possible abstraction.
+4. **Identify patterns**: Look for repetitive patterns, such as loops over collections, getters (or leak of internal state)  as potential candidates for refactoring.
+5. **Avoid unnecessary abstractions**: Be mindful of biases that can lead to over-complicated designs.
+6. **Evaluate polymorphism incrementally**: Introduce polymorphism step-by-step, I prefer the bottom-up approach to introduce polymorphism.
+7. **Document refactoring**: Use commit histories and TODOs to keep track of the refactoring journey.
