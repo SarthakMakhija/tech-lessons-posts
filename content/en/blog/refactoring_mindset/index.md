@@ -1,7 +1,7 @@
 ---
 author: "Sarthak Makhija"
 title: "Refactoring Mindset"
-date: 2025-01-11
+date: 2025-01-14
 description: "
 I haven't written about refactoring in a while. My team and I have been reading 'Refactoring by Martin Fowler' and recently worked 
 through the TaskList kata as a refactoring exercise. This experience inspired me to write this article, which focuses on 
