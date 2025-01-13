@@ -8,7 +8,7 @@ through the TaskList kata as a refactoring exercise. This experience inspired me
 cultivating a 'refactoring mindset' – a deliberate and proactive approach to consistently improve your code.
 "
 tags: ["Refactoring", "Mindset", "Code Smells", "Clean Code"]
-thumbnail: "/refactoring-mindset-title.jpg"
+thumbnail: "/refactoring-mindset-title.webp"
 caption: "Photo by Dmitry Demidov on Pexels"
 ---
 
