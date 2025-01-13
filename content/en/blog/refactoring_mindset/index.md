@@ -32,9 +32,9 @@ and supports the following commands:
 | **Command**               | **Description**                                       |
 |---------------------------|-------------------------------------------------------|
 | add project foundation    | Adds the project named **foundation**                 |
-| add task foundation Task1 | Adds the task **Task1** in the **foundation** project |
+| add task foundation Task1 | Adds the task **Task1** to the **foundation** project |
 | check 1                   | Marks the task with **id 1 as done**                  |
-| uncheck 1                 | Marks the task with **id 1 not undone**               |
+| uncheck 1                 | Marks the task with **id 1 as not done**              |
 | show                      | Lists all tasks across all projects                   |
 
 In this article, we won’t be refactoring the entire codebase but will focus on cultivating the mindset behind refactoring. 
@@ -46,7 +46,7 @@ let’s dive into "refactoring mindset."
 A refactoring mindset encourages developers to embrace small and incremental changes. Cultivating this mindset involves recognizing code smells, 
 identifying and leveraging similar patterns within the codebase, learning to defer some refactoring tasks when necessary.
 It also emphasizes the importance of maintaining a TODO list to track areas for improvement and building a strong safety net, such as robust
-tests, to ensure changes don’t break code. Furthermore, it's important to avoid "coding in the brain" by bringing the thoughts and 
+tests, to ensure changes don’t break code. Furthermore, it's important to avoid "coding in the brain" by bringing thoughts and 
 ideas in the actual code, and to be mindful of personal biases that may influence coding choices.
 
 #### Build safety net
@@ -91,7 +91,7 @@ Actual: caizin
 ```
 
 Now, that we know the behavior of the code, we can go ahead and change the test. Remember, at this point, our view of tests is different: 
-They don’t have any moral authority; they just sit there documenting what the system really does. At this stage, it’s very important to 
+they don’t have any moral authority; they just sit there documenting what the system really does. At this stage, it’s very important to 
 have the knowledge of what the system actually does. 
 
 ```java
@@ -157,6 +157,12 @@ domain concept of `Projects` to emerge more clearly.
 There are certain smells which are more common than the others. For example, the "bad name" smell is more common than "long method," 
 and "long method" is more common than "refused bequest." Being familiar with these common smells makes refactoring significantly easier.
 
+A few common smells would be: [Long Method](https://refactoring.guru/smells/long-method), [Long Parameter List](https://refactoring.guru/smells/long-parameter-list), 
+[Primitive Obsession](https://refactoring.guru/smells/primitive-obsession),
+[Switch Statements](https://refactoring.guru/smells/switch-statements),
+[Duplicate Code](https://refactoring.guru/smells/duplicate-code), [Comments](https://refactoring.guru/smells/comments), 
+[Data Class](https://refactoring.guru/smells/data-class) and [Feature Envy](https://refactoring.guru/smells/feature-envy).
+
 Let’s revisit our `TaskList` example:
 
 ```java
@@ -177,11 +183,11 @@ The method `show` lists all tasks across all projects. Let's see if we can ident
 
 While the method isn’t long in terms of the number of lines, it could certainly be broken down further. A method like this could be considered 
 a [long method](https://refactoring.guru/smells/long-method) because, even though the number of lines is small, it might be hiding other 
-potential smells that are not clearly visible.
+potential smells that are not clearly visible. A method that can be further decomposed is often referred to as a [long method](https://refactoring.guru/smells/long-method).
 
 The show method directly accesses the private fields of the `Task` class, which violates encapsulation and leads to 
 [inappropriate intimacy](https://refactoring.guru/smells/inappropriate-intimacy) between classes. This is problematic because a class 
-should have the freedom to change the internal structure (/type) of its fields without affecting other parts of the code. In other words, 
+should have the freedom to change the internal structure (/data-type) of its fields without affecting other parts of the code. In other words, 
 a class should expose behaviors that operate on its internal data rather than allowing external access to its internal state. 
 This aligns with the **Tell, Don’t Ask** principle: tell the object what to do, don’t ask for its internal state.
 
@@ -335,7 +341,6 @@ private final Map<String, Tasks> projects = new LinkedHashMap<>();
 Run the tests and commit the change. Looking at the `format` method in the `Tasks` class, we can see that it `formats` the tasks 
 and also writes the output to an instance of `java.io.Writer`. The `format` method should only be responsible for generating and returning 
 a formatted `String`, while the act of writing should be handled separately.
-
 This also aligns with the vocabulary of the `format` method that we introduced in [Recognize Code Smells](#recognize-code-smells) section.
 
 The refactored code is shown below:
@@ -493,6 +498,7 @@ The `show` method and the instantiation of `projects` variable look like the fol
 ```java
 private final Projects projects = new Projects();
 
+//all it does now is: write the formatted project string to a writer.
 private void show() throws IOException {
     this.writer.write(this.projects.format());
 }
@@ -535,7 +541,7 @@ private void addTask(String projectName, String description) {
 ```
 
 We can defer this refactoring, add a TODO, and revisit it later when the impact of changing `Projects` from being a `LinkedHashMap<String, Tasks>` to
-`LinkedHashMap<String, Project>` is localized: only the methods of the `Projects` class would be impacted. That would also be the
+`LinkedHashMap<String, Project>` is localized, meaning: only the methods of the `Projects` class would be impacted. That would also be the
 right time to evaluate whether `Projects` should extend `LinkedHashMap` or instead use composition. I decided to introduce 
 [Project](https://github.com/SarthakMakhija/task-list-refactoring/commit/e441f16663f9af15fd9bbcb1ac176794404b9fa3) only after I was sure
 that the change would only impact [Projects](https://github.com/SarthakMakhija/task-list-refactoring/blob/main/src/main/java/com/codurance/training/tasks/Projects.java) class.
@@ -647,11 +653,11 @@ public class ShowCommand {
 
 I now find the bottom-up approach for introducing polymorphism highly intuitive, as it avoids forcing polymorphism and offers ample 
 opportunities to evaluate whether the implementation aligns well with polymorphic behavior. 
-The [git history](https://github.com/SarthakMakhija/task-list-refactoring/commits/main/?before=38497bd059794e714b36d32e16122de4bdacfa4f+70)
+The git history starting from the commit [85cfb2e](https://github.com/SarthakMakhija/task-list-refactoring/commit/85cfb2e6b26bdf0d65efd2806bda1b64bed27de3)
 highlights the step-by-step process followed to introduce polymorphic commands.
 
 This approach has been helpful in evolving the signature of the `execute` method. For example, here is the `execute` method of 
-the `ShowCommand`:
+the `ShowCommand` during early commits:
 
 ```java
 void execute(int taskId) throws IOException {
