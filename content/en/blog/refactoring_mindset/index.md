@@ -653,7 +653,7 @@ public class ShowCommand {
 
 I now find the bottom-up approach for introducing polymorphism highly intuitive, as it avoids forcing polymorphism and offers ample 
 opportunities to evaluate whether the implementation aligns well with polymorphic behavior. 
-The git history starting from the commit [85cfb2e](https://github.com/SarthakMakhija/task-list-refactoring/commit/85cfb2e6b26bdf0d65efd2806bda1b64bed27de3)
+The git history from the commit [85cfb2e](https://github.com/SarthakMakhija/task-list-refactoring/commit/85cfb2e6b26bdf0d65efd2806bda1b64bed27de3)
 highlights the step-by-step process followed to introduce polymorphic commands.
 
 This approach has been helpful in evolving the signature of the `execute` method. For example, here is the `execute` method of 
