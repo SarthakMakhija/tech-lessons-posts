@@ -7,7 +7,7 @@ I recently gave a talk with Tittu Varghese on 'Questioning database claims: Desi
 In this article, I’ll walk you through my journey - from brainstorming the topic and building the presentation to running mock sessions
 and delivering the final talk. Along the way, I’ll share the experiences and emotions that shaped my path to the stage.
 "
-tags: ["Talk Preparation", "Public Speaking", "Conference Preparation", "Questioning database claims", "Design patterns of storage engines"]
+tags: ["Talk Preparation", "Public Speaking", "Conference Preparation", "Questioning Database Claims", "Design Patterns of Storage Engines"]
 thumbnail: "/talk_title.webp"
 caption: "Photo by Pixabay on Pexels"
 ---
