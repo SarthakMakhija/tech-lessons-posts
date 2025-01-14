@@ -92,7 +92,7 @@ Actual: caizin
 
 Now that we know the behavior of the code, we can go ahead and change the test. Remember, at this point, our view of tests is different: 
 they don’t have any moral authority; they just sit there documenting what the system really does. At this stage, it’s very important to 
-have the knowledge of what the system actually does. 
+have the knowledge of what the method actually does. 
 
 ```java
 @Test
