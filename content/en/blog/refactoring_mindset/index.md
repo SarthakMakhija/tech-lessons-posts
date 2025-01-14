@@ -62,7 +62,7 @@ environment.
 > This assumes the code being refactored is currently running in production. Characterization tests ensure the current behavior is captured 
 > accurately before refactoring.
 
-Here's an example of a characterization test for `TaskList`:
+Here's an example of a characterization test for the `TaskList's execute` method:
 
 ```java
 @Test
@@ -79,7 +79,7 @@ public void executeWithAdditionOfAProjectContainingOneTask() throws Exception {
 }
 ```
 
-Because we do not understand the system (at least as of now), we can expect the `Writer` to return a blank `String`. Let’s run the test and see it fail. 
+Because we do not understand the system (or the `execute` method) (at least as of now), we can expect the `Writer` to return a blank `String`. Let’s run the test and see it fail. 
 When it does, we have found out what the code actually does under the given condition.
 
 ```java
@@ -91,8 +91,7 @@ Actual: caizin
 ```
 
 Now that we know the behavior of the code, we can go ahead and change the test. Remember, at this point, our view of tests is different: 
-they don’t have any moral authority; they just sit there documenting what the system really does. At this stage, it’s very important to 
-have the knowledge of what the method actually does. 
+they don’t have any moral authority; they just sit there documenting what the system really does.
 
 ```java
 @Test
