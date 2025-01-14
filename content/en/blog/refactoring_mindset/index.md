@@ -15,7 +15,7 @@ caption: "Photo by Dmitry Demidov on Pexels"
 Continuous code improvement is an iterative process. This article focuses on cultivating a "refactoring mindset" – a deliberate and 
 proactive approach to consistently improve your code. 
 
-We'll explore key principles like making small, frequent changes, recognizing code smells, learning to defer refactoring tasks, and 
+We'll explore key principles like building safety net, making small, frequent changes, recognizing code smells, learning to defer refactoring tasks, and 
 minimizing bias to maintain a sustainable pace of improvement.
 
 This article takes the [TaskList](https://kata-log.rocks/task-list-kata) kata, makes minimal modifications to the original kata, and 
@@ -90,7 +90,7 @@ Actual: caizin
 
 ```
 
-Now, that we know the behavior of the code, we can go ahead and change the test. Remember, at this point, our view of tests is different: 
+Now that we know the behavior of the code, we can go ahead and change the test. Remember, at this point, our view of tests is different: 
 they don’t have any moral authority; they just sit there documenting what the system really does. At this stage, it’s very important to 
 have the knowledge of what the system actually does. 
 
@@ -116,7 +116,7 @@ go on adding infinite number of such tests. A simple way to determine this is:
 
 For the `TaskList` kata, I started with a couple of characterization tests. There are available [here](https://github.com/SarthakMakhija/task-list-refactoring/commit/d9d05b85e707167561c06752f9fdc4c996b3c5c5).
 
-Now, that we have characterization tests, we can start refactoring.
+Now that we have characterization tests, we can start refactoring.
 
 #### Make small changes, small commits
 
@@ -131,7 +131,7 @@ private final Map<String, List<Task>> tasks = new LinkedHashMap<>();
 
 The variable `tasks` is a bad name (or a misleading name). It actually represents `Projects`, where every `Project` has a name and a collection of `Tasks`. At this stage, the `Project`
 abstraction is buried within the `Map`. The smallest refactoring would be to rename `tasks` to `projects` without worrying too much about the domain abstraction
-`Project`. After renaming, run all the tests to ensure nothing breaks and commit the change.
+`Project` (or `Projects`). After renaming, run all the tests to ensure nothing breaks and commit the change.
 
 This small, low-risk refactoring instantly adds clarity to the code. For example, the following method:
 
@@ -296,7 +296,10 @@ private static void format(List<Task> tasks, Writer writer) throws IOException {
 This method should be moved to `List<Task>` because it works on the collection of `Task`. This smell can be called [Incomplete library class](https://refactoring.guru/smells/incomplete-library-class)
 or [Primitive obsession](https://refactoring.guru/smells/primitive-obsession).
 
-Now, we have a reason to introduce `Tasks` abstraction with the `format` method. Moving the `format` method into this new class is 
+> In languages like Kotlin that support extension functions, we could start by defining an extension function on `List<Task>`. This would allow 
+> `format()` to be written as fun `List<Task>.format(): String`. We would continue using extensions until the need arises for a higher-level abstraction like `Tasks`.
+
+Now we have a reason to introduce `Tasks` abstraction with the `format` method. Moving the `format` method into this new class is 
 straightforward, however, we need to ensure that the change is small.
 
 Look at the `format` method and notice the for-loop over `tasks` variable. With the new abstraction that we create, we should be able to use 
@@ -638,7 +641,7 @@ public class ShowCommand {
 ```
 
 ```java
-    public void execute(String commandLine) throws Exception {
+public void execute(String commandLine) throws Exception {
     String[] commandRest = commandLine.split(" ", 2);
     String command = commandRest[0];
     
@@ -689,7 +692,7 @@ of incremental, focused improvements while avoiding over-engineering or unnecess
 
 1. **Build safety net**: Ensure that tests, preferably unit tests, are in place before beginning the refactoring process. 
 2. **Maintain focus**: Break down tasks into smaller, manageable chunks. Use tools like TODO lists to capture ideas and distractions for later review.
-3. **Avoid coding in brain**: Resist the urge to visualize designs. Start with small, testable changes instead of trying to anticipate every possible abstraction.
+3. **Avoid coding in brain**: Resist the urge to visualize code. Start with small, testable changes instead of trying to anticipate every possible abstraction.
 4. **Identify patterns**: Look for repetitive patterns, such as loops over collections, getters (or leak of internal state)  as potential candidates for refactoring.
 5. **Avoid unnecessary abstractions**: Be mindful of biases that can lead to over-complicated designs.
 6. **Evaluate polymorphism incrementally**: Introduce polymorphism step-by-step, I prefer the bottom-up approach to introduce polymorphism.
