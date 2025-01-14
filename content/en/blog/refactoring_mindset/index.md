@@ -60,7 +60,7 @@ A characterization test by definition documents the current behavior of the syst
 environment. 
 
 > This assumes the code being refactored is currently running in production. Characterization tests ensure the current behavior is captured 
-> accurately before refactoring.
+> accurately before refactoring. Read more about characterization tests [here](https://tech-lessons.in/en/blog/lets_define_legacy_code/#which-tests-to-write).
 
 Here's an example of a characterization test for the `TaskList's execute` method:
 
