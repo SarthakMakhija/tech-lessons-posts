@@ -238,6 +238,9 @@ private void show() throws IOException {
 }
 ```
 
+> Please note: I chose not to increase the visibility of the `format` method. My general approach is to avoid escalating the visibility of 
+> classes or methods unless absolutely necessary.
+
 Run all the tests to ensure nothing breaks, add tests for the new `format` method inside `Task` and commit the change.
 Since the `format` method is now part of the `Task` class, the `getDescription` method is no longer needed. Remove it, run the 
 tests again, and commit this change as well.
